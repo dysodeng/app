@@ -1,0 +1,76 @@
+package http
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"io"
+	"log"
+	"net/http"
+	"os"
+	"time"
+
+	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/server"
+	"github.com/dysodeng/app/internal/server/http/router"
+	"github.com/gin-gonic/gin"
+)
+
+type Server struct {
+	server *http.Server
+}
+
+func NewServer() server.Interface {
+	// env mode
+	switch config.App.Env {
+	case config.Dev:
+		gin.SetMode(gin.DebugMode)
+	case config.Test:
+		gin.SetMode(gin.TestMode)
+	case config.Release:
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	// error logger
+	logFilename := config.LogPath + "/gin.error.log"
+	errLogFile, _ := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	gin.DefaultErrorWriter = io.MultiWriter(errLogFile, os.Stderr)
+
+	return &Server{
+		server: &http.Server{
+			Addr:    fmt.Sprintf("0.0.0.0:%s", config.Server.Http.Port),
+			Handler: router.Router(),
+		},
+	}
+}
+
+func (httpServer *Server) Serve() {
+	log.Println("start http server...")
+
+	defer func() {
+		if err := recover(); err != nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+			defer cancel()
+			if err = httpServer.server.Shutdown(ctx); err != nil {
+				log.Fatalf("http server shutdown fiald: %+v\n", err)
+			}
+		}
+	}()
+
+	log.Printf("http service listening and serving 0.0.0.0:%s\n", config.Server.Http.Port)
+
+	go func() {
+		if err := httpServer.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			log.Fatalf("http server start fiald: %s\n", err)
+		}
+	}()
+}
+
+func (httpServer *Server) Shutdown() {
+	log.Println("shutdown http server...")
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := httpServer.server.Shutdown(ctx); err != nil {
+		log.Fatalf("http server shutdown fiald:%s", err)
+	}
+}

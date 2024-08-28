@@ -1,0 +1,12 @@
+database:
+  main:
+    driver: mysql
+    host: ${MAIN_DB_HOST}
+    port: ${MAIN_DB_PORT}
+    database: ${MAIN_DB_DATABASE}
+    username: ${MAIN_DB_USERNAME}
+    password: ${MAIN_DB_PASSWORD}
+    charset: utf8mb4
+    max_idle_conns: 50
+    max_open_conns: 200
+    max_conn_lifetime: 300

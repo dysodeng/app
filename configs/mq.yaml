@@ -1,0 +1,11 @@
+mq:
+  enabled: true
+  driver: amqp
+  amqp:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    vhost: /
+  redis:
+    connection: mq

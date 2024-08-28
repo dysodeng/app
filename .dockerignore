@@ -1,0 +1,12 @@
+/.idea
+.env
+.env.*
+README.md
+Makefile
+Dockerfile
+docker-compose.*
+.dockerignore
+dev-run.conf
+pre-commit
+/var/logs/*
+/var/tmp/*

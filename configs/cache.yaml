@@ -1,0 +1,19 @@
+redis:
+  main:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    db: 0
+    key_prefix:
+  cache:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    db: 1
+    key_prefix:
+  mq:
+    host: 127.0.0.1
+    port: 6379
+    password:
+    db: 2
+    key_prefix:

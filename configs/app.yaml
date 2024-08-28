@@ -1,0 +1,19 @@
+# 应用配置
+app:
+  name: "app"
+  env: "dev"
+  domain: "http://localhost:8080"
+  jwt:
+    secret:
+
+# 服务配置
+server:
+  http:
+    port: 8080
+  task:
+    enabled: true
+  cron:
+    enabled: true
+  health:
+    enabled: true
+    port: 5000
