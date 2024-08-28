@@ -1,10 +1,13 @@
 package mq
 
 import (
+	"fmt"
+
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/mq"
 	"github.com/dysodeng/mq/contract"
 	"github.com/dysodeng/mq/driver/amqp"
+	"github.com/dysodeng/mq/driver/redis"
 	"github.com/pkg/errors"
 )
 
@@ -29,6 +32,19 @@ func NewMessageQueueConsumer(queueKey string) (contract.Consumer, error) {
 			Password: config.MQ.Amqp.Password,
 			VHost:    config.MQ.Amqp.Vhost,
 		})
+	case string(mq.Redis):
+		redisConfig := redis.Config{}
+		switch config.MQ.Redis.Connection {
+		case "mq":
+			redisConfig = redis.Config{
+				Addr:     fmt.Sprintf("%s:%s", config.Cache.MQ.Host, config.Cache.MQ.Port),
+				DB:       config.Cache.MQ.DB,
+				Password: config.Cache.MQ.Password,
+			}
+		default:
+			panic("redis connection not found.")
+		}
+		return mq.NewQueueConsumer(mq.Redis, QueueKey(queueKey), &redisConfig)
 	}
 	return nil, errors.New("mq driver not found.")
 }
@@ -44,6 +60,19 @@ func NewMessageQueueProducer(pool *contract.Pool) (contract.Producer, error) {
 			VHost:    config.MQ.Amqp.Vhost,
 			Pool:     pool,
 		})
+	case string(mq.Redis):
+		redisConfig := redis.Config{}
+		switch config.MQ.Redis.Connection {
+		case "mq":
+			redisConfig = redis.Config{
+				Addr:     fmt.Sprintf("%s:%s", config.Cache.MQ.Host, config.Cache.MQ.Port),
+				DB:       config.Cache.MQ.DB,
+				Password: config.Cache.MQ.Password,
+			}
+		default:
+			panic("redis connection not found.")
+		}
+		return mq.NewQueueProducer(mq.Redis, &redisConfig)
 	}
 	return nil, errors.New("mq driver not found.")
 }
