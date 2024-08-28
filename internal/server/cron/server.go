@@ -10,8 +10,8 @@ import (
 	"github.com/robfig/cron/v3"
 )
 
-// cronJob 定时任务
-type cronJob struct {
+// cronServer 定时任务服务
+type cronServer struct {
 	// jobs 任务注册表
 	jobs map[string]cronJobIface.JobInterface
 	// schedule 任务调度器
@@ -19,7 +19,7 @@ type cronJob struct {
 }
 
 func NewServer() server.Interface {
-	jobServer := &cronJob{
+	jobServer := &cronServer{
 		jobs: make(map[string]cronJobIface.JobInterface),
 	}
 	jobServer.register()
@@ -27,7 +27,7 @@ func NewServer() server.Interface {
 }
 
 // register 注册任务服务
-func (cronJob *cronJob) register(jobs ...cronJobIface.JobInterface) {
+func (cronJob *cronServer) register(jobs ...cronJobIface.JobInterface) {
 	for _, job := range jobs {
 		if _, ok := cronJob.jobs[job.JobKey()]; !ok {
 			cronJob.jobs[job.JobKey()] = job
@@ -35,7 +35,7 @@ func (cronJob *cronJob) register(jobs ...cronJobIface.JobInterface) {
 	}
 }
 
-func (cronJob *cronJob) Serve() {
+func (cronJob *cronServer) Serve() {
 	if !config.Server.Cron.Enabled {
 		return
 	}
@@ -53,7 +53,7 @@ func (cronJob *cronJob) Serve() {
 	cronJob.schedule.Start()
 }
 
-func (cronJob *cronJob) Shutdown() {
+func (cronJob *cronServer) Shutdown() {
 	if !config.Server.Cron.Enabled {
 		return
 	}

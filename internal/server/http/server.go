@@ -16,7 +16,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Server struct {
+type httpServer struct {
 	server *http.Server
 }
 
@@ -36,7 +36,7 @@ func NewServer() server.Interface {
 	errLogFile, _ := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	gin.DefaultErrorWriter = io.MultiWriter(errLogFile, os.Stderr)
 
-	return &Server{
+	return &httpServer{
 		server: &http.Server{
 			Addr:    fmt.Sprintf("0.0.0.0:%s", config.Server.Http.Port),
 			Handler: router.Router(),
@@ -44,7 +44,7 @@ func NewServer() server.Interface {
 	}
 }
 
-func (httpServer *Server) Serve() {
+func (httpServer *httpServer) Serve() {
 	log.Println("start http server...")
 
 	defer func() {
@@ -66,7 +66,7 @@ func (httpServer *Server) Serve() {
 	}()
 }
 
-func (httpServer *Server) Shutdown() {
+func (httpServer *httpServer) Shutdown() {
 	log.Println("shutdown http server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

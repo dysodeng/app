@@ -12,15 +12,15 @@ import (
 )
 
 // Server 容器环境健康检查服务
-type Server struct {
+type healthServer struct {
 	listener net.Listener
 }
 
 func NewServer() server.Interface {
-	return &Server{}
+	return &healthServer{}
 }
 
-func (hs *Server) Serve() {
+func (hs *healthServer) Serve() {
 	if !config.Server.Health.Enabled {
 		return
 	}
@@ -48,7 +48,7 @@ func (hs *Server) Serve() {
 	}()
 }
 
-func (hs *Server) Shutdown() {
+func (hs *healthServer) Shutdown() {
 	if !config.Server.Health.Enabled {
 		return
 	}
