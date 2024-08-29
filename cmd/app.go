@@ -5,12 +5,15 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/server"
+	"github.com/dysodeng/app/internal/pkg/db"
+	"github.com/dysodeng/app/internal/pkg/redis"
 	"github.com/dysodeng/app/internal/server/cron"
 	"github.com/dysodeng/app/internal/server/health"
 	"github.com/dysodeng/app/internal/server/http"
 	"github.com/dysodeng/app/internal/server/task"
+
+	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/server"
 )
 
 type App struct {
@@ -25,13 +28,10 @@ func (app *App) Run() {
 	// 加载配置
 	app.config()
 
+	// 应用初始化
+	app.initialize()
+
 	// 启动服务
-	app.registerServer(
-		task.NewServer(),
-		cron.NewServer(),
-		http.NewServer(),
-		health.NewServer(),
-	)
 	app.start()
 
 	// 监听退出信号
@@ -42,8 +42,21 @@ func (app *App) config() {
 	config.Load()
 }
 
+func (app *App) initialize() {
+	db.Initialize()
+	redis.Initialize()
+}
+
 func (app *App) start() {
 	log.Println("start app server...")
+
+	// 注册服务
+	app.registerServer(
+		task.NewServer(),
+		cron.NewServer(),
+		http.NewServer(),
+		health.NewServer(),
+	)
 
 	// 启动服务
 	for _, serverIns := range app.serverList {

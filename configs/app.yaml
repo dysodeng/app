@@ -15,5 +15,5 @@ server:
   cron:
     enabled: true
   health:
-    enabled: true
+    enabled: false
     port: 5000

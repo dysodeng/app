@@ -1,9 +1,9 @@
-package task
+package job
 
 import "github.com/dysodeng/mq/message"
 
-// JobInterface 队列任务接口
-type JobInterface interface {
+// Interface 队列任务接口
+type Interface interface {
 	// QueueKey 队列类型key
 	QueueKey() string
 	// IsDelay 是否延时队列

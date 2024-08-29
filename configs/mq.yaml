@@ -7,5 +7,3 @@ mq:
     username: guest
     password: guest
     vhost: /
-  redis:
-    connection: mq

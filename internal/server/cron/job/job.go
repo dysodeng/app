@@ -1,4 +1,4 @@
-package cron
+package job
 
 // JobInterface 任务接口
 type JobInterface interface {

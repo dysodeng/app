@@ -1,10 +1,9 @@
 package queue
 
 import (
+	"github.com/dysodeng/app/internal/pkg/mq"
 	"log"
 	"time"
-
-	"github.com/dysodeng/app/pkg/mq"
 
 	"github.com/dysodeng/mq/contract"
 )

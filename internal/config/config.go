@@ -31,16 +31,19 @@ func init() {
 	Server = &serverConfig{}
 	Database = &database{}
 	Cache = &cache{}
-}
 
-func Load() {
 	_ = godotenv.Load()
+
 	appConfigLoad()
 	databaseConfigLoad()
+	redisConfigLoad()
 	cacheConfigLoad()
+	mqConfigLoad()
 
 	env := App.Env
 	if !env.Valid() {
 		env = Dev
 	}
 }
+
+func Load() {}

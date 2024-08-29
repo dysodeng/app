@@ -8,7 +8,8 @@ import (
 )
 
 type database struct {
-	Main db `mapstructure:"main"`
+	Default string `mapstructure:"default"`
+	Main    db     `mapstructure:"main"`
 }
 
 type db struct {
@@ -18,7 +19,6 @@ type db struct {
 	Database        string `mapstructure:"database"`
 	Username        string `mapstructure:"username"`
 	Password        string `mapstructure:"password"`
-	Charset         string `mapstructure:"charset"`
 	MaxIdleConns    int    `mapstructure:"max_idle_conns"`
 	MaxOpenConns    int    `mapstructure:"max_open_conns"`
 	MaxConnLifetime int    `mapstructure:"max_conn_lifetime"`
@@ -49,7 +49,7 @@ func databaseConfigLoad() {
 		panic(err)
 	}
 
-	log.Println("配置文件`configs/app.yaml`加载完成")
+	log.Println("配置文件`configs/database.yaml`加载完成")
 
 	v.WatchConfig()
 	v.OnConfigChange(func(in fsnotify.Event) {

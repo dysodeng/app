@@ -33,18 +33,11 @@ func NewMessageQueueConsumer(queueKey string) (contract.Consumer, error) {
 			VHost:    config.MQ.Amqp.Vhost,
 		})
 	case string(mq.Redis):
-		redisConfig := redis.Config{}
-		switch config.MQ.Redis.Connection {
-		case "mq":
-			redisConfig = redis.Config{
-				Addr:     fmt.Sprintf("%s:%s", config.Cache.MQ.Host, config.Cache.MQ.Port),
-				DB:       config.Cache.MQ.DB,
-				Password: config.Cache.MQ.Password,
-			}
-		default:
-			panic("redis connection not found.")
-		}
-		return mq.NewQueueConsumer(mq.Redis, QueueKey(queueKey), &redisConfig)
+		return mq.NewQueueConsumer(mq.Redis, QueueKey(queueKey), &redis.Config{
+			Addr:     fmt.Sprintf("%s:%s", config.Redis.MQ.Host, config.Redis.MQ.Port),
+			DB:       config.Redis.MQ.DB,
+			Password: config.Redis.MQ.Password,
+		})
 	}
 	return nil, errors.New("mq driver not found.")
 }
@@ -61,18 +54,11 @@ func NewMessageQueueProducer(pool *contract.Pool) (contract.Producer, error) {
 			Pool:     pool,
 		})
 	case string(mq.Redis):
-		redisConfig := redis.Config{}
-		switch config.MQ.Redis.Connection {
-		case "mq":
-			redisConfig = redis.Config{
-				Addr:     fmt.Sprintf("%s:%s", config.Cache.MQ.Host, config.Cache.MQ.Port),
-				DB:       config.Cache.MQ.DB,
-				Password: config.Cache.MQ.Password,
-			}
-		default:
-			panic("redis connection not found.")
-		}
-		return mq.NewQueueProducer(mq.Redis, &redisConfig)
+		return mq.NewQueueProducer(mq.Redis, &redis.Config{
+			Addr:     fmt.Sprintf("%s:%s", config.Redis.MQ.Host, config.Redis.MQ.Port),
+			DB:       config.Redis.MQ.DB,
+			Password: config.Redis.MQ.Password,
+		})
 	}
 	return nil, errors.New("mq driver not found.")
 }

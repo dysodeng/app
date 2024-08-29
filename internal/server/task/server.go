@@ -3,33 +3,36 @@ package task
 import (
 	"log"
 
+	"github.com/dysodeng/app/internal/pkg/mq"
+	"github.com/dysodeng/app/internal/server/task/job"
+
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/server"
-	"github.com/dysodeng/app/internal/task"
-	"github.com/dysodeng/app/pkg/mq"
 	"github.com/dysodeng/mq/contract"
 	"github.com/pkg/errors"
 )
 
 type taskServer struct {
-	jobs            map[string]task.JobInterface
+	jobs            map[string]job.Interface
 	jobConsumerList []contract.Consumer
 }
 
 func NewServer() server.Interface {
 	ts := &taskServer{}
-	ts.register()
+	ts.register(
+		job.TaskTestTask{},
+	)
 	return ts
 }
 
 // register 注册任务
-func (server *taskServer) register(jobs ...task.JobInterface) {
+func (server *taskServer) register(jobs ...job.Interface) {
 	if server.jobs == nil {
-		server.jobs = make(map[string]task.JobInterface)
+		server.jobs = make(map[string]job.Interface)
 	}
-	for _, job := range jobs {
-		if _, ok := server.jobs[job.QueueKey()]; !ok {
-			server.jobs[job.QueueKey()] = job
+	for _, jobItem := range jobs {
+		if _, ok := server.jobs[jobItem.QueueKey()]; !ok {
+			server.jobs[jobItem.QueueKey()] = jobItem
 		}
 	}
 }
@@ -40,7 +43,7 @@ func (server *taskServer) Serve() {
 	}
 	log.Println("start task server...")
 	for _, jobItem := range server.jobs {
-		go func(jobItem task.JobInterface) {
+		go func(jobItem job.Interface) {
 			consumer, err := mq.NewMessageQueueConsumer(jobItem.QueueKey())
 			if err != nil {
 				log.Printf("%+v", errors.Wrap(err, "消息队列任务创建失败"))

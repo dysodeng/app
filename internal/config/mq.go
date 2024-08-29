@@ -11,9 +11,6 @@ type mq struct {
 	Enabled bool   `mapstructure:"enabled"`
 	Driver  string `mapstructure:"driver"`
 	Amqp    amqp   `mapstructure:"amqp"`
-	Redis   struct {
-		Connection string `mapstructure:"connection"`
-	} `mapstructure:"redis"`
 }
 
 type amqp struct {
@@ -38,7 +35,6 @@ func mqConfigLoad() {
 	}
 
 	d := v.Sub("mq")
-	_ = d.BindEnv("driver", "MQ_DRIVER")
 	_ = d.BindEnv("amqp.host", "MQ_AMQP_HOST")
 	_ = d.BindEnv("amqp.port", "MQ_AMQP_PORT")
 	_ = d.BindEnv("amqp.username", "MQ_AMQP_USERNAME")
@@ -46,13 +42,12 @@ func mqConfigLoad() {
 	_ = d.BindEnv("amqp.password", "MQ_AMQP_PASSWORD")
 	_ = d.BindEnv("amqp.vhost", "MQ_AMQP_VHOST")
 	_ = d.BindEnv("redis.connection", "MQ_REDIS_CONNECTION")
-	d.SetDefault("driver", "redis")
+	d.SetDefault("driver", "amqp")
 	d.SetDefault("amqp.host", "127.0.0.1")
 	d.SetDefault("amqp.port", "5672")
 	d.SetDefault("amqp.username", "guest")
 	d.SetDefault("amqp.password", "guest")
 	d.SetDefault("amqp.vhost", "/")
-	d.SetDefault("redis.connection", "mq")
 
 	if err := d.Unmarshal(&MQ); err != nil {
 		panic(err)
