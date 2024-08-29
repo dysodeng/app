@@ -1,8 +1,8 @@
 SHELL:=/bin/bash
 
-DOCKER_REGISTRY_NAME=registry.huaxisy.com/ai-research/smart-ward/api
-PLATFORM_ARCH=linux/arm64
-PROD_DOCKER_REGISTRY_NAME=mcpregistry.huaxishuyi.com/ai/ai-assistant-api
+DOCKER_REGISTRY_NAME=registry.cn-chengdu.aliyuncs.com/dysodeng/app
+PLATFORM_ARCH=linux/amd64
+PROD_DOCKER_REGISTRY_NAME=registry.cn-chengdu.aliyuncs.com/dysodeng/app
 PROD_PLATFORM_ARCH=linux/amd64
 IMAGE_VERSION=$(shell date +"%Y%m%d%H%M")
 

@@ -1,0 +1,28 @@
+filesystem:
+  storage: local
+  local:
+    base_path: "upload"
+    logic_path: "upload"
+    base_url: "http://127.0.0.1:8080/upload"
+  ali_oss:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    region: ""
+    sts_role_arn: ""
+    cdn_domain: ""
+  hw_obs:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    cdn_domain: ""
+  minio:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    cdn_domain: ""
+    use_ssl: true

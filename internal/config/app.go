@@ -56,6 +56,8 @@ func appConfigLoad() {
 	}
 
 	server := v.Sub("server")
+	_ = server.BindEnv("http.port", "SERVER_HTTP_PORT")
+	_ = server.BindEnv("health.port", "SERVER_HEALTH_CHECK_PORT")
 	if err := server.Unmarshal(&Server); err != nil {
 		panic(err)
 	}

@@ -31,6 +31,9 @@ func init() {
 	Server = &serverConfig{}
 	Database = &database{}
 	Cache = &cache{}
+	Redis = &redis{}
+	MQ = &mq{}
+	Filesystem = &filesystem{}
 
 	_ = godotenv.Load()
 
@@ -39,6 +42,7 @@ func init() {
 	redisConfigLoad()
 	cacheConfigLoad()
 	mqConfigLoad()
+	filesystemConfigLoad()
 
 	env := App.Env
 	if !env.Valid() {
