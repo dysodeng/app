@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/dysodeng/app/internal/service/provider"
+
 	"github.com/dysodeng/app/migrations/migration"
 
 	"github.com/dysodeng/app/internal/pkg/db"
@@ -48,12 +50,15 @@ func (app *App) initialize() {
 	db.Initialize()
 	redis.Initialize()
 
-	// 数据库迁移
+	// db migration
 	if config.Database.Migration.Enabled {
 		if err := migration.Migrate(db.DB()); err != nil {
 			panic(err)
 		}
 	}
+
+	// service container
+	provider.ServiceProvider()
 }
 
 func (app *App) start() {
