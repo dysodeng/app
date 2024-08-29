@@ -1,5 +1,7 @@
 database:
   default: main
+  migration:
+    enabled: true
   main:
     driver: mysql
     host: 127.0.0.1

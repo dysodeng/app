@@ -8,8 +8,11 @@ import (
 )
 
 type database struct {
-	Default string `mapstructure:"default"`
-	Main    db     `mapstructure:"main"`
+	Default   string `mapstructure:"default"`
+	Main      db     `mapstructure:"main"`
+	Migration struct {
+		Enabled bool `mapstructure:"enabled"`
+	} `mapstructure:"migration"`
 }
 
 type db struct {

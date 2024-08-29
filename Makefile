@@ -2,7 +2,7 @@ SHELL:=/bin/bash
 
 DOCKER_REGISTRY_NAME=registry.cn-chengdu.aliyuncs.com/dysodeng/app
 PLATFORM_ARCH=linux/amd64
-PROD_DOCKER_REGISTRY_NAME=registry.cn-chengdu.aliyuncs.com/dysodeng/app
+PROD_DOCKER_REGISTRY_NAME=registry.cn-chengdu.aliyuncs.com/dysodeng/app-release
 PROD_PLATFORM_ARCH=linux/amd64
 IMAGE_VERSION=$(shell date +"%Y%m%d%H%M")
 
@@ -13,7 +13,7 @@ run:
 	cp -f ./.env ./var/tmp/.env && fresh -c dev-run.conf
 
 lint:
-	go fmt ./internal/... && go fmt ./server/... && go fmt ./main.go
+	go fmt ./internal/... && go fmt ./cmd/... && go fmt ./main.go
 
 build:
 	docker buildx build --platform ${PLATFORM_ARCH} -t ${DOCKER_REGISTRY_NAME}:${IMAGE_VERSION} .

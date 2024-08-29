@@ -1,5 +1,5 @@
 # builder
-FROM registry.huaxisy.com/library/golang:1.22.2 AS Builder
+FROM registry.cn-chengdu.aliyuncs.com/dysodeng/golang:1.22.2 AS Builder
 
 RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
  && echo 'Asia/Shanghai' >/etc/timezone
@@ -15,7 +15,7 @@ ADD . /app
 
 RUN CGO_ENABLED=0 go build -o app
 
-FROM registry.huaxisy.com/library/alpine:3.19 AS Runner
+FROM registry.cn-chengdu.aliyuncs.com/dysodeng/alpine:3.19 AS Runner
 
 COPY --from=Builder /app/app /app/app
 COPY --from=Builder /app/var /app/var

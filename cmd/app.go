@@ -5,6 +5,8 @@ import (
 	"os"
 	"os/signal"
 
+	"github.com/dysodeng/app/migrations/migration"
+
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/redis"
 	"github.com/dysodeng/app/internal/server/cron"
@@ -45,6 +47,13 @@ func (app *App) config() {
 func (app *App) initialize() {
 	db.Initialize()
 	redis.Initialize()
+
+	// 数据库迁移
+	if config.Database.Migration.Enabled {
+		if err := migration.Migrate(db.DB()); err != nil {
+			panic(err)
+		}
+	}
 }
 
 func (app *App) start() {
