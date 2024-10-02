@@ -5,7 +5,8 @@ import (
 	"encoding/base64"
 	"strings"
 
-	"github.com/dysodeng/app/internal/pkg"
+	"github.com/dysodeng/app/internal/pkg/helper"
+
 	"github.com/dysodeng/app/internal/pkg/crypto/aes"
 )
 
@@ -13,8 +14,8 @@ import (
 type Crypto string
 
 func (c Crypto) Value() (driver.Value, error) {
-	key := pkg.RandomStringBytesMask(16)
-	iv := pkg.RandomStringBytesMask(16)
+	key := helper.RandomStringBytesMask(16)
+	iv := helper.RandomStringBytesMask(16)
 	crypto, _ := aes.Encrypt([]byte(c), []byte(key), []byte(iv))
 	return base64.StdEncoding.EncodeToString([]byte(base64.StdEncoding.EncodeToString(crypto) + "." + base64.StdEncoding.EncodeToString([]byte(key+"&"+iv)))), nil
 }

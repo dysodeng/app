@@ -8,12 +8,12 @@ import (
 type Env string
 
 func (e Env) Valid() bool {
-	return e == Dev || e == Test || e == Release
+	return e == Dev || e == Test || e == Prod
 }
 
 const (
-	// Release 生产环境
-	Release Env = "release"
+	// Prod 生产环境
+	Prod Env = "prod"
 	// Dev 开发环境
 	Dev Env = "dev"
 	// Test 测试环境

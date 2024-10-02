@@ -10,9 +10,9 @@ import (
 	"os"
 	"sync"
 
-	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/pkg"
+	"github.com/dysodeng/app/internal/pkg/helper"
 
+	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/filesystem/adapter"
 
 	"github.com/pkg/errors"
@@ -51,7 +51,7 @@ type Info struct {
 
 // NewFilesystem 创建Filesystem
 func NewFilesystem(userType string, userId uint64) (*Filesystem, error) {
-	if !pkg.Contain(userType, []string{"user", "ams", "anonymous"}) {
+	if !helper.Contain(userType, []string{"user", "ams", "anonymous"}) {
 		return nil, errors.New("用户类型错误")
 	}
 

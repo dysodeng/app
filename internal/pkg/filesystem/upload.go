@@ -16,8 +16,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/helper"
+
 	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/pkg"
 	"github.com/dysodeng/app/internal/pkg/api"
 
 	"github.com/dysodeng/filesystem/adapter"
@@ -115,7 +116,7 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	sha1String := hex.EncodeToString(fileSha1.Sum(nil))
 
 	savePath := time.Now().Format(time.DateOnly) + "/"
-	filePath := userType + pkg.CreateOrderNo()
+	filePath := userType + helper.CreateOrderNo()
 
 	dstFile := rootPath + savePath + filePath //原文件
 	if ext != "" {
@@ -229,7 +230,7 @@ func (uploader *Uploader) EditorUpload(userType string, userId uint64, fileBytes
 	sha1String := hex.EncodeToString(fileSha1.Sum(nil))
 
 	savePath := time.Now().Format(time.DateOnly) + "/"
-	filePath := userType + pkg.CreateOrderNo()
+	filePath := userType + helper.CreateOrderNo()
 
 	dstFile := rootPath + savePath + filePath
 	if ext != "" {

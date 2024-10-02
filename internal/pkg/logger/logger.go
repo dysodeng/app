@@ -1,72 +1,80 @@
 package logger
 
 import (
-	"io"
-	"os"
-	"time"
+	"context"
 
-	"github.com/dysodeng/app/internal/config"
-
-	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
 
-const logFileExt = ".log"
+type logger struct {
+	_logger *zap.Logger
+}
 
-var logger *zap.Logger
-var sugarLogger *zap.SugaredLogger
+type Field struct {
+	Key   string
+	Value interface{}
+}
+
+var _logger *logger
 
 func init() {
-	zapEncoderConfig := zapcore.EncoderConfig{
-		MessageKey:   "msg",                       // 结构化（json）输出：msg的key
-		LevelKey:     "level",                     // 结构化（json）输出：日志级别的key（INFO，WARN，ERROR等）
-		TimeKey:      "time",                      // 结构化（json）输出：时间的key（INFO，WARN，ERROR等）
-		CallerKey:    "file",                      // 结构化（json）输出：打印日志的文件对应的Key
-		EncodeLevel:  zapcore.CapitalLevelEncoder, // 将日志级别转换成大写（INFO，WARN，ERROR等）
-		EncodeCaller: zapcore.ShortCallerEncoder,  // 采用完整文件路径编码输出（/path/test/main.go:14 ）
-		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) { // 输出的时间格式
-			enc.AppendString(t.Format("2006-01-02 15:04:05"))
-		},
-		EncodeDuration: func(d time.Duration, enc zapcore.PrimitiveArrayEncoder) {
-			enc.AppendInt64(int64(d) / 1000000)
-		},
+	newZapLogger()
+	_logger = &logger{_logger: _zapLogger}
+}
+
+func (l *logger) log(ctx context.Context, level zapcore.Level, message string, fields ...Field) {
+	fields = append(
+		fields,
+		l.trace(ctx)...,
+	)
+
+	zipFields := make([]zap.Field, 0, len(fields))
+	for _, field := range fields {
+		zipFields = append(zipFields, zap.Any(field.Key, field.Value))
 	}
 
-	writer, err := logWriter()
-	if err != nil {
-		panic(err)
+	check := l._logger.Check(level, message)
+	check.Write(zipFields...)
+}
+
+func (l *logger) trace(ctx context.Context) []Field {
+	var fields []Field
+	if ctx.Value("traceId") != nil {
+		fields = append(fields, Field{Key: "traceId", Value: ctx.Value("traceId")})
 	}
-
-	// 实现多个输出
-	core := zapcore.NewTee(
-		zapcore.NewCore(
-			zapcore.NewJSONEncoder(zapEncoderConfig),
-			zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(writer)),
-			zap.LevelEnablerFunc(func(lvl zapcore.Level) bool {
-				return lvl >= zapcore.InfoLevel
-			}),
-		),
-	)
-	logger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.WarnLevel))
-	sugarLogger = logger.Sugar()
+	if ctx.Value("spanId") != nil {
+		fields = append(fields, Field{Key: "spanId", Value: ctx.Value("spanId")})
+	}
+	if ctx.Value("spanName") != nil {
+		fields = append(fields, Field{Key: "spanName", Value: ctx.Value("spanName")})
+	}
+	if ctx.Value("parentSpanId") != nil {
+		fields = append(fields, Field{Key: "parentSpanId", Value: ctx.Value("parentSpanId")})
+	}
+	return fields
 }
 
-func logWriter() (io.Writer, error) {
-	filename := config.LogPath + "/" + config.App.Name
-	return rotateLogs.New(
-		filename+".%Y-%m-%d"+logFileExt,
-		rotateLogs.WithLinkName(filename+logFileExt),
-		rotateLogs.WithMaxAge(time.Hour*24*30),    // 保存30天
-		rotateLogs.WithRotationTime(time.Hour*24), // 切割频率 24小时
-	)
+func Debug(ctx context.Context, message string, fields ...Field) {
+	_logger.log(ctx, zapcore.DebugLevel, message, fields...)
 }
 
-// Logger 获取结构化日志实例(性能高)
-func Logger() *zap.Logger {
-	return logger
+func Info(ctx context.Context, message string, fields ...Field) {
+	_logger.log(ctx, zapcore.InfoLevel, message, fields...)
 }
 
-func SugarLogger() *zap.SugaredLogger {
-	return sugarLogger
+func Warn(ctx context.Context, message string, fields ...Field) {
+	_logger.log(ctx, zapcore.WarnLevel, message, fields...)
+}
+
+func Error(ctx context.Context, message string, fields ...Field) {
+	_logger.log(ctx, zapcore.ErrorLevel, message, fields...)
+}
+
+func Fatal(ctx context.Context, message string, fields ...Field) {
+	_logger.log(ctx, zapcore.FatalLevel, message, fields...)
+}
+
+func Panic(ctx context.Context, message string, fields ...Field) {
+	_logger.log(ctx, zapcore.PanicLevel, message, fields...)
 }

@@ -20,7 +20,7 @@ import (
 
 // ServiceProvider 服务容器初始化
 func ServiceProvider() {
-	if config.App.Env != config.Release {
+	if config.App.Env != config.Prod {
 		di.SetTracer(&di.StdTracer{})
 	}
 

@@ -27,7 +27,7 @@ func NewServer() server.Interface {
 		gin.SetMode(gin.DebugMode)
 	case config.Test:
 		gin.SetMode(gin.TestMode)
-	case config.Release:
+	case config.Prod:
 		gin.SetMode(gin.ReleaseMode)
 	}
 

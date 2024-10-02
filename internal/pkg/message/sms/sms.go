@@ -6,8 +6,9 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/helper"
+
 	"github.com/dysodeng/app/internal/model/common"
-	"github.com/dysodeng/app/internal/pkg"
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/message"
@@ -37,7 +38,7 @@ func SendSmsCode(phoneNumber, template string) error {
 	templateId := templateConfig.TemplateId
 	templateParam := make(map[string]string)
 
-	templateParam["code"] = pkg.GenValidateCode(6) // 验证码
+	templateParam["code"] = helper.GenValidateCode(6) // 验证码
 
 	// 验证码缓存
 	key := redis.Key("sms_code_" + template + ":" + phoneNumber)

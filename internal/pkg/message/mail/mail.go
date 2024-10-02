@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dysodeng/app/internal/pkg"
+	"github.com/dysodeng/app/internal/pkg/helper"
+
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/message"
@@ -25,7 +26,7 @@ func SendMailCode(email, template string) error {
 
 	var expire int64 = 10
 
-	templateParam["code"] = pkg.GenValidateCode(6) // 验证码
+	templateParam["code"] = helper.GenValidateCode(6) // 验证码
 	templateParam["time"] = strconv.FormatInt(expire, 10)
 
 	// 验证码缓存

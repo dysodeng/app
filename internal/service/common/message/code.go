@@ -100,7 +100,7 @@ func (ms CodeMessageService) VerifyValidCode(
 	code string,
 ) service.Error {
 	// 非生产环境下可以使用万能验证码
-	if config.App.Env != config.Release {
+	if config.App.Env != config.Prod {
 		if code == "8848" {
 			return service.Error{Code: api.CodeOk}
 		}
