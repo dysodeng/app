@@ -39,7 +39,7 @@ func (app *App) Run() {
 	app.start()
 
 	// 监听退出信号
-	app.keep()
+	app.listenForShutdown()
 }
 
 func (app *App) config() {
@@ -82,7 +82,7 @@ func (app *App) registerServer(servers ...server.Interface) {
 	app.serverList = append(app.serverList, servers...)
 }
 
-func (app *App) keep() {
+func (app *App) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
