@@ -25,6 +25,11 @@ func Router() *gin.Engine {
 			go func() {
 				traceCtx := trace.New().NewSpan(ctx, "hello")
 				logger.Info(traceCtx, "hello world")
+
+				go func() {
+					childTraceCtx := trace.New().NewSpan(traceCtx, "child")
+					logger.Info(childTraceCtx, "hello child")
+				}()
 			}()
 			ctx.JSON(http.StatusOK, api.Success(ctx, "hello world"))
 		})
