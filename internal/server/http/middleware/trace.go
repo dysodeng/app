@@ -18,7 +18,7 @@ func StartTrace(ctx *gin.Context) {
 	ctx.Set("traceId", traceId)
 	ctx.Set("spanId", spanId)
 	ctx.Set("parentSpanId", parentSpanId)
-	ctx.Set("spanName", "root")
+	ctx.Set("spanName", "http.root")
 
 	ctx.Next()
 }
