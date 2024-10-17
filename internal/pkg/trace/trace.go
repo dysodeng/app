@@ -14,7 +14,7 @@ type Interface interface {
 	SpanId(ctx context.Context) string
 	ParentSpanId(ctx context.Context) string
 	SpanName(ctx context.Context) string
-	NewSpan(ctx context.Context, span string) context.Context
+	NewSpan(ctx context.Context, spanName string) context.Context
 }
 
 type trace struct{}
@@ -57,7 +57,7 @@ func (trace *trace) SpanName(ctx context.Context) string {
 	return spanName.(string)
 }
 
-func (trace *trace) NewSpan(ctx context.Context, name string) context.Context {
+func (trace *trace) NewSpan(ctx context.Context, spanName string) context.Context {
 	traceId := trace.TraceId(ctx)
 	parentSpanId := trace.SpanId(ctx)
 	spanId := GenerateSpanID()
@@ -67,7 +67,7 @@ func (trace *trace) NewSpan(ctx context.Context, name string) context.Context {
 	traceCtx := context.WithValue(ctx, "traceId", traceId)
 	traceCtx = context.WithValue(traceCtx, "spanId", spanId)
 	traceCtx = context.WithValue(traceCtx, "parentSpanId", parentSpanId)
-	traceCtx = context.WithValue(traceCtx, "spanName", name)
+	traceCtx = context.WithValue(traceCtx, "spanName", spanName)
 	return traceCtx
 }
 
