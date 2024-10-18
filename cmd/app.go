@@ -5,19 +5,18 @@ import (
 	"os"
 	"os/signal"
 
-	"github.com/dysodeng/app/internal/service/provider"
-
-	"github.com/dysodeng/app/migrations/migration"
-
+	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/redis"
+	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/app/internal/server/cron"
+	"github.com/dysodeng/app/internal/server/grpc"
 	"github.com/dysodeng/app/internal/server/health"
 	"github.com/dysodeng/app/internal/server/http"
 	"github.com/dysodeng/app/internal/server/task"
-
-	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/server"
+	"github.com/dysodeng/app/internal/server/websocket"
+	"github.com/dysodeng/app/internal/service/provider"
+	"github.com/dysodeng/app/migrations/migration"
 )
 
 type App struct {
@@ -68,7 +67,9 @@ func (app *App) start() {
 	app.registerServer(
 		task.NewServer(),
 		cron.NewServer(),
+		grpc.NewGrpcServer(),
 		http.NewServer(),
+		websocket.NewServer(),
 		health.NewServer(),
 	)
 

@@ -18,14 +18,23 @@ type appConfig struct {
 
 type serverConfig struct {
 	Http struct {
-		Port string `mapstructure:"port"`
+		Enabled bool   `mapstructure:"enabled"`
+		Port    string `mapstructure:"port"`
 	} `mapstructure:"http"`
+	Grpc struct {
+		Enabled bool   `mapstructure:"enabled"`
+		Port    string `mapstructure:"port"`
+	} `mapstructure:"grpc"`
 	Task struct {
 		Enabled bool `mapstructure:"enabled"`
 	} `mapstructure:"task"`
 	Cron struct {
 		Enabled bool `mapstructure:"enabled"`
 	} `mapstructure:"cron"`
+	Websocket struct {
+		Enabled bool   `mapstructure:"enabled"`
+		Port    string `mapstructure:"port"`
+	} `mapstructure:"websocket"`
 	Health struct {
 		Enabled bool   `mapstructure:"enabled"`
 		Port    string `mapstructure:"port"`
@@ -57,6 +66,7 @@ func appConfigLoad() {
 
 	server := v.Sub("server")
 	_ = server.BindEnv("http.port", "SERVER_HTTP_PORT")
+	_ = server.BindEnv("grpc.port", "SERVER_GRPC_PORT")
 	_ = server.BindEnv("health.port", "SERVER_HEALTH_CHECK_PORT")
 	if err := server.Unmarshal(&Server); err != nil {
 		panic(err)

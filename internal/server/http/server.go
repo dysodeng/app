@@ -10,9 +10,10 @@ import (
 	"os"
 	"time"
 
+	"github.com/dysodeng/app/internal/api/http/router"
+
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/server"
-	"github.com/dysodeng/app/internal/server/http/router"
 	"github.com/gin-gonic/gin"
 )
 
@@ -45,6 +46,9 @@ func NewServer() server.Interface {
 }
 
 func (httpServer *httpServer) Serve() {
+	if !config.Server.Http.Enabled {
+		return
+	}
 	log.Println("start http server...")
 
 	defer func() {
@@ -67,6 +71,9 @@ func (httpServer *httpServer) Serve() {
 }
 
 func (httpServer *httpServer) Shutdown() {
+	if !config.Server.Http.Enabled {
+		return
+	}
 	log.Println("shutdown http server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

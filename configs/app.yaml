@@ -9,7 +9,14 @@ app:
 # 服务配置
 server:
   http:
+    enabled: true
     port: 8080
+  grpc:
+    enabled: true
+    port: 3000
+  websocket:
+    enabled: true
+    port: 4000
   task:
     enabled: true
   cron:

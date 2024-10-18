@@ -1,14 +1,13 @@
 package router
 
 import (
-	"net/http"
-
+	"github.com/dysodeng/app/internal/api/http/middleware"
+	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/trace"
-
-	"github.com/dysodeng/app/internal/server/http/middleware"
 	"github.com/gin-gonic/gin"
+	"net/http"
 )
 
 func Router() *gin.Engine {
@@ -18,7 +17,14 @@ func Router() *gin.Engine {
 	router.Use(middleware.CrossDomain, middleware.StartTrace)
 
 	// api路由
-	apiRouter := router.Group("/api/v1")
+	baseApiRouter := router.Group("/api/v1")
+
+	// debug路由
+	if config.App.Env != config.Prod {
+		debugRouter(baseApiRouter)
+	}
+
+	apiRouter := baseApiRouter.Group("")
 	{
 		apiRouter.POST("test", func(ctx *gin.Context) {
 			logger.Debug(ctx, "test")
