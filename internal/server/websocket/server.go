@@ -13,6 +13,7 @@ import (
 	"github.com/pkg/errors"
 )
 
+// websocketServer websocket服务
 type websocketServer struct {
 	wss *http.Server
 }

@@ -17,6 +17,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// httpServer http服务
 type httpServer struct {
 	server *http.Server
 }

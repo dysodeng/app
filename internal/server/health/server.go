@@ -11,7 +11,7 @@ import (
 	"github.com/dysodeng/app/internal/server"
 )
 
-// Server 容器环境健康检查服务
+// healthServer 容器环境健康检查服务
 type healthServer struct {
 	listener net.Listener
 }
