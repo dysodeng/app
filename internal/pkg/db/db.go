@@ -2,15 +2,11 @@ package db
 
 import (
 	"fmt"
-	"io"
-	"log"
-	"os"
 	"time"
 
 	"github.com/dysodeng/app/internal/config"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
-	"gorm.io/gorm/logger"
 	"gorm.io/gorm/schema"
 )
 
@@ -41,19 +37,6 @@ func init() {
 		panic("database connection not found")
 	}
 
-	// db日志
-	logFilename := config.LogPath + "/db.log"
-	dbLogFile, _ := os.OpenFile(logFilename, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
-
-	dbLogger := logger.New(
-		log.New(io.MultiWriter(os.Stdout, dbLogFile), "", log.LstdFlags),
-		logger.Config{
-			SlowThreshold: 200 * time.Millisecond, // 慢查询时间
-			LogLevel:      logger.Warn,
-			Colorful:      false,
-		},
-	)
-
 	var dbConnector gorm.Dialector
 	switch driver {
 	case "mysql":
@@ -67,7 +50,7 @@ func init() {
 		NamingStrategy: schema.NamingStrategy{
 			SingularTable: true, // 禁止表名复数
 		},
-		Logger: dbLogger, // db日志
+		Logger: NewGormLogger(), // db日志
 	})
 	if err != nil {
 		panic("failed to connect database " + err.Error())

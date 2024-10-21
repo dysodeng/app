@@ -10,5 +10,6 @@ func debugRouter(router *gin.RouterGroup) {
 	debugApi := router.Group("debug")
 	{
 		debugApi.POST("token", debug.Token)
+		debugApi.POST("gorm_logger", debug.GormLogger)
 	}
 }
