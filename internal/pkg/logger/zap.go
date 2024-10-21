@@ -33,7 +33,7 @@ func newZapLogger() {
 				encoder.AppendString(caller.TrimmedPath())
 				return
 			}
-			encoder.AppendString(fmt.Sprintf("%s:%d", trimmedPath(file), line))
+			encoder.AppendString(fmt.Sprintf("%s:%d", file, line))
 		},
 		EncodeTime: func(t time.Time, enc zapcore.PrimitiveArrayEncoder) { // 输出的时间格式
 			enc.AppendString(t.Format(time.DateTime))

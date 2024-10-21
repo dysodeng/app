@@ -3,7 +3,10 @@ package db
 import (
 	"context"
 	"fmt"
+	"runtime"
 	"time"
+
+	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/pkg/logger"
 	gormLogger "gorm.io/gorm/logger"
@@ -77,31 +80,71 @@ func (l *GormLogger) Error(ctx context.Context, msg string, data ...interface{})
 func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
 	duration := time.Since(begin).Milliseconds()
 	sql, rows := fc()
+	_, file, line, _ := runtime.Caller(3)
+
+	traceFields := l.trace(ctx)
+	dbLogger := logger.WithOptions(zap.WithCaller(false))
+
 	if err != nil {
 		// 错误日志
-		logger.Error(
-			ctx,
+		fields := []zap.Field{
+			zap.Any("error", err),
+			zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+			zap.Any("rows", rows),
+			zap.Any("duration", fmt.Sprintf("%dms", duration)),
+		}
+		for _, field := range traceFields {
+			fields = append(fields, field)
+		}
+		dbLogger.Error(
 			fmt.Sprintf("SQL ERROR: sql( %s )", sql),
-			logger.Field{Key: "error", Value: err},
-			logger.Field{Key: "rows", Value: rows},
-			logger.Field{Key: "duration", Value: fmt.Sprintf("%dms", duration)},
+			fields...,
 		)
 	} else {
 		// 慢查询日志
 		if duration > l.SlowThreshold.Milliseconds() {
-			logger.Warn(
-				ctx,
+			fields := []zap.Field{
+				zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+				zap.Any("rows", rows),
+				zap.Any("duration", fmt.Sprintf("%dms", duration)),
+			}
+			for _, field := range traceFields {
+				fields = append(fields, field)
+			}
+			dbLogger.Warn(
 				fmt.Sprintf("SQL SLOW: sql( %s )", sql),
-				logger.Field{Key: "rows", Value: rows},
-				logger.Field{Key: "duration", Value: fmt.Sprintf("%dms", duration)},
+				fields...,
 			)
 		} else {
-			logger.Debug(
-				ctx,
+			fields := []zap.Field{
+				zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+				zap.Any("rows", rows),
+				zap.Any("duration", fmt.Sprintf("%dms", duration)),
+			}
+			for _, field := range traceFields {
+				fields = append(fields, field)
+			}
+			dbLogger.Warn(
 				fmt.Sprintf("SQL DEBUG: sql( %s )", sql),
-				logger.Field{Key: "rows", Value: rows},
-				logger.Field{Key: "duration", Value: fmt.Sprintf("%dms", duration)},
+				fields...,
 			)
 		}
 	}
+}
+
+func (l *GormLogger) trace(ctx context.Context) []zap.Field {
+	var fields []zap.Field
+	if ctx.Value("traceId") != nil {
+		fields = append(fields, zap.Any("traceId", ctx.Value("traceId")))
+	}
+	if ctx.Value("spanId") != nil {
+		fields = append(fields, zap.Any("spanId", ctx.Value("spanId")))
+	}
+	if ctx.Value("spanName") != nil {
+		fields = append(fields, zap.Any("spanName", ctx.Value("spanName")))
+	}
+	if ctx.Value("parentSpanId") != nil {
+		fields = append(fields, zap.Any("parentSpanId", ctx.Value("parentSpanId")))
+	}
+	return fields
 }

@@ -78,3 +78,7 @@ func Fatal(ctx context.Context, message string, fields ...Field) {
 func Panic(ctx context.Context, message string, fields ...Field) {
 	_logger.log(ctx, zapcore.PanicLevel, message, fields...)
 }
+
+func WithOptions(opts ...zap.Option) *zap.Logger {
+	return _logger._logger.WithOptions(opts...)
+}
