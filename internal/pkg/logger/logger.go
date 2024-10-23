@@ -16,6 +16,11 @@ type Field struct {
 	Value interface{}
 }
 
+// ErrorField 错误堆栈
+func ErrorField(err error) Field {
+	return Field{Key: "error_field", Value: err}
+}
+
 var _logger *logger
 
 func init() {
@@ -31,7 +36,11 @@ func (l *logger) log(ctx context.Context, level zapcore.Level, message string, f
 
 	zipFields := make([]zap.Field, 0, len(fields))
 	for _, field := range fields {
-		zipFields = append(zipFields, zap.Any(field.Key, field.Value))
+		if field.Key == "error_field" {
+			zipFields = append(zipFields, zap.Error(field.Value.(error)))
+		} else {
+			zipFields = append(zipFields, zap.Any(field.Key, field.Value))
+		}
 	}
 
 	check := l._logger.Check(level, message)

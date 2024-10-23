@@ -3,6 +3,8 @@ package message
 import (
 	"context"
 
+	messageModel "github.com/dysodeng/app/internal/dal/model/common"
+
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/message/mail"
@@ -11,8 +13,6 @@ import (
 	"github.com/dysodeng/app/internal/service"
 
 	"time"
-
-	messageModel "github.com/dysodeng/app/internal/model/common"
 
 	"github.com/pkg/errors"
 )

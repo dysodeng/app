@@ -1,7 +1,7 @@
 package debug
 
 import (
-	"github.com/dysodeng/app/internal/model/common"
+	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/api/token"
 	"github.com/dysodeng/app/internal/pkg/db"

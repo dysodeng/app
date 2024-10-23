@@ -1,6 +1,8 @@
 package common
 
-import "github.com/dysodeng/app/internal/pkg/model"
+import (
+	"github.com/dysodeng/app/internal/pkg/model"
+)
 
 // CascadeArea 级联地区
 type CascadeArea struct {

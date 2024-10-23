@@ -1,7 +1,7 @@
 package link
 
 import (
-	"github.com/dysodeng/app/internal/model/link"
+	"github.com/dysodeng/app/internal/dal/model/link"
 	"github.com/dysodeng/app/internal/service"
 )
 

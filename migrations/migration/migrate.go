@@ -9,6 +9,7 @@ import (
 var migration []*gormigrate.Migration
 
 func margeMigration() {
+	migration = append(migration, commonMigration...)
 	migration = append(migration, userMigration...)
 }
 

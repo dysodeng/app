@@ -6,14 +6,14 @@ import (
 	"strconv"
 	"time"
 
+	messageModel "github.com/dysodeng/app/internal/dal/model/common"
+
 	"github.com/dysodeng/app/internal/pkg/helper"
 
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/message"
 	"github.com/dysodeng/app/internal/pkg/redis"
-
-	messageModel "github.com/dysodeng/app/internal/model/common"
 
 	"github.com/pkg/errors"
 )

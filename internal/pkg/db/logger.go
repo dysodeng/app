@@ -126,7 +126,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 			for _, field := range traceFields {
 				fields = append(fields, field)
 			}
-			l._zapLogger.Warn(
+			l._zapLogger.Debug(
 				fmt.Sprintf("SQL DEBUG: sql( %s )", sql),
 				fields...,
 			)

@@ -1,13 +1,14 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/dysodeng/app/internal/api/http/middleware"
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/trace"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
 func Router() *gin.Engine {
@@ -23,6 +24,9 @@ func Router() *gin.Engine {
 	if config.App.Env != config.Prod {
 		debugRouter(baseApiRouter)
 	}
+
+	// 公共组件路由
+	commonRouter(baseApiRouter)
 
 	apiRouter := baseApiRouter.Group("")
 	{

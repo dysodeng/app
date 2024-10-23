@@ -1,7 +1,7 @@
 package area
 
 import (
-	"github.com/dysodeng/app/internal/model/common"
+	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/service"
 )
 
