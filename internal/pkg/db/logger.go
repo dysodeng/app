@@ -16,12 +16,14 @@ import (
 type GormLogger struct {
 	SlowThreshold time.Duration
 	LogLevel      gormLogger.LogLevel
+	_zapLogger    *zap.Logger
 }
 
 func NewGormLogger() gormLogger.Interface {
 	return &GormLogger{
 		SlowThreshold: 300 * time.Millisecond,
 		LogLevel:      gormLogger.Info,
+		_zapLogger:    logger.WithOptions(zap.WithCaller(false)),
 	}
 }
 
@@ -29,6 +31,7 @@ func (l *GormLogger) LogMode(level gormLogger.LogLevel) gormLogger.Interface {
 	return &GormLogger{
 		SlowThreshold: 300 * time.Millisecond,
 		LogLevel:      level,
+		_zapLogger:    logger.WithOptions(zap.WithCaller(false)),
 	}
 }
 
@@ -83,7 +86,6 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 	_, file, line, _ := runtime.Caller(3)
 
 	traceFields := l.trace(ctx)
-	dbLogger := logger.WithOptions(zap.WithCaller(false))
 
 	if err != nil {
 		// 错误日志
@@ -96,7 +98,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		for _, field := range traceFields {
 			fields = append(fields, field)
 		}
-		dbLogger.Error(
+		l._zapLogger.Error(
 			fmt.Sprintf("SQL ERROR: sql( %s )", sql),
 			fields...,
 		)
@@ -111,7 +113,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 			for _, field := range traceFields {
 				fields = append(fields, field)
 			}
-			dbLogger.Warn(
+			l._zapLogger.Warn(
 				fmt.Sprintf("SQL SLOW: sql( %s )", sql),
 				fields...,
 			)
@@ -124,7 +126,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 			for _, field := range traceFields {
 				fields = append(fields, field)
 			}
-			dbLogger.Warn(
+			l._zapLogger.Warn(
 				fmt.Sprintf("SQL DEBUG: sql( %s )", sql),
 				fields...,
 			)
