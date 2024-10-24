@@ -3,11 +3,12 @@ package common
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/pkg/sms"
+	alicloud2 "github.com/dysodeng/app/internal/pkg/sms/alicloud"
+
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/logger"
-	"github.com/dysodeng/app/internal/pkg/message/sms"
-	"github.com/dysodeng/app/internal/pkg/message/sms/alicloud"
 	"github.com/dysodeng/app/internal/pkg/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
@@ -107,15 +108,15 @@ func (ss *SmsDomainService) SendSms(telephone, template string, templateParams m
 	var sender sms.Sender
 	switch config.SmsType {
 	case "ali_cloud":
-		sender = alicloud.NewAliCloudSmsSender(
+		sender = alicloud2.NewAliCloudSmsSender(
 			telephone,
 			smsTemplate.TemplateId,
-			alicloud.WithConfig(
+			alicloud2.WithConfig(
 				config.AppKey,
 				config.SecretKey,
 				config.FreeSignName,
 			),
-			alicloud.WithParams(templateParams),
+			alicloud2.WithParams(templateParams),
 		)
 	default:
 		return errors.New("暂不支持该短信类型")

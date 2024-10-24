@@ -8,7 +8,6 @@ import (
 
 	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/helper"
-	"github.com/dysodeng/app/internal/pkg/message"
 	"github.com/dysodeng/app/internal/pkg/redis"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
@@ -69,7 +68,7 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 
 	codeCacheKey := redis.Key(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
 
-	smsCode := message.Code{
+	smsCode := commonDo.ValidCode{
 		Code:   templateParam["code"],
 		Time:   time.Now().Unix(),
 		Expire: 10,

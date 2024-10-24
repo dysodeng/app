@@ -15,7 +15,6 @@ import (
 	"github.com/dysodeng/app/internal/server/http"
 	"github.com/dysodeng/app/internal/server/task"
 	"github.com/dysodeng/app/internal/server/websocket"
-	"github.com/dysodeng/app/internal/service/provider"
 	"github.com/dysodeng/app/migrations/migration"
 )
 
@@ -55,9 +54,6 @@ func (app *App) initialize() {
 			panic(err)
 		}
 	}
-
-	// service container
-	provider.ServiceProvider()
 }
 
 func (app *App) start() {

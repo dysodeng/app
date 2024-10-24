@@ -3,6 +3,8 @@ package common
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/pkg/validator"
+
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/trace"
@@ -29,34 +31,42 @@ func NewValidCodeAppService(ctx context.Context) *ValidCodeAppService {
 }
 
 func (vc *ValidCodeAppService) SendValidCode(sender, bizType, account string) error {
-	if !helper.Contain(sender, []string{"sms", "mail"}) {
-		logger.Error(vc.ctx, "消息发送类型错误", logger.Field{Key: "sender", Value: sender})
+	if !helper.Contain(sender, []string{"sms", "email"}) {
 		return errors.New("消息发送类型错误")
 	}
 
 	if bizType == "" {
 		return errors.New("业务类型不能为空")
 	}
-	if account == "" {
-		if sender == "sms" {
+	if sender == "sms" {
+		if account == "" {
 			return errors.New("手机号不能为空")
 		} else {
+			if !validator.IsMobile(account) {
+				return errors.New("手机号格式错误")
+			}
+		}
+	} else {
+		if account == "" {
 			return errors.New("邮箱不能为空")
+		} else {
+			if !validator.IsEmail(account) {
+				return errors.New("邮箱格式错误")
+			}
 		}
 	}
 
 	err := vc.validCodeDomainService.SendValidCode(commonDo.SenderType(sender), bizType, account)
 	if err != nil {
 		logger.Error(vc.ctx, "验证码发送失败", logger.ErrorField(err))
-		return errors.Wrap(err, "验证码发送失败")
+		return errors.New("验证码发送失败")
 	}
 
 	return nil
 }
 
 func (vc *ValidCodeAppService) VerifyValidCode(sender, bizType, account, code string) error {
-	if !helper.Contain(sender, []string{"sms", "mail"}) {
-		logger.Error(vc.ctx, "消息发送类型错误", logger.Field{Key: "sender", Value: sender})
+	if !helper.Contain(sender, []string{"sms", "email"}) {
 		return errors.New("消息发送类型错误")
 	}
 
