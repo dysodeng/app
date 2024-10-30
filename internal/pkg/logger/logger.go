@@ -61,6 +61,9 @@ func (l *logger) trace(ctx context.Context) []Field {
 	if ctx.Value("parentSpanId") != nil {
 		fields = append(fields, Field{Key: "parentSpanId", Value: ctx.Value("parentSpanId")})
 	}
+	if ctx.Value("parentSpanName") != nil {
+		fields = append(fields, Field{Key: "parentSpanName", Value: ctx.Value("parentSpanName")})
+	}
 	return fields
 }
 

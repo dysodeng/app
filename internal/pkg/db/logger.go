@@ -155,5 +155,8 @@ func (l *GormLogger) trace(ctx context.Context) []zap.Field {
 	if ctx.Value("parentSpanId") != nil {
 		fields = append(fields, zap.Any("parentSpanId", ctx.Value("parentSpanId")))
 	}
+	if ctx.Value("parentSpanName") != nil {
+		fields = append(fields, zap.Any("parentSpanName", ctx.Value("parentSpanName")))
+	}
 	return fields
 }

@@ -60,6 +60,7 @@ func (trace *trace) SpanName(ctx context.Context) string {
 func (trace *trace) NewSpan(ctx context.Context, spanName string) context.Context {
 	traceId := trace.TraceId(ctx)
 	parentSpanId := trace.SpanId(ctx)
+	parentSpanName := trace.SpanName(ctx)
 	spanId := GenerateSpanID()
 	if traceId == "" {
 		traceId = spanId
@@ -68,6 +69,7 @@ func (trace *trace) NewSpan(ctx context.Context, spanName string) context.Contex
 	traceCtx = context.WithValue(traceCtx, "spanId", spanId)
 	traceCtx = context.WithValue(traceCtx, "parentSpanId", parentSpanId)
 	traceCtx = context.WithValue(traceCtx, "spanName", spanName)
+	traceCtx = context.WithValue(traceCtx, "parentSpanName", parentSpanName)
 	return traceCtx
 }
 
