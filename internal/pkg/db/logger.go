@@ -104,7 +104,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 			fields = append(fields, field)
 		}
 		l._zapLogger.Error(
-			fmt.Sprintf("SQL ERROR: sql( %s )", sql),
+			fmt.Sprintf("SQL ERROR: %s", sql),
 			fields...,
 		)
 	} else {
@@ -119,7 +119,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 				fields = append(fields, field)
 			}
 			l._zapLogger.Warn(
-				fmt.Sprintf("SQL SLOW: sql( %s )", sql),
+				fmt.Sprintf("SQL SLOW: %s", sql),
 				fields...,
 			)
 		} else {
@@ -133,7 +133,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 					fields = append(fields, field)
 				}
 				l._zapLogger.Debug(
-					fmt.Sprintf("SQL DEBUG: sql( %s )", sql),
+					fmt.Sprintf("SQL DEBUG: %s", sql),
 					fields...,
 				)
 			}
