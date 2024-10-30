@@ -12,6 +12,8 @@ import (
 	gormLogger "gorm.io/gorm/logger"
 )
 
+const defaultSlowThresholdTime = 300 * time.Millisecond
+
 // GormLogger gorm日志
 type GormLogger struct {
 	SlowThreshold time.Duration
@@ -21,15 +23,15 @@ type GormLogger struct {
 
 func NewGormLogger() gormLogger.Interface {
 	return &GormLogger{
-		SlowThreshold: 300 * time.Millisecond,
-		LogLevel:      gormLogger.Info,
+		SlowThreshold: defaultSlowThresholdTime,
+		LogLevel:      gormLogger.Warn,
 		_zapLogger:    logger.WithOptions(zap.WithCaller(false)),
 	}
 }
 
 func (l *GormLogger) LogMode(level gormLogger.LogLevel) gormLogger.Interface {
 	return &GormLogger{
-		SlowThreshold: 300 * time.Millisecond,
+		SlowThreshold: defaultSlowThresholdTime,
 		LogLevel:      level,
 		_zapLogger:    logger.WithOptions(zap.WithCaller(false)),
 	}
@@ -81,6 +83,9 @@ func (l *GormLogger) Error(ctx context.Context, msg string, data ...interface{})
 }
 
 func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (string, int64), err error) {
+	if l.LogLevel <= gormLogger.Silent {
+		return
+	}
 	duration := time.Since(begin).Milliseconds()
 	sql, rows := fc()
 	_, file, line, _ := runtime.Caller(3)
@@ -118,18 +123,20 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 				fields...,
 			)
 		} else {
-			fields := []zap.Field{
-				zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
-				zap.Any("rows", rows),
-				zap.Any("duration", fmt.Sprintf("%dms", duration)),
+			if l.LogLevel == gormLogger.Info {
+				fields := []zap.Field{
+					zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+					zap.Any("rows", rows),
+					zap.Any("duration", fmt.Sprintf("%dms", duration)),
+				}
+				for _, field := range traceFields {
+					fields = append(fields, field)
+				}
+				l._zapLogger.Debug(
+					fmt.Sprintf("SQL DEBUG: sql( %s )", sql),
+					fields...,
+				)
 			}
-			for _, field := range traceFields {
-				fields = append(fields, field)
-			}
-			l._zapLogger.Debug(
-				fmt.Sprintf("SQL DEBUG: sql( %s )", sql),
-				fields...,
-			)
 		}
 	}
 }

@@ -18,6 +18,6 @@ func Token(ctx *gin.Context) {
 func GormLogger(ctx *gin.Context) {
 	var mailConfig common.MailConfig
 	db.DB().WithContext(ctx).Where("a=?", "b").First(&mailConfig)
-	db.DB().WithContext(ctx).First(&mailConfig)
+	db.DB().WithContext(ctx).Debug().First(&mailConfig)
 	ctx.JSON(200, api.Success(ctx, mailConfig))
 }
