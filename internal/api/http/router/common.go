@@ -13,5 +13,6 @@ func commonRouter(router *gin.RouterGroup) {
 		commonApi.POST("area/cascade", common.CascadeArea)
 		commonApi.POST("valid_code/send", common.SendValidCode)
 		commonApi.POST("valid_code/verify", common.VerifyValidCode)
+		commonApi.POST("qr_code", common.QrCode)
 	}
 }
