@@ -20,9 +20,6 @@ type taskServer struct {
 
 func NewServer() server.Interface {
 	ts := &taskServer{}
-	ts.register(
-		job.TaskTestTask{},
-	)
 	return ts
 }
 
@@ -43,6 +40,11 @@ func (server *taskServer) Serve() {
 		return
 	}
 	log.Println("start task server...")
+
+	server.register(
+		job.TaskTestTask{},
+	)
+
 	for _, jobItem := range server.jobs {
 		go func(jobItem job.Interface) {
 			consumer, err := mq.NewMessageQueueConsumer(jobItem.QueueKey())
