@@ -19,6 +19,15 @@ type websocketServer struct {
 }
 
 func NewServer() server.Interface {
+	return &websocketServer{}
+}
+
+func (server *websocketServer) Serve() {
+	if !config.Server.Websocket.Enabled {
+		return
+	}
+	log.Println("start websocket server...")
+
 	// websocket 客户端连接hub
 	ws.HubBus = ws.NewHub()
 	go ws.HubBus.Run()
@@ -32,20 +41,11 @@ func NewServer() server.Interface {
 		ws.Metrics(w)
 	})
 
-	return &websocketServer{
-		wss: &http.Server{
-			Addr:              ":" + config.Server.Websocket.Port,
-			Handler:           mux,
-			ReadHeaderTimeout: 3 * time.Second,
-		},
+	server.wss = &http.Server{
+		Addr:              ":" + config.Server.Websocket.Port,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
 	}
-}
-
-func (server *websocketServer) Serve() {
-	if !config.Server.Websocket.Enabled {
-		return
-	}
-	log.Println("start websocket server...")
 
 	go func() {
 		if err := server.wss.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
