@@ -23,7 +23,6 @@ func NewServer() server.Interface {
 	jobServer := &cronServer{
 		jobs: make(map[string]job.JobInterface),
 	}
-	jobServer.register()
 	return jobServer
 }
 
@@ -41,6 +40,8 @@ func (cronJob *cronServer) Serve() {
 		return
 	}
 	log.Println("start cron server...")
+
+	cronJob.register()
 
 	cronJob.schedule = cron.New(cron.WithLocation(time.Local))
 
