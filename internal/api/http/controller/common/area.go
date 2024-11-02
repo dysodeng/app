@@ -3,8 +3,9 @@ package common
 import (
 	"net/http"
 
+	"github.com/dysodeng/app/internal/service/reply/api"
+
 	commonRequest "github.com/dysodeng/app/internal/api/http/request/common"
-	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/service/app/common"
 	"github.com/gin-gonic/gin"
 )

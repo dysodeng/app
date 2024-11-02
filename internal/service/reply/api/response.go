@@ -1,13 +1,15 @@
 package api
 
-import "context"
+import (
+	"context"
+)
 
 // Response api 响应数据结构
-type Response struct {
+type Response[T any] struct {
 	// Code 错误码
 	Code Code `json:"code"`
 	// Data data payload
-	Data interface{} `json:"data,omitempty"`
+	Data T `json:"data,omitempty"`
 	// Message 错误信息
 	Message string `json:"message"`
 	// TraceId 追踪id
@@ -15,15 +17,14 @@ type Response struct {
 }
 
 // Record 分页列表记录结构
-type Record struct {
-	Record          interface{} `json:"record"`
-	Total           int64       `json:"total"`
-	CurrentPageSize int         `json:"current_page_size"`
+type Record[T any] struct {
+	Record T     `json:"record"`
+	Total  int64 `json:"total"`
 }
 
 // Success 正确响应
-func Success(ctx context.Context, result interface{}) Response {
-	return Response{
+func Success[T any](ctx context.Context, result T) Response[T] {
+	return Response[T]{
 		Code:    CodeOk,
 		Data:    result,
 		Message: "success",
@@ -32,8 +33,8 @@ func Success(ctx context.Context, result interface{}) Response {
 }
 
 // Fail 失败响应
-func Fail(ctx context.Context, error string, code Code) Response {
-	return Response{
+func Fail(ctx context.Context, error string, code Code) Response[any] {
+	return Response[any]{
 		Code:    code,
 		Data:    nil,
 		Message: error,

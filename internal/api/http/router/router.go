@@ -3,9 +3,10 @@ package router
 import (
 	"net/http"
 
+	"github.com/dysodeng/app/internal/service/reply/api"
+
 	"github.com/dysodeng/app/internal/api/http/middleware"
 	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/pkg/api"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/trace"
 	"github.com/gin-gonic/gin"

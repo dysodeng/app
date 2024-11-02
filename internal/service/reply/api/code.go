@@ -13,11 +13,9 @@ func (c Code) ToInt64() int64 {
 
 // 业务接口响应码
 const (
-	CodeOk              Code = 200 // 成功
-	CodeFail            Code = 0   // 业务错误
-	CodeAccountDisable  Code = 1   // 账号已被禁止
-	CodeLocationError   Code = 2   // 定位失败
-	CodeNotIdentityAuth Code = 3   // 未进行身份认证
+	CodeOk             Code = 200 // 成功
+	CodeFail           Code = 0   // 业务错误
+	CodeAccountDisable Code = 1   // 账号已被禁止
 )
 
 // 系统异常接口响应码

@@ -16,11 +16,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/service"
+
 	"github.com/dysodeng/app/internal/pkg/helper"
 
 	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/pkg/api"
-
 	"github.com/dysodeng/filesystem/adapter"
 
 	"github.com/pkg/errors"
@@ -75,7 +75,7 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	log.Printf("upload image: mime:%s ext:%s fType:%s, filename:%s", mime, ext, fType, filename)
 
 	if !ok || !IsExistsMimeAllow(fType, uploader.allow.AllowMimeType) {
-		return Info{}, api.EMFileTypeError
+		return Info{}, service.EMFileTypeError
 	}
 
 	extSlice := strings.Split(filename, ".")
@@ -90,7 +90,7 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	}
 
 	if size > uploader.allow.AllowCapacitySize {
-		return Info{}, api.EMFileSizeLimitError
+		return Info{}, service.EMFileSizeLimitError
 	}
 
 	// 如果是图片，获取图片尺寸
@@ -118,7 +118,7 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	savePath := time.Now().Format(time.DateOnly) + "/"
 	filePath := userType + helper.CreateOrderNo()
 
-	dstFile := rootPath + savePath + filePath //原文件
+	dstFile := rootPath + savePath + filePath // 原文件
 	if ext != "" {
 		dstFile += "." + ext
 	}
@@ -159,9 +159,9 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 
 	// 保存文件
 	// id, err := SaveFile(userType, userId, info)
-	//if err == nil {
+	// if err == nil {
 	//	info.Id = id
-	//}
+	// }
 
 	return info, nil
 }
@@ -179,7 +179,7 @@ func (uploader *Uploader) EditorUpload(userType string, userId uint64, fileBytes
 	switch userType {
 	case "user": // 终端用户
 		if userId <= 0 {
-			return Info{}, api.EMMissUserIdError
+			return Info{}, service.EMMissUserIdError
 		}
 		rootPath += fmt.Sprintf("user/%d/", userId)
 		break
@@ -201,7 +201,7 @@ func (uploader *Uploader) EditorUpload(userType string, userId uint64, fileBytes
 	log.Printf("upload image: mime:%s ext:%s fType:%s, filename:%s", mime, ext, fType, filename)
 
 	if !ok || !IsExistsMimeAllow(fType, uploader.allow.AllowMimeType) {
-		return Info{}, api.EMFileTypeError
+		return Info{}, service.EMFileTypeError
 	}
 
 	// 计算文件大小

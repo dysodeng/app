@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dysodeng/app/internal/pkg/api/token"
+	"github.com/dysodeng/app/internal/pkg/token"
+
 	"github.com/dysodeng/app/internal/pkg/helper"
 )
 

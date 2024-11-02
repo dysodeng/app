@@ -6,7 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/dysodeng/app/internal/pkg/api"
+	"github.com/dysodeng/app/internal/service"
+
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/redis"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
@@ -55,7 +56,7 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 	if client.Exists(context.Background(), limitKey).Val() > 0 {
 		limitTotal, _ = client.Get(context.Background(), limitKey).Int()
 		if limitTotal >= 5 {
-			return api.EMValidCodeLimitError
+			return service.EMValidCodeLimitError
 		}
 		ttl := client.TTL(context.Background(), limitKey).Val()
 		limitExpire = ttl.Seconds()
@@ -125,26 +126,26 @@ func (vc *ValidCodeDomainService) VerifyValidCode(sender commonDo.SenderType, bi
 	client := redis.Client()
 	cacheCode, err := client.HGet(context.Background(), codeCacheKey, "Code").Result()
 	if err != nil {
-		return api.EMValidCodeExpireError
+		return service.EMValidCodeExpireError
 	}
 	expire, _ := client.HGet(context.Background(), codeCacheKey, "Expire").Result()
 	codeTime, _ := client.HGet(context.Background(), codeCacheKey, "Time").Result()
 	expireInt, err := strconv.ParseInt(expire, 10, 64)
 	if err != nil {
-		return api.EMValidCodeExpireError
+		return service.EMValidCodeExpireError
 	}
 	codeTimeInt, err := strconv.ParseInt(codeTime, 10, 64)
 	if err != nil {
-		return api.EMValidCodeExpireError
+		return service.EMValidCodeExpireError
 	}
 
 	if codeTimeInt+expireInt*60 > time.Now().Unix() {
 		if code != cacheCode {
-			return api.EMValidCodeError
+			return service.EMValidCodeError
 		}
 		client.Del(context.Background(), codeCacheKey)
 	} else {
-		return api.EMValidCodeExpireError
+		return service.EMValidCodeExpireError
 	}
 
 	return nil

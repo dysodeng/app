@@ -2,11 +2,11 @@ package debug
 
 import (
 	"github.com/dysodeng/app/internal/dal/model/common"
-	"github.com/dysodeng/app/internal/pkg/api"
-	"github.com/dysodeng/app/internal/pkg/api/token"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/logger"
+	"github.com/dysodeng/app/internal/pkg/token"
 	"github.com/dysodeng/app/internal/pkg/trace"
+	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/gin-gonic/gin"
 )
 
