@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/pkg/trace"
+	"github.com/dysodeng/app/internal/service/rpc"
+
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/validator"
@@ -30,14 +33,15 @@ func (m *UserService) RegisterMetadata() metadata.ServiceRegisterMetadata {
 }
 
 func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*proto.UserResponse, error) {
+	traceCtx := trace.New().NewSpan(rpc.FromCtx(ctx), "grpc.user.Info")
 	if req.Id <= 0 {
 		return nil, errors.New("缺少用户ID")
 	}
 
-	userDomainService := user.NewUserDomainService(ctx)
+	userDomainService := user.NewUserDomainService(traceCtx)
 	userInfo, err := userDomainService.Info(req.Id)
 	if err != nil {
-		logger.Error(ctx, "获取用户信息失败", logger.ErrorField(err))
+		logger.Error(traceCtx, "获取用户信息失败", logger.ErrorField(err))
 		return nil, err
 	}
 
@@ -53,6 +57,8 @@ func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*pr
 }
 
 func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) (*proto.UserListResponse, error) {
+	traceCtx := trace.New().NewSpan(rpc.FromCtx(ctx), "grpc.user.ListUser")
+	logger.Debug(traceCtx, "获取用户列表接口", logger.Field{Key: "params", Value: req})
 	if req.PageNum <= 0 {
 		req.PageNum = 1
 	}
@@ -65,10 +71,10 @@ func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) 
 		condition["username like %?%"] = req.Username
 	}
 
-	userDomainService := user.NewUserDomainService(ctx)
+	userDomainService := user.NewUserDomainService(traceCtx)
 	list, total, err := userDomainService.ListUser(int(req.PageNum), int(req.PageSize), condition)
 	if err != nil {
-		logger.Error(ctx, "获取用户列表失败", logger.ErrorField(err))
+		logger.Error(traceCtx, "获取用户列表失败", logger.ErrorField(err))
 		return nil, err
 	}
 
@@ -92,6 +98,7 @@ func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) 
 }
 
 func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*proto.UserResponse, error) {
+	traceCtx := trace.New().NewSpan(rpc.FromCtx(ctx), "grpc.user.CreateUser")
 	if req.Telephone == "" {
 		return nil, errors.New("缺少手机号码")
 	}
@@ -113,7 +120,7 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 	if !validator.IsSafePassword(req.Password, 8) {
 		return nil, errors.New("密码格式不正确")
 	}
-	userDomainService := user.NewUserDomainService(ctx)
+	userDomainService := user.NewUserDomainService(traceCtx)
 	userInfo, err := userDomainService.CreateUser(userDo.User{
 		Telephone: req.Telephone,
 		Password:  req.Password,
@@ -124,7 +131,7 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 		Gender:    uint8(req.Gender),
 	})
 	if err != nil {
-		logger.Error(ctx, "创建用户失败", logger.ErrorField(err))
+		logger.Error(traceCtx, "创建用户失败", logger.ErrorField(err))
 		return nil, err
 	}
 	return &proto.UserResponse{

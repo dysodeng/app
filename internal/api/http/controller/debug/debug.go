@@ -53,8 +53,8 @@ func User(ctx *gin.Context) {
 		return
 	}
 
-	userInfo, err := userService.Info(ctx, &proto.UserInfoRequest{
-		Id: 1,
+	userInfo, err := userService.Info(rpc.Ctx(ctx), &proto.UserInfoRequest{
+		Id: 2,
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
@@ -66,22 +66,27 @@ func User(ctx *gin.Context) {
 }
 
 func ListUser(ctx *gin.Context) {
+	traceCtx := trace.New().NewSpan(ctx, "debug.ListUser")
+	logger.Debug(traceCtx, "获取用户列表接口", logger.Field{Key: "params", Value: proto.UserListRequest{
+		PageNum:  1,
+		PageSize: 10,
+	}})
 	userService, err := user.Service()
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(traceCtx, err.Error(), api.CodeFail))
 		return
 	}
-	res, err := userService.ListUser(ctx, &proto.UserListRequest{
+	res, err := userService.ListUser(rpc.Ctx(traceCtx), &proto.UserListRequest{
 		PageNum:  1,
 		PageSize: 10,
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(traceCtx, err.Error(), api.CodeFail))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api.Success(ctx, res))
+	ctx.JSON(http.StatusOK, api.Success(traceCtx, res))
 }
 
 func CreateUser(ctx *gin.Context) {
@@ -91,7 +96,7 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 
-	_, err = userService.CreateUser(ctx, &proto.UserRequest{
+	_, err = userService.CreateUser(rpc.Ctx(ctx), &proto.UserRequest{
 		Telephone: "13730825687",
 		Password:  "XXmusic@112",
 		RealName:  "dysodeng",
