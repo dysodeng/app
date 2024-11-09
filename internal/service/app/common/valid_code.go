@@ -3,11 +3,10 @@ package common
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/pkg/validator"
-
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/trace"
+	"github.com/dysodeng/app/internal/pkg/validator"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/dysodeng/app/internal/service/domain/common"
 	"github.com/pkg/errors"

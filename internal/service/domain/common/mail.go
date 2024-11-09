@@ -3,10 +3,9 @@ package common
 import (
 	"context"
 
-	mail2 "github.com/dysodeng/app/internal/pkg/mail"
-
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
 	"github.com/dysodeng/app/internal/dal/model/common"
+	"github.com/dysodeng/app/internal/pkg/mail"
 	"github.com/dysodeng/app/internal/pkg/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
@@ -95,15 +94,15 @@ func (ms *MailDomainService) SendMail(email []string, subject, template string, 
 		return errors.New("邮件配置不存在")
 	}
 
-	opts := []mail2.Option{
-		mail2.WithParams(templateParams),
-		mail2.WithSubject(subject),
+	opts := []mail.Option{
+		mail.WithParams(templateParams),
+		mail.WithSubject(subject),
 	}
 
-	sender, err := mail2.NewMailSender(
+	sender, err := mail.NewMailSender(
 		email,
 		template,
-		mail2.WithConfig(
+		mail.WithConfig(
 			config.Host,
 			config.Port,
 			config.Transport,
