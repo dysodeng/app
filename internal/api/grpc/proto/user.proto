@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package proto;
+option go_package = "grpc/proto";
+option java_package = "com.dysodeng.app.api.proto";
+
+message UserInfoRequest {
+  uint64 id = 1;
+}
+
+message UserRequest {
+  string telephone = 1;
+  string password = 2;
+  string real_name = 3;
+  string nickname = 4;
+  string avatar = 5;
+  uint32 gender = 6;
+  string birthday = 7;
+  uint32 Status = 8;
+}
+
+message UserResponse {
+  uint64 id = 1;
+  string telephone = 2;
+  string real_name = 3;
+  string nickname = 4;
+  string avatar = 5;
+  uint32 gender = 6;
+  string birthday = 7;
+}
+
+message UserListRequest {
+  uint64 page_num = 1;
+  uint64 page_size = 2;
+  string username = 3;
+}
+
+message UserListResponse {
+  uint64 total = 1;
+  repeated UserResponse list = 2;
+}
+
+service UserService {
+  rpc Info(UserInfoRequest) returns(UserResponse);
+  rpc ListUser(UserListRequest) returns(UserListResponse);
+  rpc CreateUser(UserRequest) returns(UserResponse);
+}

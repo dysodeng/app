@@ -42,6 +42,7 @@ func init() {
 	redisConfigLoad()
 	cacheConfigLoad()
 	mqConfigLoad()
+	etcdConfigLoad()
 	filesystemConfigLoad()
 
 	env := App.Env

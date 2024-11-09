@@ -8,12 +8,12 @@ import (
 )
 
 type redis struct {
-	Main  item `mapstructure:"main"`
-	Cache item `mapstructure:"cache"`
-	MQ    item `mapstructure:"mq"`
+	Main  redisItem `mapstructure:"main"`
+	Cache redisItem `mapstructure:"cache"`
+	MQ    redisItem `mapstructure:"mq"`
 }
 
-type item struct {
+type redisItem struct {
 	Host      string `mapstructure:"host"`
 	Port      string `mapstructure:"port"`
 	Password  string `mapstructure:"password"`

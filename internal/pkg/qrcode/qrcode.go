@@ -46,12 +46,12 @@ func (qr *QrCode) Text() string {
 
 // SaveToBuffer 保存到buffer
 func (qr *QrCode) SaveToBuffer() (*bytes.Buffer, error) {
-	buf := bufferWriter{Buffer: bytes.NewBuffer(nil)}
+	buf := bytes.NewBuffer(nil)
 	err := qr.ptr.SaveTo(buf)
 	if err != nil {
 		return nil, errors.Wrap(err, "save to buffer QR Code error")
 	}
-	return buf.Buffer, nil
+	return buf, nil
 }
 
 // SaveToFile 保存到文件
