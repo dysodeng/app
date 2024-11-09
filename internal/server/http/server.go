@@ -26,6 +26,10 @@ func NewServer() server.Interface {
 	return &httpServer{}
 }
 
+func (httpServer *httpServer) IsEnabled() bool {
+	return config.Server.Http.Enabled
+}
+
 func (httpServer *httpServer) init() {
 	// env mode
 	switch config.App.Env {
@@ -49,13 +53,8 @@ func (httpServer *httpServer) init() {
 }
 
 func (httpServer *httpServer) Serve() {
-	if !config.Server.Http.Enabled {
-		return
-	}
 	log.Println("start http server...")
-
 	httpServer.init()
-
 	defer func() {
 		if err := recover(); err != nil {
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
@@ -67,7 +66,6 @@ func (httpServer *httpServer) Serve() {
 	}()
 
 	log.Printf("http service listening and serving 0.0.0.0:%s\n", config.Server.Http.Port)
-
 	go func() {
 		if err := httpServer.server.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
 			log.Fatalf("http server start fiald: %s\n", err)
@@ -76,9 +74,6 @@ func (httpServer *httpServer) Serve() {
 }
 
 func (httpServer *httpServer) Shutdown() {
-	if !config.Server.Http.Enabled {
-		return
-	}
 	log.Println("shutdown http server...")
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

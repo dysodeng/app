@@ -22,10 +22,11 @@ func NewServer() server.Interface {
 	return &websocketServer{}
 }
 
+func (server *websocketServer) IsEnabled() bool {
+	return config.Server.Websocket.Enabled
+}
+
 func (server *websocketServer) Serve() {
-	if !config.Server.Websocket.Enabled {
-		return
-	}
 	log.Println("start websocket server...")
 
 	// websocket 客户端连接hub
@@ -57,11 +58,7 @@ func (server *websocketServer) Serve() {
 }
 
 func (server *websocketServer) Shutdown() {
-	if !config.Server.Websocket.Enabled {
-		return
-	}
 	log.Println("shutdown websocket server...")
-
 	err := server.wss.Shutdown(context.Background())
 	if err != nil {
 		log.Printf("websocket server shutdown fiald:%s", err)

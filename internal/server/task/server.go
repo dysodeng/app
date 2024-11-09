@@ -23,6 +23,10 @@ func NewServer() server.Interface {
 	return ts
 }
 
+func (server *taskServer) IsEnabled() bool {
+	return config.Server.Task.Enabled
+}
+
 // register 注册任务
 func (server *taskServer) register(jobs ...job.Interface) {
 	if server.jobs == nil {
@@ -36,15 +40,10 @@ func (server *taskServer) register(jobs ...job.Interface) {
 }
 
 func (server *taskServer) Serve() {
-	if !config.Server.Task.Enabled {
-		return
-	}
 	log.Println("start task server...")
-
 	server.register(
 		job.TaskTestTask{},
 	)
-
 	for _, jobItem := range server.jobs {
 		go func(jobItem job.Interface) {
 			consumer, err := mq.NewMessageQueueConsumer(jobItem.QueueKey())
@@ -67,9 +66,6 @@ func (server *taskServer) Serve() {
 }
 
 func (server *taskServer) Shutdown() {
-	if !config.Server.Task.Enabled {
-		return
-	}
 	log.Println("shutdown task server...")
 	for _, consumer := range server.jobConsumerList {
 		_ = consumer.Close()

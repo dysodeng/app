@@ -65,6 +65,11 @@ func FromCtx(ctx context.Context) context.Context {
 	if vals, ok := md["parent_span_name"]; ok {
 		parentSpanName = vals[0]
 	}
+	if traceId == "" {
+		traceId = trace.GenerateSpanID()
+		spanId = traceId
+		spanName = "grpc.root"
+	}
 
 	valCtx := context.WithValue(ctx, "traceId", traceId)
 	valCtx = context.WithValue(valCtx, "spanId", spanId)

@@ -20,11 +20,11 @@ func NewServer() server.Interface {
 	return &healthServer{}
 }
 
-func (hs *healthServer) Serve() {
-	if !config.Server.Health.Enabled {
-		return
-	}
+func (hs *healthServer) IsEnabled() bool {
+	return config.Server.Health.Enabled
+}
 
+func (hs *healthServer) Serve() {
 	log.Println("start health server...")
 
 	var err error
@@ -49,10 +49,6 @@ func (hs *healthServer) Serve() {
 }
 
 func (hs *healthServer) Shutdown() {
-	if !config.Server.Health.Enabled {
-		return
-	}
-
 	log.Println("shutdown health server...")
 	if hs.listener != nil {
 		_ = hs.listener.Close()

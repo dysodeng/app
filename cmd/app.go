@@ -76,7 +76,11 @@ func (app *App) start() {
 }
 
 func (app *App) registerServer(servers ...server.Interface) {
-	app.serverList = append(app.serverList, servers...)
+	for _, s := range servers {
+		if s.IsEnabled() {
+			app.serverList = append(app.serverList, s)
+		}
+	}
 }
 
 func (app *App) listenForShutdown() {

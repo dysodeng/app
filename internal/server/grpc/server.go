@@ -24,6 +24,10 @@ func NewGrpcServer() server.Interface {
 	return &grpcServer{}
 }
 
+func (grpcServer *grpcServer) IsEnabled() bool {
+	return config.Server.Grpc.Enabled
+}
+
 func (grpcServer *grpcServer) register() {
 	err := grpcServer.rpcServer.RegisterService(service.NewUserService(), proto.RegisterUserServiceServer)
 	if err != nil {
@@ -32,12 +36,7 @@ func (grpcServer *grpcServer) register() {
 }
 
 func (grpcServer *grpcServer) Serve() {
-	if !config.Server.Grpc.Enabled {
-		return
-	}
-
 	log.Println("start grpc server...")
-
 	opts := []etcd.RegistryOption{
 		etcd.WithRegistryNamespace(config.App.Name),
 		etcd.WithRegistryLease(10),
@@ -75,11 +74,7 @@ func (grpcServer *grpcServer) Serve() {
 }
 
 func (grpcServer *grpcServer) Shutdown() {
-	if !config.Server.Grpc.Enabled {
-		return
-	}
 	log.Println("shutdown grpc server...")
-
 	err := grpcServer.rpcServer.Stop()
 	if err != nil {
 		log.Printf("grpc server shutdown fiald:%s", err)
