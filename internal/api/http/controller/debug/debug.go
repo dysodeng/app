@@ -98,7 +98,7 @@ func CreateUser(ctx *gin.Context) {
 
 	_, err = userService.CreateUser(rpc.Ctx(ctx), &proto.UserRequest{
 		Telephone: "13730825687",
-		Password:  "XXmusic@112",
+		Password:  "dysodeng@112",
 		RealName:  "dysodeng",
 		Nickname:  "丹枫",
 		Avatar:    "https://minio.dysodeng.com/user/avatar.png",
