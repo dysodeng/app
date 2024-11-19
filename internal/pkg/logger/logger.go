@@ -3,6 +3,8 @@ package logger
 import (
 	"context"
 
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -48,21 +50,19 @@ func (l *logger) log(ctx context.Context, level zapcore.Level, message string, f
 }
 
 func (l *logger) trace(ctx context.Context) []Field {
+	span := trace.SpanFromContext(ctx)
 	var fields []Field
-	if ctx.Value("traceId") != nil {
-		fields = append(fields, Field{Key: "traceId", Value: ctx.Value("traceId")})
+	if span.SpanContext().HasTraceID() {
+		fields = append(fields, Field{Key: "traceId", Value: span.SpanContext().TraceID().String()})
 	}
-	if ctx.Value("spanId") != nil {
-		fields = append(fields, Field{Key: "spanId", Value: ctx.Value("spanId")})
+	if span.SpanContext().HasSpanID() {
+		fields = append(fields, Field{Key: "spanId", Value: span.SpanContext().SpanID().String()})
 	}
-	if ctx.Value("spanName") != nil {
-		fields = append(fields, Field{Key: "spanName", Value: ctx.Value("spanName")})
-	}
-	if ctx.Value("parentSpanId") != nil {
-		fields = append(fields, Field{Key: "parentSpanId", Value: ctx.Value("parentSpanId")})
-	}
-	if ctx.Value("parentSpanName") != nil {
-		fields = append(fields, Field{Key: "parentSpanName", Value: ctx.Value("parentSpanName")})
+	if spanIns, ok := span.(sdktrace.ReadWriteSpan); ok {
+		fields = append(fields, Field{Key: "spanName", Value: spanIns.Name()})
+		if spanIns.Parent().HasSpanID() {
+			fields = append(fields, Field{Key: "parentSpanId", Value: spanIns.Parent().SpanID().String()})
+		}
 	}
 	return fields
 }

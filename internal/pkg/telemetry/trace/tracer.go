@@ -72,6 +72,10 @@ func Context() context.Context {
 	return traceCtx
 }
 
+func TracerProvider() *sdktrace.TracerProvider {
+	return provider
+}
+
 func NewTracer(traceName string, opts ...trace.TracerOption) trace.Tracer {
 	return provider.Tracer(traceName, opts...)
 }

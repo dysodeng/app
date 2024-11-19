@@ -8,7 +8,6 @@ import (
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/sms"
 	"github.com/dysodeng/app/internal/pkg/sms/alicloud"
-	"github.com/dysodeng/app/internal/pkg/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
 )
@@ -21,12 +20,10 @@ type SmsDomainService struct {
 }
 
 func NewSmsDomainService(ctx context.Context) *SmsDomainService {
-	baseTraceSpanName := "domain.common.SmsDomainService"
-	traceCtx := trace.New().NewSpan(ctx, baseTraceSpanName)
 	return &SmsDomainService{
-		ctx:               traceCtx,
-		smsDao:            commonDao.NewSmsDao(traceCtx),
-		baseTraceSpanName: baseTraceSpanName,
+		ctx:               ctx,
+		smsDao:            commonDao.NewSmsDao(ctx),
+		baseTraceSpanName: "domain.common.SmsDomainService",
 	}
 }
 

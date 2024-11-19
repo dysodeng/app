@@ -3,20 +3,18 @@ package debug
 import (
 	"net/http"
 
-	trace2 "github.com/dysodeng/app/internal/pkg/monitor/trace"
-	"go.opentelemetry.io/otel/codes"
-
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/token"
-	"github.com/dysodeng/app/internal/pkg/trace"
 	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/dysodeng/app/internal/service/rpc"
 	"github.com/dysodeng/app/internal/service/rpc/user"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel/codes"
 )
 
 func Token(ctx *gin.Context) {
@@ -33,82 +31,86 @@ func GenRandomString(ctx *gin.Context) {
 }
 
 func GormLogger(ctx *gin.Context) {
-	traceCtx := trace.New().NewSpan(ctx, "debug.GormLogger")
-
-	spanCtx, span := trace2.Tracer().Start(ctx.Request.Context(), "debug.GormLogger")
+	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.GormLogger")
 	defer span.End()
 
 	span.SetStatus(codes.Ok, "ok")
 	logger.Debug(spanCtx, "trace logger")
 
 	var mailConfig common.MailConfig
-	db.DB().WithContext(traceCtx).First(&mailConfig)
+	db.DB().WithContext(spanCtx).First(&mailConfig)
 	var smsConfig common.SmsConfig
-	db.DB().WithContext(traceCtx).Where("a=?", "b").First(&smsConfig)
+	db.DB().WithContext(spanCtx).Where("a=?", "b").First(&smsConfig)
 
 	go func() {
-		childSpanCtx, childSpan := trace2.Tracer().Start(spanCtx, "debug.GormLogger.child")
+		childSpanCtx, childSpan := trace.Tracer().Start(spanCtx, "debug.GormLogger.child")
 		defer childSpan.End()
-		childTraceCtx := trace.New().NewSpan(traceCtx, "debug.GormLogger.child")
-		logger.Debug(childTraceCtx, "child logger")
-		logger.Error(childTraceCtx, "child logger")
-		logger.Info(childSpanCtx, "child logger")
+		logger.Debug(childSpanCtx, "child logger")
+		logger.Error(childSpanCtx, "child logger")
 	}()
 
-	ctx.JSON(200, api.Success(traceCtx, mailConfig))
+	ctx.JSON(200, api.Success(spanCtx, mailConfig))
 }
 
 func User(ctx *gin.Context) {
-	userService, err := user.Service()
+	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.User")
+	defer span.End()
+
+	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
 
-	userInfo, err := userService.Info(rpc.Ctx(ctx), &proto.UserInfoRequest{
-		Id: 2,
+	userInfo, err := userService.Info(spanCtx, &proto.UserInfoRequest{
+		Id: 1,
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, userInfo))
 }
 
 func ListUser(ctx *gin.Context) {
-	traceCtx := trace.New().NewSpan(ctx, "debug.ListUser")
-	logger.Debug(traceCtx, "获取用户列表接口", logger.Field{Key: "params", Value: proto.UserListRequest{
+	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.ListUser")
+	defer span.End()
+
+	logger.Debug(spanCtx, "获取用户列表接口", logger.Field{Key: "params", Value: proto.UserListRequest{
 		PageNum:  1,
 		PageSize: 10,
 	}})
-	userService, err := user.Service()
+	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(traceCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
-	res, err := userService.ListUser(rpc.Ctx(traceCtx), &proto.UserListRequest{
+	res, err := userService.ListUser(spanCtx, &proto.UserListRequest{
 		PageNum:  1,
 		PageSize: 10,
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(traceCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api.Success(traceCtx, res))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, res))
 }
 
 func CreateUser(ctx *gin.Context) {
-	userService, err := user.Service()
+	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.CreateUser")
+	defer span.End()
+
+	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
 
-	_, err = userService.CreateUser(rpc.Ctx(ctx), &proto.UserRequest{
+	_, err = userService.CreateUser(spanCtx, &proto.UserRequest{
 		Telephone: "13011223344",
 		Password:  "dysodeng@112",
 		RealName:  "dysodeng",
@@ -119,8 +121,8 @@ func CreateUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
-	ctx.JSON(http.StatusOK, api.Success(ctx, true))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, true))
 }

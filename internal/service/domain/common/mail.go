@@ -6,7 +6,6 @@ import (
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/mail"
-	"github.com/dysodeng/app/internal/pkg/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
 )
@@ -19,12 +18,10 @@ type MailDomainService struct {
 }
 
 func NewMailDomainService(ctx context.Context) *MailDomainService {
-	baseTraceSpanName := "domain.common.MailDomainService"
-	traceCtx := trace.New().NewSpan(ctx, baseTraceSpanName)
 	return &MailDomainService{
-		ctx:               traceCtx,
-		mailDao:           commonDao.NewMailDao(traceCtx),
-		baseTraceSpanName: baseTraceSpanName,
+		ctx:               ctx,
+		mailDao:           commonDao.NewMailDao(ctx),
+		baseTraceSpanName: "domain.common.MailDomainService",
 	}
 }
 

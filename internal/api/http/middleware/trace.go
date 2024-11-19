@@ -5,7 +5,7 @@ import (
 	"fmt"
 
 	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/pkg/monitor/trace"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -51,10 +51,10 @@ func StartTrace(ctx *gin.Context) {
 	if spanName == "" {
 		spanName = fmt.Sprintf("HTTP %s route not found", ctx.Request.Method)
 	}
-	newCtx, span := trace.Tracer().Start(newCtx, spanName, opts...)
+	spanCtx, span := trace.Tracer().Start(newCtx, spanName, opts...)
 	defer span.End()
 
-	ctx.Request = ctx.Request.WithContext(newCtx)
+	ctx.Request = ctx.Request.WithContext(spanCtx)
 
 	ctx.Next()
 

@@ -2,17 +2,18 @@ package service
 
 import (
 	"context"
-
-	"github.com/dysodeng/app/internal/pkg/trace"
-	"github.com/dysodeng/app/internal/service/rpc"
+	"fmt"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/pkg/logger"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/validator"
 	userDo "github.com/dysodeng/app/internal/service/do/user"
 	"github.com/dysodeng/app/internal/service/domain/user"
 	"github.com/dysodeng/rpc/metadata"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 // UserService 用户服务
@@ -33,16 +34,29 @@ func (m *UserService) RegisterMetadata() metadata.ServiceRegisterMetadata {
 }
 
 func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*proto.UserResponse, error) {
-	traceCtx := trace.New().NewSpan(rpc.FromCtx(ctx), "grpc.user.Info")
+	spanCtx, span := trace.Tracer().Start(ctx, "grpc.user.Info")
+	defer span.End()
+
 	if req.Id <= 0 {
 		return nil, errors.New("缺少用户ID")
 	}
 
-	userDomainService := user.NewUserDomainService(traceCtx)
+	userDomainService := user.NewUserDomainService(spanCtx)
 	userInfo, err := userDomainService.Info(req.Id)
 	if err != nil {
-		logger.Error(traceCtx, "获取用户信息失败", logger.ErrorField(err))
+		span.SetStatus(codes.Error, "获取用户信息失败")
+		span.RecordError(err)
+		logger.Error(spanCtx, "获取用户信息失败", logger.ErrorField(err))
 		return nil, err
+	}
+
+	if userInfo.Id <= 0 {
+		span.SetStatus(codes.Error, "用户不存在")
+		span.SetAttributes(attribute.String("query: user_id", fmt.Sprintf("%d", req.Id)))
+	} else {
+		span.SetStatus(codes.Ok, "获取用户信息成功")
+		span.SetAttributes(attribute.String("user_id", fmt.Sprintf("%d", userInfo.Id)))
+		span.SetAttributes(attribute.String("nickname", userInfo.Nickname))
 	}
 
 	return &proto.UserResponse{
@@ -57,8 +71,9 @@ func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*pr
 }
 
 func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) (*proto.UserListResponse, error) {
-	traceCtx := trace.New().NewSpan(rpc.FromCtx(ctx), "grpc.user.ListUser")
-	logger.Debug(traceCtx, "获取用户列表接口", logger.Field{Key: "params", Value: req})
+	spanCtx, span := trace.Tracer().Start(ctx, "grpc.user.ListUser")
+	defer span.End()
+	logger.Debug(spanCtx, "获取用户列表接口", logger.Field{Key: "params", Value: req})
 	if req.PageNum <= 0 {
 		req.PageNum = 1
 	}
@@ -71,10 +86,10 @@ func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) 
 		condition["username like %?%"] = req.Username
 	}
 
-	userDomainService := user.NewUserDomainService(traceCtx)
+	userDomainService := user.NewUserDomainService(spanCtx)
 	list, total, err := userDomainService.ListUser(int(req.PageNum), int(req.PageSize), condition)
 	if err != nil {
-		logger.Error(traceCtx, "获取用户列表失败", logger.ErrorField(err))
+		logger.Error(spanCtx, "获取用户列表失败", logger.ErrorField(err))
 		return nil, err
 	}
 
@@ -98,7 +113,9 @@ func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) 
 }
 
 func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*proto.UserResponse, error) {
-	traceCtx := trace.New().NewSpan(rpc.FromCtx(ctx), "grpc.user.CreateUser")
+	spanCtx, span := trace.Tracer().Start(ctx, "grpc.user.CreateUser")
+	defer span.End()
+
 	if req.Telephone == "" {
 		return nil, errors.New("缺少手机号码")
 	}
@@ -120,7 +137,7 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 	if !validator.IsSafePassword(req.Password, 8) {
 		return nil, errors.New("密码格式不正确")
 	}
-	userDomainService := user.NewUserDomainService(traceCtx)
+	userDomainService := user.NewUserDomainService(spanCtx)
 	userInfo, err := userDomainService.CreateUser(userDo.User{
 		Telephone: req.Telephone,
 		Password:  req.Password,
@@ -131,7 +148,7 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 		Gender:    uint8(req.Gender),
 	})
 	if err != nil {
-		logger.Error(traceCtx, "创建用户失败", logger.ErrorField(err))
+		logger.Error(spanCtx, "创建用户失败", logger.ErrorField(err))
 		return nil, err
 	}
 	return &proto.UserResponse{

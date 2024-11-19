@@ -8,7 +8,6 @@ import (
 	"github.com/dysodeng/app/internal/pkg/filesystem"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/model"
-	"github.com/dysodeng/app/internal/pkg/trace"
 	userDo "github.com/dysodeng/app/internal/service/do/user"
 )
 
@@ -19,12 +18,10 @@ type DomainService struct {
 }
 
 func NewUserDomainService(ctx context.Context) *DomainService {
-	baseTraceSpanName := "domain.user.UserDomainService"
-	traceCtx := trace.New().NewSpan(ctx, baseTraceSpanName)
 	return &DomainService{
-		ctx:               traceCtx,
-		userDao:           userDao.NewUserDao(traceCtx),
-		baseTraceSpanName: baseTraceSpanName,
+		ctx:               ctx,
+		userDao:           userDao.NewUserDao(ctx),
+		baseTraceSpanName: "domain.user.UserDomainService",
 	}
 }
 

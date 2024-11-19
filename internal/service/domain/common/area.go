@@ -5,7 +5,6 @@ import (
 
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
 	"github.com/dysodeng/app/internal/pkg/logger"
-	"github.com/dysodeng/app/internal/pkg/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
 )
@@ -18,12 +17,10 @@ type AreaDomainService struct {
 }
 
 func NewAreaDomainService(ctx context.Context) *AreaDomainService {
-	baseTraceSpanName := "domain.common.AreaDomainService"
-	traceCtx := trace.New().NewSpan(ctx, baseTraceSpanName)
 	return &AreaDomainService{
-		ctx:               traceCtx,
-		areaDao:           commonDao.NewAreaDao(traceCtx),
-		baseTraceSpanName: baseTraceSpanName,
+		ctx:               ctx,
+		areaDao:           commonDao.NewAreaDao(ctx),
+		baseTraceSpanName: "domain.common.AreaDomainService",
 	}
 }
 

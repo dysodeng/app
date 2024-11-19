@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/dysodeng/app/internal/pkg/helper"
-	"github.com/dysodeng/app/internal/pkg/trace"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/service/domain/common"
 	commonReply "github.com/dysodeng/app/internal/service/reply/common"
 	"github.com/pkg/errors"
@@ -13,27 +13,27 @@ import (
 // AreaAppService 地区应用服务
 type AreaAppService struct {
 	ctx               context.Context
-	areaDomainService *common.AreaDomainService
 	baseTraceSpanName string
 }
 
 func NewAreaAppService(ctx context.Context) *AreaAppService {
-	baseTraceSpanName := "app.service.common.AreaAppService"
-	traceCtx := trace.New().NewSpan(ctx, baseTraceSpanName)
 	return &AreaAppService{
-		ctx:               traceCtx,
-		areaDomainService: common.NewAreaDomainService(traceCtx),
-		baseTraceSpanName: baseTraceSpanName,
+		ctx:               ctx,
+		baseTraceSpanName: "app.service.common.AreaAppService",
 	}
 }
 
 // Area 获取地区列表
 func (area *AreaAppService) Area(areaType string, parentAreaId string) ([]commonReply.Area, error) {
+	spanCtr, span := trace.Tracer().Start(area.ctx, area.baseTraceSpanName+".Area")
+	defer span.End()
+
 	if !helper.Contain(areaType, []string{"province", "city", "county"}) {
 		return nil, errors.New("地区类型错误")
 	}
 
-	areaList, err := area.areaDomainService.Area(areaType, parentAreaId)
+	areaDomainService := common.NewAreaDomainService(spanCtr)
+	areaList, err := areaDomainService.Area(areaType, parentAreaId)
 	if err != nil {
 		return nil, err
 	}
@@ -56,6 +56,9 @@ func (area *AreaAppService) CascadeArea(
 	cityAreaId string,
 	countyAreaId string,
 ) (*commonReply.CascadeArea, error) {
+	spanCtr, span := trace.Tracer().Start(area.ctx, area.baseTraceSpanName+".CascadeArea")
+	defer span.End()
+
 	if provinceAreaId == "" {
 		return nil, errors.New("缺少省地区编号")
 	}
@@ -66,7 +69,8 @@ func (area *AreaAppService) CascadeArea(
 		return nil, errors.New("缺少区县地区编号")
 	}
 
-	cascadeArea, err := area.areaDomainService.CascadeArea(provinceAreaId, cityAreaId, countyAreaId)
+	areaDomainService := common.NewAreaDomainService(spanCtr)
+	cascadeArea, err := areaDomainService.CascadeArea(provinceAreaId, cityAreaId, countyAreaId)
 	if err != nil {
 		return nil, err
 	}

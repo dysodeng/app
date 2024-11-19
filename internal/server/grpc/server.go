@@ -5,6 +5,10 @@ import (
 	"log"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"google.golang.org/grpc"
+
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/api/grpc/service"
 	"github.com/dysodeng/app/internal/pkg/helper"
@@ -59,6 +63,9 @@ func (grpcServer *grpcServer) Serve() {
 		config.App.Name,
 		fmt.Sprintf("0.0.0.0:%s", config.Server.Grpc.Port),
 		registry,
+		rpc.WithServerGrpcServerOption(
+			grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithTracerProvider(trace.TracerProvider()))),
+		),
 	)
 
 	// 注册服务

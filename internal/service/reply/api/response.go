@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+
+	"go.opentelemetry.io/otel/trace"
 )
 
 // Response api 响应数据结构
@@ -24,20 +26,22 @@ type Record[T any] struct {
 
 // Success 正确响应
 func Success[T any](ctx context.Context, result T) Response[T] {
+	span := trace.SpanFromContext(ctx)
 	return Response[T]{
 		Code:    CodeOk,
 		Data:    result,
 		Message: "success",
-		TraceId: ctx.Value("traceId").(string),
+		TraceId: span.SpanContext().TraceID().String(),
 	}
 }
 
 // Fail 失败响应
 func Fail(ctx context.Context, error string, code Code) Response[any] {
+	span := trace.SpanFromContext(ctx)
 	return Response[any]{
 		Code:    code,
 		Data:    nil,
 		Message: error,
-		TraceId: ctx.Value("traceId").(string),
+		TraceId: span.SpanContext().TraceID().String(),
 	}
 }

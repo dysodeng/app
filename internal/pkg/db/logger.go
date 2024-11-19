@@ -6,6 +6,9 @@ import (
 	"runtime"
 	"time"
 
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/trace"
+
 	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/pkg/logger"
@@ -142,21 +145,19 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 }
 
 func (l *GormLogger) trace(ctx context.Context) []zap.Field {
+	span := trace.SpanFromContext(ctx)
 	var fields []zap.Field
-	if ctx.Value("traceId") != nil {
-		fields = append(fields, zap.Any("traceId", ctx.Value("traceId")))
+	if span.SpanContext().HasTraceID() {
+		fields = append(fields, zap.Any("traceId", span.SpanContext().TraceID().String()))
 	}
-	if ctx.Value("spanId") != nil {
-		fields = append(fields, zap.Any("spanId", ctx.Value("spanId")))
+	if span.SpanContext().HasSpanID() {
+		fields = append(fields, zap.Any("spanId", span.SpanContext().SpanID().String()))
 	}
-	if ctx.Value("spanName") != nil {
-		fields = append(fields, zap.Any("spanName", ctx.Value("spanName")))
-	}
-	if ctx.Value("parentSpanId") != nil {
-		fields = append(fields, zap.Any("parentSpanId", ctx.Value("parentSpanId")))
-	}
-	if ctx.Value("parentSpanName") != nil {
-		fields = append(fields, zap.Any("parentSpanName", ctx.Value("parentSpanName")))
+	if spanIns, ok := span.(sdktrace.ReadWriteSpan); ok {
+		fields = append(fields, zap.Any("spanName", spanIns.Name()))
+		if spanIns.Parent().HasSpanID() {
+			fields = append(fields, zap.Any("parentSpanId", spanIns.Parent().SpanID().String()))
+		}
 	}
 	return fields
 }
