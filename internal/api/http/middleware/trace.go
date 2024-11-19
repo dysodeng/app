@@ -1,26 +1,69 @@
 package middleware
 
 import (
-	"github.com/dysodeng/app/internal/pkg/trace"
+	"context"
+	"fmt"
+
+	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/pkg/monitor/trace"
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/propagation"
+	semconv "go.opentelemetry.io/otel/semconv/v1.12.0"
+	oteltrace "go.opentelemetry.io/otel/trace"
 )
 
 // StartTrace trace
 func StartTrace(ctx *gin.Context) {
-	traceId := ctx.Request.Header.Get("traceId")
-	parentSpanId := ctx.Request.Header.Get("parentSpanId")
-	spanName := ctx.Request.Header.Get("spanName")
-	spanId := trace.GenerateSpanID()
+	savedCtx := ctx.Request.Context()
+	defer func() {
+		ctx.Request = ctx.Request.WithContext(savedCtx)
+	}()
 
-	if traceId == "" {
-		traceId = spanId
+	traceIdByHex := ctx.Request.Header.Get("traceId")
+	spanIdByHex := ctx.Request.Header.Get("spanId")
+
+	var newCtx context.Context
+	if traceIdByHex != "" {
+		traceId, _ := oteltrace.TraceIDFromHex(traceIdByHex)
+		spanId, _ := oteltrace.SpanIDFromHex(spanIdByHex)
+		spanCtx := oteltrace.NewSpanContext(oteltrace.SpanContextConfig{
+			TraceID:    traceId,
+			SpanID:     spanId,
+			TraceFlags: oteltrace.FlagsSampled,
+			Remote:     true,
+		})
+		carrier := propagation.HeaderCarrier{}
+		carrier.Set("traceId", traceIdByHex)
+		newCtx = oteltrace.ContextWithRemoteSpanContext(otel.GetTextMapPropagator().Extract(savedCtx, carrier), spanCtx)
+	} else {
+		newCtx = otel.GetTextMapPropagator().Extract(savedCtx, propagation.HeaderCarrier(ctx.Request.Header))
 	}
 
-	ctx.Set("traceId", traceId)
-	ctx.Set("spanId", spanId)
-	ctx.Set("spanName", ctx.FullPath())
-	ctx.Set("parentSpanId", parentSpanId)
-	ctx.Set("parentSpanName", spanName)
+	opts := []oteltrace.SpanStartOption{
+		oteltrace.WithAttributes(semconv.NetAttributesFromHTTPRequest("tcp", ctx.Request)...),
+		oteltrace.WithAttributes(semconv.EndUserAttributesFromHTTPRequest(ctx.Request)...),
+		oteltrace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(config.App.Name, ctx.FullPath(), ctx.Request)...),
+		oteltrace.WithSpanKind(oteltrace.SpanKindServer),
+	}
+	spanName := ctx.FullPath()
+	if spanName == "" {
+		spanName = fmt.Sprintf("HTTP %s route not found", ctx.Request.Method)
+	}
+	newCtx, span := trace.Tracer().Start(newCtx, spanName, opts...)
+	defer span.End()
+
+	ctx.Request = ctx.Request.WithContext(newCtx)
 
 	ctx.Next()
+
+	status := ctx.Writer.Status()
+	attrs := semconv.HTTPAttributesFromHTTPStatusCode(status)
+	spanStatus, spanMessage := semconv.SpanStatusFromHTTPStatusCodeAndSpanKind(status, oteltrace.SpanKindServer)
+	span.SetAttributes(attrs...)
+	span.SetStatus(spanStatus, spanMessage)
+	if len(ctx.Errors) > 0 {
+		span.SetAttributes(attribute.String("gin.errors", ctx.Errors.String()))
+	}
 }

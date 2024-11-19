@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/dysodeng/app/internal/config"
-
 	"github.com/go-redis/redis/v8"
 )
 

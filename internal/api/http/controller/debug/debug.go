@@ -3,6 +3,9 @@ package debug
 import (
 	"net/http"
 
+	trace2 "github.com/dysodeng/app/internal/pkg/monitor/trace"
+	"go.opentelemetry.io/otel/codes"
+
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/db"
@@ -32,15 +35,24 @@ func GenRandomString(ctx *gin.Context) {
 func GormLogger(ctx *gin.Context) {
 	traceCtx := trace.New().NewSpan(ctx, "debug.GormLogger")
 
+	spanCtx, span := trace2.Tracer().Start(ctx.Request.Context(), "debug.GormLogger")
+	defer span.End()
+
+	span.SetStatus(codes.Ok, "ok")
+	logger.Debug(spanCtx, "trace logger")
+
 	var mailConfig common.MailConfig
 	db.DB().WithContext(traceCtx).First(&mailConfig)
 	var smsConfig common.SmsConfig
 	db.DB().WithContext(traceCtx).Where("a=?", "b").First(&smsConfig)
 
 	go func() {
+		childSpanCtx, childSpan := trace2.Tracer().Start(spanCtx, "debug.GormLogger.child")
+		defer childSpan.End()
 		childTraceCtx := trace.New().NewSpan(traceCtx, "debug.GormLogger.child")
 		logger.Debug(childTraceCtx, "child logger")
 		logger.Error(childTraceCtx, "child logger")
+		logger.Info(childSpanCtx, "child logger")
 	}()
 
 	ctx.JSON(200, api.Success(traceCtx, mailConfig))

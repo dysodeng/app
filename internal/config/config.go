@@ -11,6 +11,10 @@ func (e Env) Valid() bool {
 	return e == Dev || e == Test || e == Prod
 }
 
+func (e Env) String() string {
+	return string(e)
+}
+
 const (
 	// Prod 生产环境
 	Prod Env = "prod"
@@ -34,6 +38,7 @@ func init() {
 	Redis = &redis{}
 	MQ = &mq{}
 	Filesystem = &filesystem{}
+	Monitor = &monitor{}
 
 	_ = godotenv.Load()
 
@@ -44,6 +49,7 @@ func init() {
 	mqConfigLoad()
 	etcdConfigLoad()
 	filesystemConfigLoad()
+	monitorConfigLoad()
 
 	env := App.Env
 	if !env.Valid() {
