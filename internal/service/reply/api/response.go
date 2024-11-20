@@ -26,22 +26,38 @@ type Record[T any] struct {
 
 // Success 正确响应
 func Success[T any](ctx context.Context, result T) Response[T] {
-	span := trace.SpanFromContext(ctx)
+	var traceId string
+	if ctx.Value("Trace-Id") != nil {
+		traceId = ctx.Value("Trace-Id").(string)
+	} else {
+		span := trace.SpanFromContext(ctx)
+		if span.SpanContext().HasTraceID() {
+			traceId = span.SpanContext().TraceID().String()
+		}
+	}
 	return Response[T]{
 		Code:    CodeOk,
 		Data:    result,
 		Message: "success",
-		TraceId: span.SpanContext().TraceID().String(),
+		TraceId: traceId,
 	}
 }
 
 // Fail 失败响应
 func Fail(ctx context.Context, error string, code Code) Response[any] {
-	span := trace.SpanFromContext(ctx)
+	var traceId string
+	if ctx.Value("Trace-Id") != nil {
+		traceId = ctx.Value("Trace-Id").(string)
+	} else {
+		span := trace.SpanFromContext(ctx)
+		if span.SpanContext().HasTraceID() {
+			traceId = span.SpanContext().TraceID().String()
+		}
+	}
 	return Response[any]{
 		Code:    code,
 		Data:    nil,
 		Message: error,
-		TraceId: span.SpanContext().TraceID().String(),
+		TraceId: traceId,
 	}
 }

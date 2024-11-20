@@ -3,10 +3,10 @@ package common
 import (
 	"net/http"
 
-	"github.com/dysodeng/app/internal/service/reply/api"
-
 	commonRequest "github.com/dysodeng/app/internal/api/http/request/common"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/service/app/common"
+	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -16,7 +16,9 @@ func Area(ctx *gin.Context) {
 	var body commonRequest.AreaBody
 	_ = ctx.ShouldBindJSON(&body)
 
-	result, err := common.NewAreaAppService(ctx).Area(body.AreaType, body.ParentAreaId)
+	spanCtx := trace.Gin(ctx)
+
+	result, err := common.NewAreaAppService(spanCtx).Area(body.AreaType, body.ParentAreaId)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
@@ -31,7 +33,9 @@ func CascadeArea(ctx *gin.Context) {
 	var body commonRequest.CascadeAreaBody
 	_ = ctx.ShouldBindJSON(&body)
 
-	result, err := common.NewAreaAppService(ctx).CascadeArea(body.ProvinceAreaId, body.CityAreaId, body.CountyAreaId)
+	spanCtx := trace.Gin(ctx)
+
+	result, err := common.NewAreaAppService(spanCtx).CascadeArea(body.ProvinceAreaId, body.CityAreaId, body.CountyAreaId)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return

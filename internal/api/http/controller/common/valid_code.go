@@ -3,10 +3,10 @@ package common
 import (
 	"net/http"
 
-	"github.com/dysodeng/app/internal/service/reply/api"
-
 	commonRequest "github.com/dysodeng/app/internal/api/http/request/common"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/service/app/common"
+	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -15,6 +15,8 @@ import (
 func SendValidCode(ctx *gin.Context) {
 	var body commonRequest.SendValidCodeBody
 	_ = ctx.ShouldBindJSON(&body)
+
+	spanCtx := trace.Gin(ctx)
 
 	if body.Type == "" {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少账号类型", api.CodeFail))
@@ -28,7 +30,7 @@ func SendValidCode(ctx *gin.Context) {
 		account = body.Email
 	}
 
-	err := common.NewValidCodeAppService(ctx).SendValidCode(body.Type, body.BizType, account)
+	err := common.NewValidCodeAppService(spanCtx).SendValidCode(body.Type, body.BizType, account)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
@@ -43,6 +45,8 @@ func VerifyValidCode(ctx *gin.Context) {
 	var body commonRequest.VerifyValidCodeBody
 	_ = ctx.ShouldBindJSON(&body)
 
+	spanCtx := trace.Gin(ctx)
+
 	if body.Type == "" {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少账号类型", api.CodeFail))
 		return
@@ -55,7 +59,7 @@ func VerifyValidCode(ctx *gin.Context) {
 		account = body.Email
 	}
 
-	err := common.NewValidCodeAppService(ctx).VerifyValidCode(body.Type, body.BizType, account, body.ValidCode)
+	err := common.NewValidCodeAppService(spanCtx).VerifyValidCode(body.Type, body.BizType, account, body.ValidCode)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return

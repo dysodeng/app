@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dysodeng/app/internal/config"
+	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -33,13 +34,13 @@ func init() {
 			attribute.String("env", config.App.Env.String()),
 		)),
 	}
-	if config.Monitor.Tracer.ReportEnabled {
-		if config.Monitor.Tracer.ReportEndpoint == "" {
-			panic("tracer report endpoint is empty")
+	if config.Monitor.Tracer.OtelEnabled {
+		if config.Monitor.Tracer.OtelEndpoint == "" {
+			panic("tracer otel endpoint is empty")
 		}
 		exp, err := otlptracehttp.New(
 			traceCtx,
-			otlptracehttp.WithEndpointURL(config.Monitor.Tracer.ReportEndpoint),
+			otlptracehttp.WithEndpointURL(config.Monitor.Tracer.OtelEndpoint),
 		)
 		if err != nil {
 			panic(err)
@@ -82,4 +83,8 @@ func NewTracer(traceName string, opts ...trace.TracerOption) trace.Tracer {
 
 func Tracer() trace.Tracer {
 	return tracer
+}
+
+func Gin(ctx *gin.Context) context.Context {
+	return ctx.Request.Context()
 }

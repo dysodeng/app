@@ -21,8 +21,8 @@ func StartTrace(ctx *gin.Context) {
 		ctx.Request = ctx.Request.WithContext(savedCtx)
 	}()
 
-	traceIdByHex := ctx.Request.Header.Get("traceId")
-	spanIdByHex := ctx.Request.Header.Get("spanId")
+	traceIdByHex := ctx.Request.Header.Get("Trace-Id")
+	spanIdByHex := ctx.Request.Header.Get("Span-Id")
 
 	var newCtx context.Context
 	if traceIdByHex != "" {
@@ -35,7 +35,7 @@ func StartTrace(ctx *gin.Context) {
 			Remote:     true,
 		})
 		carrier := propagation.HeaderCarrier{}
-		carrier.Set("traceId", traceIdByHex)
+		carrier.Set("Trace-Id", traceIdByHex)
 		newCtx = oteltrace.ContextWithRemoteSpanContext(otel.GetTextMapPropagator().Extract(savedCtx, carrier), spanCtx)
 	} else {
 		newCtx = otel.GetTextMapPropagator().Extract(savedCtx, propagation.HeaderCarrier(ctx.Request.Header))
@@ -55,6 +55,7 @@ func StartTrace(ctx *gin.Context) {
 	defer span.End()
 
 	ctx.Request = ctx.Request.WithContext(spanCtx)
+	ctx.Set("Trace-Id", span.SpanContext().TraceID().String())
 
 	ctx.Next()
 

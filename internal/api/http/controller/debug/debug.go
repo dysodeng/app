@@ -27,11 +27,13 @@ func Token(ctx *gin.Context) {
 // GenRandomString 生成随机字符串
 // @route GET /debug/random_string
 func GenRandomString(ctx *gin.Context) {
-	ctx.JSON(http.StatusOK, api.Success(ctx, helper.RandomStringBytesMask(24)))
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GenRandomString")
+	span.End()
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomStringBytesMask(24)))
 }
 
 func GormLogger(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.GormLogger")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GormLogger")
 	defer span.End()
 
 	span.SetStatus(codes.Ok, "ok")
@@ -49,16 +51,16 @@ func GormLogger(ctx *gin.Context) {
 		logger.Error(childSpanCtx, "child logger")
 	}()
 
-	ctx.JSON(200, api.Success(spanCtx, mailConfig))
+	ctx.JSON(200, api.Success(ctx, mailConfig))
 }
 
 func User(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.User")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.User")
 	defer span.End()
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
@@ -71,11 +73,11 @@ func User(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, userInfo))
+	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
 }
 
 func ListUser(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.ListUser")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.ListUser")
 	defer span.End()
 
 	logger.Debug(spanCtx, "获取用户列表接口", logger.Field{Key: "params", Value: proto.UserListRequest{
@@ -84,7 +86,7 @@ func ListUser(ctx *gin.Context) {
 	}})
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 	res, err := userService.ListUser(spanCtx, &proto.UserListRequest{
@@ -93,20 +95,20 @@ func ListUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, res))
+	ctx.JSON(http.StatusOK, api.Success(ctx, res))
 }
 
 func CreateUser(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(ctx.Request.Context(), "debug.CreateUser")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.CreateUser")
 	defer span.End()
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
@@ -121,8 +123,8 @@ func CreateUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, true))
+	ctx.JSON(http.StatusOK, api.Success(ctx, true))
 }

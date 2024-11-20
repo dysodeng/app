@@ -14,8 +14,8 @@ type monitor struct {
 
 // tracer 链路追踪配置
 type tracer struct {
-	ReportEnabled  bool   `mapstructure:"report_enabled"`
-	ReportEndpoint string `mapstructure:"report_endpoint"`
+	OtelEnabled    bool   `mapstructure:"otel_enabled"`
+	OtelEndpoint   string `mapstructure:"otel_endpoint"`
 	ServiceName    string `mapstructure:"service_name"`
 	ServiceVersion string `mapstructure:"service_version"`
 }
@@ -34,12 +34,12 @@ func monitorConfigLoad() {
 	}
 
 	mon := v.Sub("monitor")
-	_ = mon.BindEnv("tracer.report_enabled", "MONITOR_TRACER_REPORT_ENABLED")
-	_ = mon.BindEnv("tracer.report_endpoint", "MONITOR_TRACER_REPORT_ENDPOINT")
+	_ = mon.BindEnv("tracer.otel_enabled", "MONITOR_TRACER_OTEL_ENABLED")
+	_ = mon.BindEnv("tracer.otel_endpoint", "MONITOR_TRACER_OTEL_ENDPOINT")
 	_ = mon.BindEnv("tracer.service_name", "MONITOR_TRACER_SERVICE_NAME")
 	_ = mon.BindEnv("tracer.service_version", "MONITOR_TRACER_SERVICE_VERSION")
-	mon.SetDefault("tracer.report_enabled", "false")
-	mon.SetDefault("tracer.report_endpoint", "http://127.0.0.1:4318")
+	mon.SetDefault("tracer.otel_enabled", "false")
+	mon.SetDefault("tracer.otel_endpoint", "http://127.0.0.1:4318")
 	mon.SetDefault("tracer.service_name", "app")
 	mon.SetDefault("tracer.service_version", "v1.0.0")
 
