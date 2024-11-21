@@ -1,73 +1,128 @@
 package request
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"encoding/json"
 	"io"
 	"net/http"
-	netUrl "net/url"
+	"net/url"
 	"time"
-
-	"github.com/dysodeng/app/internal/pkg/logger"
 
 	"github.com/pkg/errors"
 )
 
-// Request http请求
-func Request(ctx context.Context, url, method string, body io.Reader, opts ...Option) ([]byte, int, error) {
+func request(requestUrl, method string, body io.Reader, opts ...Option) ([]byte, int, error) {
 	reqOpts := defaultRequestOptions()
 	for _, opt := range opts {
-		_ = opt.apply(reqOpts)
+		opt.apply(reqOpts)
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(reqOpts.ctx, reqOpts.timeout)
 	defer cancel()
 
-	req, err := http.NewRequestWithContext(timeoutCtx, method, url, body)
+	req, err := http.NewRequestWithContext(timeoutCtx, method, requestUrl, body)
 	if err != nil {
-		logger.Error(ctx, "请求错误", logger.ErrorField(err))
 		return nil, 0, err
 	}
 	for headerName, headerValue := range reqOpts.headers {
 		req.Header.Add(headerName, headerValue)
 	}
 
-	res, err := http.DefaultClient.Do(req)
+	response, err := http.DefaultClient.Do(req)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
 			return nil, 0, errors.New("请求超时")
 		}
-		logger.Error(ctx, "请求错误", logger.ErrorField(err))
 		return nil, 0, err
 	}
+	defer func() {
+		_ = response.Body.Close()
+	}()
 
-	if res.StatusCode != 200 && res.StatusCode != 201 {
-		d, _ := io.ReadAll(res.Body)
-		logger.Error(
-			ctx,
-			"请求错误",
-			logger.Field{Key: "http_status", Value: res.StatusCode},
-			logger.Field{Key: "http_body", Value: string(d)},
-		)
-		return d, res.StatusCode, errors.New("请求错误")
+	if response.StatusCode != 200 && response.StatusCode != 201 {
+		d, _ := io.ReadAll(response.Body)
+		return d, response.StatusCode, errors.New("请求错误")
 	}
 
-	b, _ := io.ReadAll(res.Body)
+	b, _ := io.ReadAll(response.Body)
 
-	return b, res.StatusCode, nil
+	return b, response.StatusCode, nil
+}
+
+func streamRequest(requestUrl, method string, body io.Reader, fn func([]byte) error, opts ...Option) (int, error) {
+	reqOpts := defaultRequestOptions()
+	for _, opt := range opts {
+		opt.apply(reqOpts)
+	}
+
+	timeoutCtx, cancel := context.WithTimeout(reqOpts.ctx, reqOpts.timeout)
+	defer cancel()
+
+	req, err := http.NewRequestWithContext(timeoutCtx, method, requestUrl, body)
+	if err != nil {
+		return 0, err
+	}
+	for headerName, headerValue := range reqOpts.headers {
+		req.Header.Add(headerName, headerValue)
+	}
+
+	client := &http.Client{Timeout: reqOpts.timeout}
+	response, err := client.Do(req)
+	if err != nil {
+		return 0, err
+	}
+	defer func() {
+		_ = response.Body.Close()
+	}()
+
+	if response.StatusCode != 200 && response.StatusCode != 201 {
+		d, _ := io.ReadAll(response.Body)
+		return response.StatusCode, errors.New(string(d))
+	}
+
+	scanner := bufio.NewScanner(response.Body)
+	// increase the buffer size to avoid running out of space
+	scanBuf := make([]byte, 0, maxBufferSize)
+	scanner.Buffer(scanBuf, maxBufferSize)
+	for scanner.Scan() {
+		bts := scanner.Bytes()
+		if err = fn(bts); err != nil {
+			return 0, err
+		}
+	}
+
+	select {
+	case <-timeoutCtx.Done():
+		return 0, context.DeadlineExceeded
+	default:
+
+	}
+
+	return response.StatusCode, nil
+}
+
+// Request http请求
+func Request(requestUrl, method string, body io.Reader, opts ...Option) ([]byte, int, error) {
+	return request(requestUrl, method, body, opts...)
+}
+
+// StreamRequest 流式请求
+func StreamRequest(requestUrl, method string, body io.Reader, fn func([]byte) error, opts ...Option) (int, error) {
+	return streamRequest(requestUrl, method, body, fn, opts...)
 }
 
 // JsonRequest json请求
-func JsonRequest(ctx context.Context, url, method string, data map[string]interface{}, opts ...Option) ([]byte, int, error) {
+func JsonRequest(requestUrl, method string, data map[string]interface{}, opts ...Option) ([]byte, int, error) {
 	dataBytes, _ := json.Marshal(data)
 	opts = append(opts, WithHeader("Content-Type", "application/json; charset=utf-8"))
-	return Request(ctx, url, method, bytes.NewReader(dataBytes), opts...)
+	return request(requestUrl, method, bytes.NewReader(dataBytes), opts...)
 }
 
 // FormRequest form-data请求
-func FormRequest(ctx context.Context, url, method string, data map[string]string, opts ...Option) ([]byte, int, error) {
-	body := netUrl.Values{}
+func FormRequest(requestUrl, method string, data map[string]string, opts ...Option) ([]byte, int, error) {
+	body := url.Values{}
 	if data != nil {
 		for key, val := range data {
 			body.Set(key, val)
@@ -75,7 +130,7 @@ func FormRequest(ctx context.Context, url, method string, data map[string]string
 	}
 	reader := bytes.NewReader([]byte(body.Encode()))
 	opts = append(opts, WithHeader("Content-Type", "application/x-www-form-urlencoded"))
-	return Request(ctx, url, method, reader, opts...)
+	return request(requestUrl, method, reader, opts...)
 }
 
 // RetryRequest 带重试的请求
