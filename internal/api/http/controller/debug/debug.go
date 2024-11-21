@@ -1,7 +1,15 @@
 package debug
 
 import (
+	"bytes"
+	"encoding/json"
+	"fmt"
+	"log"
 	"net/http"
+	"strings"
+	"time"
+
+	"github.com/dysodeng/app/internal/pkg/request"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/dal/model/common"
@@ -127,4 +135,53 @@ func CreateUser(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, api.Success(ctx, true))
+}
+
+func ChatMessage(ctx *gin.Context) {
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Message")
+	defer span.End()
+
+	ctx.Writer.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
+
+	flusher, ok := ctx.Writer.(http.Flusher)
+	if !ok {
+		ctx.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+	data, _ := json.Marshal(map[string]interface{}{
+		"query":              "你好",
+		"response_mode":      "streaming",
+		"user":               "dds",
+		"auto_generate_name": true,
+		"inputs": map[string]interface{}{
+			"name":     "dds",
+			"gender":   "男",
+			"age":      "12",
+			"patBedId": 8,
+		},
+	})
+	statusCode, err := request.StreamRequest(
+		"", // api
+		"POST",
+		bytes.NewBuffer(data),
+		func(chunk []byte) error {
+			chunkString := string(chunk)
+			if strings.HasPrefix(chunkString, "data: ") {
+				chunkString = strings.Replace(chunkString, "data: ", "", 1)
+			}
+			if chunkString != "" && chunkString != "\n" && chunkString != "\n\n" {
+				_, _ = fmt.Fprintf(ctx.Writer, "data: "+chunkString+"\n\n")
+				flusher.Flush()
+			}
+			return nil
+		},
+		request.WithTimeout(2*time.Minute),
+		request.WithContext(spanCtx),
+		request.WithStreamMaxBufferSize(1024*1024),
+		request.WithHeader("Authorization", "Bearer "), // api key
+		request.WithHeader("Content-Type", "application/json"),
+		request.WithTracer("Trace-Id", "Span-Id"),
+	)
+	log.Printf("statusCode: %d, err: %v", statusCode, err)
 }
