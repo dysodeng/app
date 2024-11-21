@@ -16,7 +16,7 @@ cp .env.example .env
 
 Usage
 -----
-在安装完成后，你可以使用以下命令启动服务：
+在安装完成后，可以使用以下命令启动服务：
 ```sh
 go run main.go
 ```
