@@ -65,7 +65,7 @@ func User(ctx *gin.Context) {
 	}
 
 	userInfo, err := userService.Info(spanCtx, &proto.UserInfoRequest{
-		Id: 1,
+		Id: 2,
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)

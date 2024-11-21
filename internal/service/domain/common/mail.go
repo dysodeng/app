@@ -6,6 +6,7 @@ import (
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/mail"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
 )
@@ -13,21 +14,20 @@ import (
 // MailDomainService 邮件领域服务
 type MailDomainService struct {
 	ctx               context.Context
-	mailDao           *commonDao.MailDao
 	baseTraceSpanName string
 }
 
 func NewMailDomainService(ctx context.Context) *MailDomainService {
 	return &MailDomainService{
 		ctx:               ctx,
-		mailDao:           commonDao.NewMailDao(ctx),
-		baseTraceSpanName: "domain.common.MailDomainService",
+		baseTraceSpanName: "service.domain.common.MailDomainService",
 	}
 }
 
 // Config 获取邮件配置
 func (ms *MailDomainService) Config() (*commonDo.MailConfig, error) {
-	config, err := ms.mailDao.Config()
+	mailDao := commonDao.NewMailDao(ms.ctx)
+	config, err := mailDao.Config()
 	if err != nil {
 		return nil, errors.Wrap(err, "邮件配置获取失败")
 	}
@@ -66,7 +66,8 @@ func (ms *MailDomainService) SaveMailConfig(config commonDo.MailConfig) error {
 		config.Transport = "smtp"
 	}
 
-	err := ms.mailDao.SaveConfig(common.MailConfig{
+	mailDao := commonDao.NewMailDao(ms.ctx)
+	err := mailDao.SaveConfig(common.MailConfig{
 		Host:      config.Host,
 		Port:      config.Port,
 		FromName:  config.FromName,
@@ -83,11 +84,17 @@ func (ms *MailDomainService) SaveMailConfig(config commonDo.MailConfig) error {
 
 // SendMail 发送邮件
 func (ms *MailDomainService) SendMail(email []string, subject, template string, templateParams map[string]string) error {
-	config, err := ms.mailDao.Config()
+	spanCtx, span := trace.Tracer().Start(ms.ctx, ms.baseTraceSpanName+".SendMail")
+	defer span.End()
+
+	mailDao := commonDao.NewMailDao(spanCtx)
+	config, err := mailDao.Config()
 	if err != nil {
+		trace.Error(errors.Wrap(err, "邮件配置获取失败"), span)
 		return errors.Wrap(err, "邮件配置获取失败")
 	}
 	if config.ID <= 0 {
+		trace.Error(errors.New("邮件配置不存在"), span)
 		return errors.New("邮件配置不存在")
 	}
 
@@ -111,11 +118,13 @@ func (ms *MailDomainService) SendMail(email []string, subject, template string, 
 		opts...,
 	)
 	if err != nil {
+		trace.Error(err, span)
 		return errors.Wrap(err, "创建邮件发送器失败")
 	}
 
 	err = sender.SendMail()
 	if err != nil {
+		trace.Error(err, span)
 		return errors.Wrap(err, "邮件发送失败")
 	}
 

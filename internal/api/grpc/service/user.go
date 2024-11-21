@@ -44,15 +44,14 @@ func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*pr
 	userDomainService := user.NewUserDomainService(spanCtx)
 	userInfo, err := userDomainService.Info(req.Id)
 	if err != nil {
-		span.SetStatus(codes.Error, "获取用户信息失败")
-		span.RecordError(err)
+		trace.Error(errors.Wrap(err, "获取用户信息失败"), span)
 		logger.Error(spanCtx, "获取用户信息失败", logger.ErrorField(err))
 		return nil, err
 	}
 
 	if userInfo.Id <= 0 {
 		span.SetStatus(codes.Error, "用户不存在")
-		span.SetAttributes(attribute.String("query: user_id", fmt.Sprintf("%d", req.Id)))
+		span.SetAttributes(attribute.String("query.user_id", fmt.Sprintf("%d", req.Id)))
 	} else {
 		span.SetStatus(codes.Ok, "获取用户信息成功")
 		span.SetAttributes(attribute.String("user_id", fmt.Sprintf("%d", userInfo.Id)))

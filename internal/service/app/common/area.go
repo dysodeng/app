@@ -19,7 +19,7 @@ type AreaAppService struct {
 func NewAreaAppService(ctx context.Context) *AreaAppService {
 	return &AreaAppService{
 		ctx:               ctx,
-		baseTraceSpanName: "app.service.common.AreaAppService",
+		baseTraceSpanName: "service.app.common.AreaAppService",
 	}
 }
 

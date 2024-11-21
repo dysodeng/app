@@ -13,9 +13,8 @@ func (c Code) ToInt64() int64 {
 
 // 业务接口响应码
 const (
-	CodeOk             Code = 200 // 成功
-	CodeFail           Code = 0   // 业务错误
-	CodeAccountDisable Code = 1   // 账号已被禁止
+	CodeOk   Code = 200 // 成功
+	CodeFail Code = 0   // 业务错误
 )
 
 // 系统异常接口响应码
@@ -30,8 +29,7 @@ const (
 
 // 错误消息内容
 const (
-	ErrorBusy        string = "系统繁忙，请稍后再试"
-	ErrorMissUid     string = "缺少用户ID"
-	ErrorMissAdminId string = "缺少管理员ID"
-	ErrForbidden     string = "当前账号没有操作权限"
+	ErrorBusy       string = "系统繁忙，请稍后再试"
+	ErrorMissUserId string = "缺少用户ID"
+	ErrorForbidden  string = "当前账号没有操作权限"
 )

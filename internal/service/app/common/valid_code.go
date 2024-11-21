@@ -3,10 +3,9 @@ package common
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
-
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/validator"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/dysodeng/app/internal/service/domain/common"
@@ -22,7 +21,7 @@ type ValidCodeAppService struct {
 func NewValidCodeAppService(ctx context.Context) *ValidCodeAppService {
 	return &ValidCodeAppService{
 		ctx:               ctx,
-		baseTraceSpanName: "app.service.common.ValidCodeAppService",
+		baseTraceSpanName: "service.app.common.ValidCodeAppService",
 	}
 }
 

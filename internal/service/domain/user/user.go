@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
+
 	userDao "github.com/dysodeng/app/internal/dal/dao/user"
 	userModel "github.com/dysodeng/app/internal/dal/model/user"
 	"github.com/dysodeng/app/internal/pkg/filesystem"
@@ -21,12 +23,16 @@ func NewUserDomainService(ctx context.Context) *DomainService {
 	return &DomainService{
 		ctx:               ctx,
 		userDao:           userDao.NewUserDao(ctx),
-		baseTraceSpanName: "domain.user.UserDomainService",
+		baseTraceSpanName: "service.domain.user.UserDomainService",
 	}
 }
 
 func (ds *DomainService) CreateUser(userInfo userDo.User) (*userDo.User, error) {
-	user, err := ds.userDao.CreateUser(userModel.User{
+	spanCtx, span := trace.Tracer().Start(ds.ctx, ds.baseTraceSpanName+".CreateUser")
+	defer span.End()
+
+	uDao := userDao.NewUserDao(spanCtx)
+	user, err := uDao.CreateUser(userModel.User{
 		Telephone: userInfo.Telephone,
 		Password:  helper.GeneratePassword([]byte(userInfo.Password)),
 		RealName:  userInfo.RealName,
@@ -37,6 +43,7 @@ func (ds *DomainService) CreateUser(userInfo userDo.User) (*userDo.User, error) 
 		Status:    model.BinaryStatusYes,
 	})
 	if err != nil {
+		trace.Error(err, span)
 		return nil, err
 	}
 	return &userDo.User{
@@ -52,7 +59,8 @@ func (ds *DomainService) CreateUser(userInfo userDo.User) (*userDo.User, error) 
 }
 
 func (ds *DomainService) Info(userId uint64) (*userDo.User, error) {
-	user, err := ds.userDao.Info(userId)
+	uDao := userDao.NewUserDao(ds.ctx)
+	user, err := uDao.Info(userId)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +77,8 @@ func (ds *DomainService) Info(userId uint64) (*userDo.User, error) {
 }
 
 func (ds *DomainService) ListUser(page, pageSize int, condition map[string]interface{}) ([]userDo.User, int64, error) {
-	userList, count, err := ds.userDao.ListUser(page, pageSize, condition)
+	uDao := userDao.NewUserDao(ds.ctx)
+	userList, count, err := uDao.ListUser(page, pageSize, condition)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -92,6 +101,7 @@ func (ds *DomainService) ListUser(page, pageSize int, condition map[string]inter
 }
 
 func (ds *DomainService) UpdateUser(userInfo userDo.User) (*userDo.User, error) {
+	uDao := userDao.NewUserDao(ds.ctx)
 	u := userModel.User{
 		PrimaryKeyID: model.PrimaryKeyID{ID: userInfo.Id},
 		Telephone:    userInfo.Telephone,
@@ -105,7 +115,7 @@ func (ds *DomainService) UpdateUser(userInfo userDo.User) (*userDo.User, error) 
 	if userInfo.Password != "" {
 		u.Password = helper.GeneratePassword([]byte(userInfo.Password))
 	}
-	user, err := ds.userDao.UpdateUser(u)
+	user, err := uDao.UpdateUser(u)
 	if err != nil {
 		return nil, err
 	}
@@ -122,5 +132,5 @@ func (ds *DomainService) UpdateUser(userInfo userDo.User) (*userDo.User, error) 
 }
 
 func (ds *DomainService) DeleteUser(userId uint64) error {
-	return ds.userDao.DeleteUser(userId)
+	return userDao.NewUserDao(ds.ctx).DeleteUser(userId)
 }

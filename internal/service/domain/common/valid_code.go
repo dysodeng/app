@@ -8,6 +8,7 @@ import (
 
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/redis"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/service"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
@@ -16,20 +17,21 @@ import (
 // ValidCodeDomainService 验证码领域服务
 type ValidCodeDomainService struct {
 	ctx               context.Context
-	smsDomainService  *SmsDomainService
-	mailDomainService *MailDomainService
+	baseTraceSpanName string
 }
 
 func NewValidCodeDomainService(ctx context.Context) *ValidCodeDomainService {
 	return &ValidCodeDomainService{
 		ctx:               ctx,
-		smsDomainService:  NewSmsDomainService(ctx),
-		mailDomainService: NewMailDomainService(ctx),
+		baseTraceSpanName: "service.domain.common.ValidCodeDomainService",
 	}
 }
 
 // SendValidCode 发送验证码
 func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizType, account string) error {
+	spanCtx, span := trace.Tracer().Start(vc.ctx, vc.baseTraceSpanName+".SendValidCode")
+	defer span.End()
+
 	switch sender {
 	case commonDo.SmsSender:
 		if account == "" {
@@ -52,12 +54,12 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 	limitKey := redis.Key(fmt.Sprintf("%s_code_limit:%s:%s", sender, bizType, account))
 	var limitTotal int = 0
 	var limitExpire float64 = 3600
-	if client.Exists(context.Background(), limitKey).Val() > 0 {
-		limitTotal, _ = client.Get(context.Background(), limitKey).Int()
+	if client.Exists(spanCtx, limitKey).Val() > 0 {
+		limitTotal, _ = client.Get(spanCtx, limitKey).Int()
 		if limitTotal >= 5 {
 			return service.EMValidCodeLimitError
 		}
-		ttl := client.TTL(context.Background(), limitKey).Val()
+		ttl := client.TTL(spanCtx, limitKey).Val()
 		limitExpire = ttl.Seconds()
 	}
 
@@ -74,19 +76,21 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 		Expire: 10,
 	}
 
-	client.HMSet(context.Background(), codeCacheKey, map[string]interface{}{
+	client.HMSet(spanCtx, codeCacheKey, map[string]interface{}{
 		"Code":   smsCode.Code,
 		"Time":   smsCode.Time,
 		"Expire": smsCode.Expire,
 	})
-	client.Expire(context.Background(), codeCacheKey, 600*time.Second)
+	client.Expire(spanCtx, codeCacheKey, 600*time.Second)
 
 	// 发送验证码
 	var err error
 	if sender == commonDo.SmsSender {
-		err = vc.smsDomainService.SendSms(account, "code", templateParam)
+		smsDomainService := NewSmsDomainService(spanCtx)
+		err = smsDomainService.SendSms(account, "code", templateParam)
 	} else {
-		err = vc.mailDomainService.SendMail([]string{account}, "验证码", "code", templateParam)
+		mailDomainService := NewMailDomainService(spanCtx)
+		err = mailDomainService.SendMail([]string{account}, "验证码", "code", templateParam)
 	}
 	if err != nil {
 		return err
@@ -101,6 +105,9 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 
 // VerifyValidCode 验证码验证
 func (vc *ValidCodeDomainService) VerifyValidCode(sender commonDo.SenderType, bizType, account, code string) error {
+	spanCtr, span := trace.Tracer().Start(vc.ctx, vc.baseTraceSpanName+".VerifyValidCode")
+	defer span.End()
+
 	switch sender {
 	case commonDo.SmsSender:
 		if account == "" {
@@ -123,12 +130,12 @@ func (vc *ValidCodeDomainService) VerifyValidCode(sender commonDo.SenderType, bi
 	codeCacheKey := redis.Key(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
 
 	client := redis.Client()
-	cacheCode, err := client.HGet(context.Background(), codeCacheKey, "Code").Result()
+	cacheCode, err := client.HGet(spanCtr, codeCacheKey, "Code").Result()
 	if err != nil {
 		return service.EMValidCodeExpireError
 	}
-	expire, _ := client.HGet(context.Background(), codeCacheKey, "Expire").Result()
-	codeTime, _ := client.HGet(context.Background(), codeCacheKey, "Time").Result()
+	expire, _ := client.HGet(spanCtr, codeCacheKey, "Expire").Result()
+	codeTime, _ := client.HGet(spanCtr, codeCacheKey, "Time").Result()
 	expireInt, err := strconv.ParseInt(expire, 10, 64)
 	if err != nil {
 		return service.EMValidCodeExpireError
@@ -142,7 +149,7 @@ func (vc *ValidCodeDomainService) VerifyValidCode(sender commonDo.SenderType, bi
 		if code != cacheCode {
 			return service.EMValidCodeError
 		}
-		client.Del(context.Background(), codeCacheKey)
+		client.Del(spanCtr, codeCacheKey)
 	} else {
 		return service.EMValidCodeExpireError
 	}

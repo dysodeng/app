@@ -3,6 +3,8 @@ package common
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
+
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"
@@ -12,22 +14,24 @@ import (
 // AreaDomainService Area领域服务
 type AreaDomainService struct {
 	ctx               context.Context
-	areaDao           *commonDao.AreaDao
 	baseTraceSpanName string
 }
 
 func NewAreaDomainService(ctx context.Context) *AreaDomainService {
 	return &AreaDomainService{
 		ctx:               ctx,
-		areaDao:           commonDao.NewAreaDao(ctx),
-		baseTraceSpanName: "domain.common.AreaDomainService",
+		baseTraceSpanName: "service.domain.common.AreaDomainService",
 	}
 }
 
 // ProvinceByAreaId 根据省地区编号查询省地区信息
 // @param areaId 省地区编号
 func (ads *AreaDomainService) ProvinceByAreaId(areaId string) (*commonDo.Area, error) {
-	area, err := ads.areaDao.ProvinceByAreaId(areaId)
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".ProvinceByAreaId")
+	defer span.End()
+
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	area, err := areaDao.ProvinceByAreaId(areaId)
 	if err != nil {
 		return nil, err
 	}
@@ -40,7 +44,11 @@ func (ads *AreaDomainService) ProvinceByAreaId(areaId string) (*commonDo.Area, e
 // CityByAreaId 根据市地区编号查询市地区信息
 // @param areaId 市地区编号
 func (ads *AreaDomainService) CityByAreaId(areaId string) (*commonDo.Area, error) {
-	area, err := ads.areaDao.CityByAreaId(areaId, "")
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".CityByAreaId")
+	defer span.End()
+
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	area, err := areaDao.CityByAreaId(areaId, "")
 	if err != nil {
 		return nil, err
 	}
@@ -54,7 +62,11 @@ func (ads *AreaDomainService) CityByAreaId(areaId string) (*commonDo.Area, error
 // CountyByAreaId 根据县地区编号查询县地区信息
 // @param areaId 县地区编号
 func (ads *AreaDomainService) CountyByAreaId(areaId string) (*commonDo.Area, error) {
-	area, err := ads.areaDao.CountyByAreaId(areaId, "")
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".CountyByAreaId")
+	defer span.End()
+
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	area, err := areaDao.CountyByAreaId(areaId, "")
 	if err != nil {
 		return nil, err
 	}
@@ -68,7 +80,11 @@ func (ads *AreaDomainService) CountyByAreaId(areaId string) (*commonDo.Area, err
 // ProvinceByAreaName 根据省地区名称查询省地区信息
 // @param areaName 省地区名称
 func (ads *AreaDomainService) ProvinceByAreaName(areaName string) (*commonDo.Area, error) {
-	area, err := ads.areaDao.ProvinceByAreaName(areaName)
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".ProvinceByAreaName")
+	defer span.End()
+
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	area, err := areaDao.ProvinceByAreaName(areaName)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +97,11 @@ func (ads *AreaDomainService) ProvinceByAreaName(areaName string) (*commonDo.Are
 // CityByAreaName 根据市地区名称查询市地区信息
 // @param areaName 市地区名称
 func (ads *AreaDomainService) CityByAreaName(areaName string) (*commonDo.Area, error) {
-	area, err := ads.areaDao.CityByAreaName(areaName)
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".CityByAreaName")
+	defer span.End()
+
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	area, err := areaDao.CityByAreaName(areaName)
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +115,11 @@ func (ads *AreaDomainService) CityByAreaName(areaName string) (*commonDo.Area, e
 // CountyByAreaName 根据区县地区名称查询区县地区信息
 // @param areaName 区县地区名称
 func (ads *AreaDomainService) CountyByAreaName(areaName string) (*commonDo.Area, error) {
-	area, err := ads.areaDao.CountyByAreaName(areaName)
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".CountyByAreaName")
+	defer span.End()
+
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	area, err := areaDao.CountyByAreaName(areaName)
 	if err != nil {
 		return nil, err
 	}
@@ -115,6 +139,9 @@ func (ads *AreaDomainService) CascadeArea(
 	cityAreaId string,
 	countyAreaId string,
 ) (*commonDo.CascadeArea, error) {
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".CascadeArea")
+	defer span.End()
+
 	if provinceAreaId == "" {
 		return nil, errors.New("缺少省地区编号")
 	}
@@ -125,7 +152,8 @@ func (ads *AreaDomainService) CascadeArea(
 		return nil, errors.New("缺少区县地区编号")
 	}
 
-	province, err := ads.areaDao.ProvinceByAreaId(provinceAreaId)
+	areaDao := commonDao.NewAreaDao(spanCtx)
+	province, err := areaDao.ProvinceByAreaId(provinceAreaId)
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +161,7 @@ func (ads *AreaDomainService) CascadeArea(
 		return nil, errors.New("省地区错误")
 	}
 
-	city, err := ads.areaDao.CityByAreaId(cityAreaId, province.AreaId)
+	city, err := areaDao.CityByAreaId(cityAreaId, province.AreaId)
 	if err != nil {
 		return nil, err
 	}
@@ -141,7 +169,7 @@ func (ads *AreaDomainService) CascadeArea(
 		return nil, errors.New("市地区错误")
 	}
 
-	county, err := ads.areaDao.CountyByAreaId(countyAreaId, city.AreaId)
+	county, err := areaDao.CountyByAreaId(countyAreaId, city.AreaId)
 	if err != nil {
 		return nil, err
 	}
@@ -160,6 +188,9 @@ func (ads *AreaDomainService) CascadeArea(
 // @param areaType 地区类型 省：province 市：city 区县：county
 // @param parentAreaId 父级地区ID
 func (ads *AreaDomainService) Area(areaType string, parentAreaId string) ([]commonDo.Area, error) {
+	spanCtx, span := trace.Tracer().Start(ads.ctx, ads.baseTraceSpanName+".Area")
+	defer span.End()
+
 	if areaType == "" {
 		return nil, errors.New("缺少地区类型")
 	}
@@ -169,11 +200,13 @@ func (ads *AreaDomainService) Area(areaType string, parentAreaId string) ([]comm
 
 	var areaCollection []commonDo.Area
 
+	areaDao := commonDao.NewAreaDao(spanCtx)
+
 	switch areaType {
 	case "province":
-		provinceList, err := ads.areaDao.ProvinceList()
+		provinceList, err := areaDao.ProvinceList()
 		if err != nil {
-			logger.Error(ads.ctx, "查询省列表失败", logger.ErrorField(err))
+			logger.Error(spanCtx, "查询省列表失败", logger.ErrorField(err))
 			return nil, errors.New("查询省列表失败")
 		}
 		for _, province := range provinceList {
@@ -182,9 +215,9 @@ func (ads *AreaDomainService) Area(areaType string, parentAreaId string) ([]comm
 		break
 
 	case "city":
-		cityList, err := ads.areaDao.CityList(parentAreaId)
+		cityList, err := areaDao.CityList(parentAreaId)
 		if err != nil {
-			logger.Error(ads.ctx, "查询市列表失败", logger.ErrorField(err))
+			logger.Error(spanCtx, "查询市列表失败", logger.ErrorField(err))
 			return nil, errors.New("查询市列表失败")
 		}
 		for _, city := range cityList {
@@ -197,9 +230,9 @@ func (ads *AreaDomainService) Area(areaType string, parentAreaId string) ([]comm
 		break
 
 	case "county":
-		countyList, err := ads.areaDao.CountyList(parentAreaId)
+		countyList, err := areaDao.CountyList(parentAreaId)
 		if err != nil {
-			logger.Error(ads.ctx, "查询区县列表失败", logger.ErrorField(err))
+			logger.Error(spanCtx, "查询区县列表失败", logger.ErrorField(err))
 			return nil, errors.New("查询区县列表失败")
 		}
 		for _, county := range countyList {
