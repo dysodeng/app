@@ -58,6 +58,7 @@ func init() {
 
 	tracer = NewTracer(
 		serviceName(),
+		trace.WithInstrumentationVersion(config.Monitor.Tracer.ServiceVersion),
 	)
 }
 
