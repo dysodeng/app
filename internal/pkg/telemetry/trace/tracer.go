@@ -34,13 +34,13 @@ func init() {
 			attribute.String("env", config.App.Env.String()),
 		)),
 	}
-	if config.Monitor.Tracer.OtelEnabled {
-		if config.Monitor.Tracer.OtelEndpoint == "" {
+	if config.Monitor.Tracer.OtlpEnabled {
+		if config.Monitor.Tracer.OtlpEndpoint == "" {
 			panic("tracer otel endpoint is empty")
 		}
 		exp, err := otlptracehttp.New(
 			traceCtx,
-			otlptracehttp.WithEndpointURL(config.Monitor.Tracer.OtelEndpoint),
+			otlptracehttp.WithEndpointURL(config.Monitor.Tracer.OtlpEndpoint),
 		)
 		if err != nil {
 			panic(err)
