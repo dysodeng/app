@@ -10,13 +10,47 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/pkg/errors"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
 )
 
 func request(requestUrl, method string, body io.Reader, opts ...Option) ([]byte, int, error) {
 	reqOpts := defaultRequestOptions()
 	for _, opt := range opts {
 		opt.apply(reqOpts)
+	}
+
+	var response *http.Response
+	var err error
+
+	var traceId, traceSpanId string
+	if reqOpts.tracerTransmit {
+		_, span := trace.Tracer().Start(reqOpts.ctx, "request.HttpRequest")
+		defer span.End()
+		if span.SpanContext().HasTraceID() {
+			traceId = span.SpanContext().TraceID().String()
+		}
+		if span.SpanContext().HasSpanID() {
+			traceSpanId = span.SpanContext().SpanID().String()
+		}
+
+		reqOpts.headers[reqOpts.traceIdKey] = traceId
+		reqOpts.headers[reqOpts.traceSpanIdKey] = traceSpanId
+
+		defer func() {
+			if err != nil {
+				span.SetStatus(codes.Ok, err.Error())
+			} else {
+				span.SetStatus(codes.Ok, "")
+			}
+			span.SetAttributes(
+				attribute.Int("http.status_code", response.StatusCode),
+				attribute.String("http.method", response.Request.Method),
+				attribute.String("http.url", response.Request.URL.String()),
+			)
+		}()
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(reqOpts.ctx, reqOpts.timeout)
@@ -30,10 +64,11 @@ func request(requestUrl, method string, body io.Reader, opts ...Option) ([]byte,
 		req.Header.Add(headerName, headerValue)
 	}
 
-	response, err := http.DefaultClient.Do(req)
+	response, err = http.DefaultClient.Do(req)
 	if err != nil {
 		if errors.Is(err, context.DeadlineExceeded) {
-			return nil, 0, errors.New("请求超时")
+			err = errors.New("请求超时")
+			return nil, 0, err
 		}
 		return nil, 0, err
 	}
@@ -43,7 +78,8 @@ func request(requestUrl, method string, body io.Reader, opts ...Option) ([]byte,
 
 	if response.StatusCode != 200 && response.StatusCode != 201 {
 		d, _ := io.ReadAll(response.Body)
-		return d, response.StatusCode, errors.New("请求错误")
+		err = errors.New("请求错误")
+		return d, response.StatusCode, err
 	}
 
 	b, _ := io.ReadAll(response.Body)
@@ -55,6 +91,37 @@ func streamRequest(requestUrl, method string, body io.Reader, fn func([]byte) er
 	reqOpts := defaultRequestOptions()
 	for _, opt := range opts {
 		opt.apply(reqOpts)
+	}
+
+	var response *http.Response
+	var err error
+
+	var traceId, traceSpanId string
+	if reqOpts.tracerTransmit {
+		_, span := trace.Tracer().Start(reqOpts.ctx, "request.StreamRequest")
+		defer span.End()
+		if span.SpanContext().HasTraceID() {
+			traceId = span.SpanContext().TraceID().String()
+		}
+		if span.SpanContext().HasSpanID() {
+			traceSpanId = span.SpanContext().SpanID().String()
+		}
+
+		reqOpts.headers[reqOpts.traceIdKey] = traceId
+		reqOpts.headers[reqOpts.traceSpanIdKey] = traceSpanId
+
+		defer func() {
+			if err != nil {
+				span.SetStatus(codes.Error, err.Error())
+			} else {
+				span.SetStatus(codes.Ok, "")
+			}
+			span.SetAttributes(
+				attribute.Int("http.status_code", response.StatusCode),
+				attribute.String("http.method", response.Request.Method),
+				attribute.String("http.url", response.Request.URL.String()),
+			)
+		}()
 	}
 
 	timeoutCtx, cancel := context.WithTimeout(reqOpts.ctx, reqOpts.timeout)
@@ -69,7 +136,7 @@ func streamRequest(requestUrl, method string, body io.Reader, fn func([]byte) er
 	}
 
 	client := &http.Client{Timeout: reqOpts.timeout}
-	response, err := client.Do(req)
+	response, err = client.Do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -79,13 +146,14 @@ func streamRequest(requestUrl, method string, body io.Reader, fn func([]byte) er
 
 	if response.StatusCode != 200 && response.StatusCode != 201 {
 		d, _ := io.ReadAll(response.Body)
-		return response.StatusCode, errors.New(string(d))
+		err = errors.New(string(d))
+		return response.StatusCode, err
 	}
 
 	scanner := bufio.NewScanner(response.Body)
 	// increase the buffer size to avoid running out of space
-	scanBuf := make([]byte, 0, maxBufferSize)
-	scanner.Buffer(scanBuf, maxBufferSize)
+	scanBuf := make([]byte, 0, reqOpts.maxBufferSize)
+	scanner.Buffer(scanBuf, reqOpts.maxBufferSize)
 	for scanner.Scan() {
 		bts := scanner.Bytes()
 		if err = fn(bts); err != nil {
@@ -95,7 +163,8 @@ func streamRequest(requestUrl, method string, body io.Reader, fn func([]byte) er
 
 	select {
 	case <-timeoutCtx.Done():
-		return 0, context.DeadlineExceeded
+		err = context.DeadlineExceeded
+		return 0, err
 	default:
 
 	}

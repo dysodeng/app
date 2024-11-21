@@ -11,10 +11,13 @@ const (
 )
 
 type requestOption struct {
-	ctx           context.Context
-	timeout       time.Duration
-	maxBufferSize int
-	headers       map[string]string
+	ctx            context.Context
+	timeout        time.Duration
+	maxBufferSize  int
+	headers        map[string]string
+	tracerTransmit bool
+	traceIdKey     string
+	traceSpanIdKey string
 }
 
 type Option interface {
@@ -62,5 +65,14 @@ func WithHeader(key, value string) Option {
 func WithStreamMaxBufferSize(maxBufferSize int) Option {
 	return optionFunc(func(option *requestOption) {
 		option.maxBufferSize = maxBufferSize
+	})
+}
+
+// WithTracer 添加链路追踪
+func WithTracer(traceIdKey, spanIdKey string) Option {
+	return optionFunc(func(option *requestOption) {
+		option.tracerTransmit = true
+		option.traceIdKey = traceIdKey
+		option.traceSpanIdKey = spanIdKey
 	})
 }
