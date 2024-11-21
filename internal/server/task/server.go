@@ -3,11 +3,10 @@ package task
 import (
 	"log"
 
-	"github.com/dysodeng/app/internal/pkg/mq"
-	"github.com/dysodeng/app/internal/server/task/job"
-
 	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/pkg/mq"
 	"github.com/dysodeng/app/internal/server"
+	"github.com/dysodeng/app/internal/server/task/job"
 	"github.com/dysodeng/mq/contract"
 	"github.com/pkg/errors"
 )

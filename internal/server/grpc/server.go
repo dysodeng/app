@@ -5,18 +5,16 @@ import (
 	"log"
 	"time"
 
-	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
-	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
-	"google.golang.org/grpc"
-
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/api/grpc/service"
+	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/helper"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
+	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/rpc"
 	"github.com/dysodeng/rpc/naming/etcd"
-
-	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/server"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
+	"google.golang.org/grpc"
 )
 
 // grpcServer gRPC服务

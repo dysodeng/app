@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/dysodeng/app/internal/api/http/router"
-
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/server"
 	"github.com/gin-gonic/gin"
