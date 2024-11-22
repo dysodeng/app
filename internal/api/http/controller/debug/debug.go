@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -68,6 +69,13 @@ func User(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.User")
 	defer span.End()
 
+	userId := ctx.Query("user_id")
+	userID, _ := strconv.ParseUint(userId, 10, 64)
+	if userID <= 0 {
+		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少用户ID", api.CodeFail))
+		return
+	}
+
 	userService, err := user.Service(spanCtx)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
@@ -75,7 +83,7 @@ func User(ctx *gin.Context) {
 	}
 
 	userInfo, err := userService.Info(spanCtx, &proto.UserInfoRequest{
-		Id: 2,
+		Id: userID,
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
