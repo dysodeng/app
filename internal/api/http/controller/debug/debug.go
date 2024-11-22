@@ -9,13 +9,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dysodeng/app/internal/pkg/request"
+	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
+	"go.opentelemetry.io/otel/metric"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
+	"github.com/dysodeng/app/internal/pkg/request"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/token"
 	"github.com/dysodeng/app/internal/service/reply/api"
@@ -78,8 +80,22 @@ func User(ctx *gin.Context) {
 	if err != nil {
 		err, _ = rpc.Error(err)
 		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+
+		apiCounter, _ := metrics.Meter().Int64Counter(
+			"user.fail",
+			metric.WithDescription("获取用户信息失败数量"),
+			metric.WithUnit("{call}"),
+		)
+		apiCounter.Add(spanCtx, 1)
 		return
 	}
+
+	apiCounter, _ := metrics.Meter().Int64Counter(
+		"user.success",
+		metric.WithDescription("获取用户信息成功数量"),
+		metric.WithUnit("{call}"),
+	)
+	apiCounter.Add(spanCtx, 1)
 
 	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
 }

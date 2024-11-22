@@ -9,15 +9,16 @@ import (
 
 // Monitor 平台监控配置
 type monitor struct {
-	Tracer tracer `mapstructure:"tracer"`
+	ServiceName    string `mapstructure:"service_name"`
+	ServiceVersion string `mapstructure:"service_version"`
+	Tracer         otlp   `mapstructure:"tracer"`
+	Metrics        otlp   `mapstructure:"metrics"`
 }
 
 // tracer 链路追踪配置
-type tracer struct {
-	OtlpEnabled    bool   `mapstructure:"otlp_enabled"`
-	OtlpEndpoint   string `mapstructure:"otlp_endpoint"`
-	ServiceName    string `mapstructure:"service_name"`
-	ServiceVersion string `mapstructure:"service_version"`
+type otlp struct {
+	OtlpEnabled  bool   `mapstructure:"otlp_enabled"`
+	OtlpEndpoint string `mapstructure:"otlp_endpoint"`
 }
 
 var Monitor *monitor
@@ -34,14 +35,18 @@ func monitorConfigLoad() {
 	}
 
 	mon := v.Sub("monitor")
+	_ = mon.BindEnv("service_name", "MONITOR_SERVICE_NAME")
+	_ = mon.BindEnv("service_version", "MONITOR_SERVICE_VERSION")
 	_ = mon.BindEnv("tracer.otlp_enabled", "MONITOR_TRACER_OTLP_ENABLED")
 	_ = mon.BindEnv("tracer.otlp_endpoint", "MONITOR_TRACER_OTLP_ENDPOINT")
-	_ = mon.BindEnv("tracer.service_name", "MONITOR_TRACER_SERVICE_NAME")
-	_ = mon.BindEnv("tracer.service_version", "MONITOR_TRACER_SERVICE_VERSION")
+	_ = mon.BindEnv("metrics.otlp_enabled", "MONITOR_METRICS_OTLP_ENABLED")
+	_ = mon.BindEnv("metrics.otlp_endpoint", "MONITOR_METRICS_OTLP_ENDPOINT")
+	mon.SetDefault("service_name", "app")
+	mon.SetDefault("service_version", "v1.0.0")
 	mon.SetDefault("tracer.otlp_enabled", "false")
 	mon.SetDefault("tracer.otlp_endpoint", "http://127.0.0.1:4318")
-	mon.SetDefault("tracer.service_name", "app")
-	mon.SetDefault("tracer.service_version", "v1.0.0")
+	mon.SetDefault("metrics.otlp_enabled", "false")
+	mon.SetDefault("metrics.otlp_endpoint", "http://127.0.0.1:4318")
 
 	if err := mon.Unmarshal(&Monitor); err != nil {
 		panic(err)

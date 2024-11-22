@@ -52,6 +52,7 @@ func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*pr
 	if userInfo.Id <= 0 {
 		span.SetStatus(codes.Error, "用户不存在")
 		span.SetAttributes(attribute.String("query.user_id", fmt.Sprintf("%d", req.Id)))
+		return nil, errors.New("用户不存在")
 	} else {
 		span.SetStatus(codes.Ok, "获取用户信息成功")
 		span.SetAttributes(attribute.String("user_id", fmt.Sprintf("%d", userInfo.Id)))

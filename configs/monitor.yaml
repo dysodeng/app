@@ -1,6 +1,9 @@
 monitor:
+  service_name: "app"
+  service_version: "v1.0.0"
   tracer: # 链路追踪
     otlp_enable: false # 是否开启数据上报
     otlp_endpoint: "http://127.0.0.1:4318" # 上报地址
-    service_name: "app"
-    service_version: "v1.0.0"
+  metrics: # 监控
+    otlp_enable: false # 是否开启数据上报
+    otlp_endpoint: "http://127.0.0.1:4318" # 上报地址

@@ -8,6 +8,8 @@ import (
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/redis"
+	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/app/internal/server/cron"
 	"github.com/dysodeng/app/internal/server/grpc"
@@ -30,6 +32,9 @@ func (app *App) Run() {
 	// 加载配置
 	app.config()
 
+	// 开启监控
+	app.monitor()
+
 	// 应用初始化
 	app.initialize()
 
@@ -42,6 +47,17 @@ func (app *App) Run() {
 
 func (app *App) config() {
 	config.Load()
+}
+
+func (app *App) monitor() {
+	err := trace.TracerProviderInit()
+	if err != nil {
+		panic(err)
+	}
+	err = metrics.MetricProviderInit()
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (app *App) initialize() {
@@ -87,10 +103,6 @@ func (app *App) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
-	app.shutdown()
-}
-
-func (app *App) shutdown() {
 	for _, serverIns := range app.serverList {
 		serverIns.Shutdown()
 	}

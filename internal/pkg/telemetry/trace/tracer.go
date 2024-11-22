@@ -5,6 +5,7 @@ import (
 
 	"github.com/dysodeng/app/internal/config"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp"
@@ -23,27 +24,34 @@ var tracer trace.Tracer
 
 var traceCtx context.Context
 
-func init() {
+func TracerProviderInit() error {
 	traceCtx = context.Background()
-	tpOpts := []sdktrace.TracerProviderOption{
-		sdktrace.WithSampler(sdktrace.AlwaysSample()),
-		sdktrace.WithResource(resource.NewWithAttributes(
+	res, err := resource.Merge(
+		resource.Default(),
+		resource.NewWithAttributes(
 			semconv.SchemaURL,
 			semconv.ServiceName(serviceName()),
-			semconv.ServiceVersion(config.Monitor.Tracer.ServiceVersion),
+			semconv.ServiceVersion(config.Monitor.ServiceVersion),
 			attribute.String("env", config.App.Env.String()),
-		)),
+		),
+	)
+	if err != nil {
+		return err
+	}
+	tpOpts := []sdktrace.TracerProviderOption{
+		sdktrace.WithSampler(sdktrace.AlwaysSample()),
+		sdktrace.WithResource(res),
 	}
 	if config.Monitor.Tracer.OtlpEnabled {
 		if config.Monitor.Tracer.OtlpEndpoint == "" {
-			panic("tracer otel endpoint is empty")
+			return errors.New("tracer otel endpoint is empty")
 		}
 		exp, err := otlptracehttp.New(
 			traceCtx,
 			otlptracehttp.WithEndpointURL(config.Monitor.Tracer.OtlpEndpoint),
 		)
 		if err != nil {
-			panic(err)
+			return err
 		}
 		tpOpts = append(tpOpts, sdktrace.WithBatcher(exp))
 	}
@@ -58,14 +66,16 @@ func init() {
 
 	tracer = NewTracer(
 		serviceName(),
-		trace.WithInstrumentationVersion(config.Monitor.Tracer.ServiceVersion),
+		trace.WithInstrumentationVersion(config.Monitor.ServiceVersion),
 	)
+
+	return nil
 }
 
 func serviceName() string {
 	name := config.App.Name
-	if config.Monitor.Tracer.ServiceName != "" {
-		name = config.Monitor.Tracer.ServiceName
+	if config.Monitor.ServiceName != "" {
+		name = config.Monitor.ServiceName
 	}
 	return name
 }
