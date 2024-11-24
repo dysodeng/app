@@ -174,7 +174,7 @@ func ChatMessage(ctx *gin.Context) {
 	}
 
 	data, _ := json.Marshal(map[string]interface{}{
-		"query":              "你好",
+		"query":              "你好，现在几点了",
 		"response_mode":      "streaming",
 		"user":               "dds",
 		"auto_generate_name": true,
@@ -208,4 +208,31 @@ func ChatMessage(ctx *gin.Context) {
 		request.WithTracer("Trace-Id", "Span-Id"),
 	)
 	log.Printf("statusCode: %d, err: %v", statusCode, err)
+}
+
+func RemoteRequest(ctx *gin.Context) {
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.RemoteRequest")
+	defer span.End()
+
+	body, statusCode, err := request.JsonRequest(
+		"http://localhost:8080/api/v1/debug/grpc/user?user_id=2",
+		"POST",
+		nil,
+		request.WithContext(spanCtx),
+		request.WithTracer("Trace-Id", "Span-Id"),
+	)
+	if err != nil {
+		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: err})
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "接口请求失败", api.CodeFail))
+		return
+	}
+	if statusCode != 200 {
+		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: string(body)}, logger.Field{Key: "status_code", Value: statusCode})
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "接口请求失败", api.CodeFail))
+		return
+	}
+
+	var res map[string]interface{}
+	_ = json.Unmarshal(body, &res)
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, res))
 }
