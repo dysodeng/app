@@ -2,7 +2,6 @@ package mail
 
 import (
 	"bytes"
-	"crypto/tls"
 	htmlTemplate "html/template"
 
 	"github.com/pkg/errors"
@@ -72,15 +71,9 @@ func NewMailSender(to []string, template string, config Config, opts ...Option) 
 // SendMail 发送邮件
 func (sender *Mail) SendMail() error {
 	d := gomail.NewDialer(sender.option.host, sender.option.port, sender.option.username, sender.option.password)
-	if sender.option.port == 465 {
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: true}
-	}
-
 	err := d.DialAndSend(sender.message)
-
 	if err != nil {
 		return errors.Wrap(err, "邮件发送失败")
 	}
-
 	return nil
 }
