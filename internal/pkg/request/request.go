@@ -6,6 +6,7 @@ import (
 	"context"
 	"encoding/json"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"time"
@@ -203,14 +204,17 @@ func FormRequest(requestUrl, method string, data map[string]string, opts ...Opti
 }
 
 // RetryRequest 带重试的请求
-func RetryRequest(requestFunc func() error, retryNum int) {
-	// 设置初始等待时间和递增时间间隔
-	initialWait := 5 * time.Second
-	increment := 10 * time.Second
-	retry := 0 // 重试次数
+func RetryRequest(requestFunc func() error, opts ...RetryOption) {
+	options := defaultRetryOptions()
+	for _, opt := range opts {
+		opt.apply(options)
+	}
+
+	// 重试次数
+	retry := 0
 
 	// 记录下一次尝试的时间
-	nextTry := time.Now().Add(initialWait)
+	nextTry := time.Now().Add(options.initialWaitTime)
 
 	err := requestFunc()
 	if err == nil { // 请求成功
@@ -218,16 +222,17 @@ func RetryRequest(requestFunc func() error, retryNum int) {
 	}
 
 	for {
-		// 如果当前时间大于下一次尝试的时间，则等待结束，进行下一次请求
+		log.Printf("第%d次请求", retry+1)
+		// 如果当前时间大于下一次重试的时间，则等待结束，进行下一次请求
 		if time.Now().After(nextTry) {
 			err = requestFunc()
 			if err == nil {
 				break
 			}
-			nextTry = nextTry.Add(increment) // 更新下一次尝试的时间
+			nextTry = nextTry.Add(options.incrementTime) // 更新下一次重试的时间
 		}
 
-		if retry >= retryNum {
+		if retry >= options.retryNum {
 			break
 		}
 
