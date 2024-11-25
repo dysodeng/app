@@ -15,7 +15,7 @@ type etcdItem struct {
 	Addr     string `mapstructure:"addr"`
 	Username string `mapstructure:"username"`
 	Password string `mapstructure:"password"`
-	TTL      bool   `mapstructure:"ttl"`
+	TLS      bool   `mapstructure:"tls"`
 }
 
 var Etcd *etcd
@@ -35,7 +35,7 @@ func etcdConfigLoad() {
 	_ = d.BindEnv("grpc.addr", "GRPC_ETCD_ADDR")
 	_ = d.BindEnv("grpc.username", "GRPC_ETCD_USERNAME")
 	_ = d.BindEnv("grpc.password", "GRPC_ETCD_PASSWORD")
-	_ = d.BindEnv("grpc.ttl", "GRPC_ETCD_TTL")
+	_ = d.BindEnv("grpc.tls", "GRPC_ETCD_TLS")
 	d.SetDefault("grpc.addr", "127.0.0.1:2379")
 	if err := d.Unmarshal(&Etcd); err != nil {
 		panic(err)
