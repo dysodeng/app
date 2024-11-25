@@ -214,8 +214,10 @@ func RemoteRequest(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.RemoteRequest")
 	defer span.End()
 
+	userId := ctx.Query("user_id")
+
 	body, statusCode, err := request.JsonRequest(
-		"http://localhost:8080/api/v1/debug/grpc/user?user_id=2",
+		"http://localhost:8080/api/v1/debug/grpc/user?user_id="+userId,
 		"POST",
 		nil,
 		request.WithContext(spanCtx),

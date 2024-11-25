@@ -15,21 +15,34 @@ import (
 )
 
 // ValidCodeDomainService 验证码领域服务
-type ValidCodeDomainService struct {
-	ctx               context.Context
-	baseTraceSpanName string
+type ValidCodeDomainService interface {
+	SendValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account string) error
+	VerifyValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account, code string) error
 }
 
-func NewValidCodeDomainService(ctx context.Context) *ValidCodeDomainService {
-	return &ValidCodeDomainService{
-		ctx:               ctx,
-		baseTraceSpanName: "service.domain.common.ValidCodeDomainService",
+// validCodeDomainService 验证码领域服务
+type validCodeDomainService struct {
+	baseTraceSpanName string
+	smsDomainService  SmsDomainService
+	mailDomainService MailDomainService
+}
+
+var validCodeDomainServiceInstance ValidCodeDomainService
+
+func NewValidCodeDomainService(smsDomainService SmsDomainService, mailDomainService MailDomainService) ValidCodeDomainService {
+	if validCodeDomainServiceInstance == nil {
+		validCodeDomainServiceInstance = &validCodeDomainService{
+			baseTraceSpanName: "service.domain.common.ValidCodeDomainService",
+			smsDomainService:  smsDomainService,
+			mailDomainService: mailDomainService,
+		}
 	}
+	return validCodeDomainServiceInstance
 }
 
 // SendValidCode 发送验证码
-func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizType, account string) error {
-	spanCtx, span := trace.Tracer().Start(vc.ctx, vc.baseTraceSpanName+".SendValidCode")
+func (vc *validCodeDomainService) SendValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".SendValidCode")
 	defer span.End()
 
 	switch sender {
@@ -86,11 +99,9 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 	// 发送验证码
 	var err error
 	if sender == commonDo.SmsSender {
-		smsDomainService := NewSmsDomainService(spanCtx)
-		err = smsDomainService.SendSms(account, "code", templateParam)
+		err = vc.smsDomainService.SendSms(spanCtx, account, "code", templateParam)
 	} else {
-		mailDomainService := NewMailDomainService(spanCtx)
-		err = mailDomainService.SendMail([]string{account}, "验证码", "code", templateParam)
+		err = vc.mailDomainService.SendMail(spanCtx, []string{account}, "验证码", "code", templateParam)
 	}
 	if err != nil {
 		return err
@@ -98,14 +109,14 @@ func (vc *ValidCodeDomainService) SendValidCode(sender commonDo.SenderType, bizT
 
 	// 设置发送次数
 	limitTotal += 1
-	client.Set(context.Background(), limitKey, limitTotal, time.Duration(limitExpire)*time.Second)
+	client.Set(spanCtx, limitKey, limitTotal, time.Duration(limitExpire)*time.Second)
 
 	return nil
 }
 
 // VerifyValidCode 验证码验证
-func (vc *ValidCodeDomainService) VerifyValidCode(sender commonDo.SenderType, bizType, account, code string) error {
-	spanCtr, span := trace.Tracer().Start(vc.ctx, vc.baseTraceSpanName+".VerifyValidCode")
+func (vc *validCodeDomainService) VerifyValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account, code string) error {
+	spanCtr, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".VerifyValidCode")
 	defer span.End()
 
 	switch sender {

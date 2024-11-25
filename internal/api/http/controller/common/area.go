@@ -18,7 +18,8 @@ func Area(ctx *gin.Context) {
 
 	spanCtx := trace.Gin(ctx)
 
-	result, err := common.NewAreaAppService(spanCtx).Area(body.AreaType, body.ParentAreaId)
+	areaAppService := common.InitAreaAppService()
+	result, err := areaAppService.Area(spanCtx, body.AreaType, body.ParentAreaId)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
@@ -35,7 +36,8 @@ func CascadeArea(ctx *gin.Context) {
 
 	spanCtx := trace.Gin(ctx)
 
-	result, err := common.NewAreaAppService(spanCtx).CascadeArea(body.ProvinceAreaId, body.CityAreaId, body.CountyAreaId)
+	areaAppService := common.InitAreaAppService()
+	result, err := areaAppService.CascadeArea(spanCtx, body.ProvinceAreaId, body.CityAreaId, body.CountyAreaId)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return

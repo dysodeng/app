@@ -13,26 +13,38 @@ import (
 	userDo "github.com/dysodeng/app/internal/service/do/user"
 )
 
-type DomainService struct {
-	ctx               context.Context
-	userDao           *userDao.Dao
+// DomainService 用户领域服务
+type DomainService interface {
+	Info(ctx context.Context, userId uint64) (*userDo.User, error)
+	ListUser(ctx context.Context, page, pageSize int, condition map[string]interface{}) ([]userDo.User, int64, error)
+	CreateUser(ctx context.Context, userInfo userDo.User) (*userDo.User, error)
+	UpdateUser(ctx context.Context, userInfo userDo.User) (*userDo.User, error)
+	DeleteUser(ctx context.Context, userId uint64) error
+}
+
+// domainService 用户领域服务
+type domainService struct {
+	userDao           userDao.Dao
 	baseTraceSpanName string
 }
 
-func NewUserDomainService(ctx context.Context) *DomainService {
-	return &DomainService{
-		ctx:               ctx,
-		userDao:           userDao.NewUserDao(ctx),
-		baseTraceSpanName: "service.domain.user.UserDomainService",
+var userDomainServiceInstance DomainService
+
+func NewUserDomainService(userDao userDao.Dao) DomainService {
+	if userDomainServiceInstance == nil {
+		userDomainServiceInstance = &domainService{
+			baseTraceSpanName: "service.domain.user.UserDomainService",
+			userDao:           userDao,
+		}
 	}
+	return userDomainServiceInstance
 }
 
-func (ds *DomainService) CreateUser(userInfo userDo.User) (*userDo.User, error) {
-	spanCtx, span := trace.Tracer().Start(ds.ctx, ds.baseTraceSpanName+".CreateUser")
+func (ds *domainService) CreateUser(ctx context.Context, userInfo userDo.User) (*userDo.User, error) {
+	spanCtx, span := trace.Tracer().Start(ctx, ds.baseTraceSpanName+".CreateUser")
 	defer span.End()
 
-	uDao := userDao.NewUserDao(spanCtx)
-	user, err := uDao.CreateUser(userModel.User{
+	user, err := ds.userDao.CreateUser(spanCtx, userModel.User{
 		Telephone: userInfo.Telephone,
 		Password:  helper.GeneratePassword([]byte(userInfo.Password)),
 		RealName:  userInfo.RealName,
@@ -58,9 +70,8 @@ func (ds *DomainService) CreateUser(userInfo userDo.User) (*userDo.User, error) 
 	}, nil
 }
 
-func (ds *DomainService) Info(userId uint64) (*userDo.User, error) {
-	uDao := userDao.NewUserDao(ds.ctx)
-	user, err := uDao.Info(userId)
+func (ds *domainService) Info(ctx context.Context, userId uint64) (*userDo.User, error) {
+	user, err := ds.userDao.Info(ctx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -76,9 +87,8 @@ func (ds *DomainService) Info(userId uint64) (*userDo.User, error) {
 	}, nil
 }
 
-func (ds *DomainService) ListUser(page, pageSize int, condition map[string]interface{}) ([]userDo.User, int64, error) {
-	uDao := userDao.NewUserDao(ds.ctx)
-	userList, count, err := uDao.ListUser(page, pageSize, condition)
+func (ds *domainService) ListUser(ctx context.Context, page, pageSize int, condition map[string]interface{}) ([]userDo.User, int64, error) {
+	userList, count, err := ds.userDao.ListUser(ctx, page, pageSize, condition)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -100,8 +110,7 @@ func (ds *DomainService) ListUser(page, pageSize int, condition map[string]inter
 	return userDoList, count, nil
 }
 
-func (ds *DomainService) UpdateUser(userInfo userDo.User) (*userDo.User, error) {
-	uDao := userDao.NewUserDao(ds.ctx)
+func (ds *domainService) UpdateUser(ctx context.Context, userInfo userDo.User) (*userDo.User, error) {
 	u := userModel.User{
 		PrimaryKeyID: model.PrimaryKeyID{ID: userInfo.Id},
 		Telephone:    userInfo.Telephone,
@@ -115,7 +124,7 @@ func (ds *DomainService) UpdateUser(userInfo userDo.User) (*userDo.User, error) 
 	if userInfo.Password != "" {
 		u.Password = helper.GeneratePassword([]byte(userInfo.Password))
 	}
-	user, err := uDao.UpdateUser(u)
+	user, err := ds.userDao.UpdateUser(ctx, u)
 	if err != nil {
 		return nil, err
 	}
@@ -131,6 +140,6 @@ func (ds *DomainService) UpdateUser(userInfo userDo.User) (*userDo.User, error) 
 	}, nil
 }
 
-func (ds *DomainService) DeleteUser(userId uint64) error {
-	return userDao.NewUserDao(ds.ctx).DeleteUser(userId)
+func (ds *domainService) DeleteUser(ctx context.Context, userId uint64) error {
+	return ds.userDao.DeleteUser(ctx, userId)
 }

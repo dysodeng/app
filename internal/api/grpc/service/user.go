@@ -41,8 +41,8 @@ func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*pr
 		return nil, errors.New("缺少用户ID")
 	}
 
-	userDomainService := user.NewUserDomainService(spanCtx)
-	userInfo, err := userDomainService.Info(req.Id)
+	userDomainService := user.InitUserDomainService()
+	userInfo, err := userDomainService.Info(spanCtx, req.Id)
 	if err != nil {
 		trace.Error(errors.Wrap(err, "获取用户信息失败"), span)
 		logger.Error(spanCtx, "获取用户信息失败", logger.ErrorField(err))
@@ -86,8 +86,8 @@ func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) 
 		condition["username like %?%"] = req.Username
 	}
 
-	userDomainService := user.NewUserDomainService(spanCtx)
-	list, total, err := userDomainService.ListUser(int(req.PageNum), int(req.PageSize), condition)
+	userDomainService := user.InitUserDomainService()
+	list, total, err := userDomainService.ListUser(spanCtx, int(req.PageNum), int(req.PageSize), condition)
 	if err != nil {
 		logger.Error(spanCtx, "获取用户列表失败", logger.ErrorField(err))
 		return nil, err
@@ -137,8 +137,9 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 	if !validator.IsSafePassword(req.Password, 8) {
 		return nil, errors.New("密码格式不正确")
 	}
-	userDomainService := user.NewUserDomainService(spanCtx)
-	userInfo, err := userDomainService.CreateUser(userDo.User{
+
+	userDomainService := user.InitUserDomainService()
+	userInfo, err := userDomainService.CreateUser(spanCtx, userDo.User{
 		Telephone: req.Telephone,
 		Password:  req.Password,
 		RealName:  req.RealName,

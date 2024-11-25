@@ -11,29 +11,39 @@ import (
 )
 
 // AreaAppService 地区应用服务
-type AreaAppService struct {
-	ctx               context.Context
-	baseTraceSpanName string
+type AreaAppService interface {
+	Area(ctx context.Context, areaType string, parentAreaId string) ([]commonReply.Area, error)
+	CascadeArea(ctx context.Context, provinceAreaId string, cityAreaId string, countyAreaId string) (*commonReply.CascadeArea, error)
 }
 
-func NewAreaAppService(ctx context.Context) *AreaAppService {
-	return &AreaAppService{
-		ctx:               ctx,
-		baseTraceSpanName: "service.app.common.AreaAppService",
+// areaAppService 地区应用服务
+type areaAppService struct {
+	baseTraceSpanName string
+	areaDomainService common.AreaDomainService
+}
+
+var areaAppServiceInstance AreaAppService
+
+func NewAreaAppService(areaDomainService common.AreaDomainService) AreaAppService {
+	if areaAppServiceInstance == nil {
+		areaAppServiceInstance = &areaAppService{
+			baseTraceSpanName: "service.app.common.AreaAppService",
+			areaDomainService: areaDomainService,
+		}
 	}
+	return areaAppServiceInstance
 }
 
 // Area 获取地区列表
-func (area *AreaAppService) Area(areaType string, parentAreaId string) ([]commonReply.Area, error) {
-	spanCtr, span := trace.Tracer().Start(area.ctx, area.baseTraceSpanName+".Area")
+func (area *areaAppService) Area(ctx context.Context, areaType string, parentAreaId string) ([]commonReply.Area, error) {
+	spanCtx, span := trace.Tracer().Start(ctx, area.baseTraceSpanName+".Area")
 	defer span.End()
 
 	if !helper.Contain(areaType, []string{"province", "city", "county"}) {
 		return nil, errors.New("地区类型错误")
 	}
 
-	areaDomainService := common.NewAreaDomainService(spanCtr)
-	areaList, err := areaDomainService.Area(areaType, parentAreaId)
+	areaList, err := area.areaDomainService.Area(spanCtx, areaType, parentAreaId)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +61,13 @@ func (area *AreaAppService) Area(areaType string, parentAreaId string) ([]common
 }
 
 // CascadeArea 获取地区级联信息
-func (area *AreaAppService) CascadeArea(
+func (area *areaAppService) CascadeArea(
+	ctx context.Context,
 	provinceAreaId string,
 	cityAreaId string,
 	countyAreaId string,
 ) (*commonReply.CascadeArea, error) {
-	spanCtr, span := trace.Tracer().Start(area.ctx, area.baseTraceSpanName+".CascadeArea")
+	spanCtx, span := trace.Tracer().Start(ctx, area.baseTraceSpanName+".CascadeArea")
 	defer span.End()
 
 	if provinceAreaId == "" {
@@ -69,8 +80,7 @@ func (area *AreaAppService) CascadeArea(
 		return nil, errors.New("缺少区县地区编号")
 	}
 
-	areaDomainService := common.NewAreaDomainService(spanCtr)
-	cascadeArea, err := areaDomainService.CascadeArea(provinceAreaId, cityAreaId, countyAreaId)
+	cascadeArea, err := area.areaDomainService.CascadeArea(spanCtx, provinceAreaId, cityAreaId, countyAreaId)
 	if err != nil {
 		return nil, err
 	}

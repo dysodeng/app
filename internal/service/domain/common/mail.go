@@ -12,22 +12,33 @@ import (
 )
 
 // MailDomainService 邮件领域服务
-type MailDomainService struct {
-	ctx               context.Context
-	baseTraceSpanName string
+type MailDomainService interface {
+	Config(ctx context.Context) (*commonDo.MailConfig, error)
+	SaveMailConfig(ctx context.Context, config commonDo.MailConfig) error
+	SendMail(ctx context.Context, email []string, subject, template string, templateParams map[string]string) error
 }
 
-func NewMailDomainService(ctx context.Context) *MailDomainService {
-	return &MailDomainService{
-		ctx:               ctx,
-		baseTraceSpanName: "service.domain.common.MailDomainService",
+// mailDomainService 邮件领域服务
+type mailDomainService struct {
+	baseTraceSpanName string
+	mailDao           commonDao.MailDao
+}
+
+var mailDomainServiceInstance MailDomainService
+
+func NewMailDomainService(mailDao commonDao.MailDao) MailDomainService {
+	if mailDomainServiceInstance == nil {
+		mailDomainServiceInstance = &mailDomainService{
+			baseTraceSpanName: "service.domain.common.MailDomainService",
+			mailDao:           mailDao,
+		}
 	}
+	return mailDomainServiceInstance
 }
 
 // Config 获取邮件配置
-func (ms *MailDomainService) Config() (*commonDo.MailConfig, error) {
-	mailDao := commonDao.NewMailDao(ms.ctx)
-	config, err := mailDao.Config()
+func (ms *mailDomainService) Config(ctx context.Context) (*commonDo.MailConfig, error) {
+	config, err := ms.mailDao.Config(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "邮件配置获取失败")
 	}
@@ -43,7 +54,7 @@ func (ms *MailDomainService) Config() (*commonDo.MailConfig, error) {
 }
 
 // SaveMailConfig 保存邮件配置
-func (ms *MailDomainService) SaveMailConfig(config commonDo.MailConfig) error {
+func (ms *mailDomainService) SaveMailConfig(ctx context.Context, config commonDo.MailConfig) error {
 	if config.Host == "" {
 		return errors.New("缺少邮件服务器地址")
 	}
@@ -66,8 +77,7 @@ func (ms *MailDomainService) SaveMailConfig(config commonDo.MailConfig) error {
 		config.Transport = "smtp"
 	}
 
-	mailDao := commonDao.NewMailDao(ms.ctx)
-	err := mailDao.SaveConfig(common.MailConfig{
+	err := ms.mailDao.SaveConfig(ctx, common.MailConfig{
 		Host:      config.Host,
 		Port:      config.Port,
 		FromName:  config.FromName,
@@ -83,12 +93,11 @@ func (ms *MailDomainService) SaveMailConfig(config commonDo.MailConfig) error {
 }
 
 // SendMail 发送邮件
-func (ms *MailDomainService) SendMail(email []string, subject, template string, templateParams map[string]string) error {
-	spanCtx, span := trace.Tracer().Start(ms.ctx, ms.baseTraceSpanName+".SendMail")
+func (ms *mailDomainService) SendMail(ctx context.Context, email []string, subject, template string, templateParams map[string]string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, ms.baseTraceSpanName+".SendMail")
 	defer span.End()
 
-	mailDao := commonDao.NewMailDao(spanCtx)
-	config, err := mailDao.Config()
+	config, err := ms.mailDao.Config(spanCtx)
 	if err != nil {
 		trace.Error(errors.Wrap(err, "邮件配置获取失败"), span)
 		return errors.Wrap(err, "邮件配置获取失败")

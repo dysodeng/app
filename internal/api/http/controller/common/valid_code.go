@@ -30,7 +30,8 @@ func SendValidCode(ctx *gin.Context) {
 		account = body.Email
 	}
 
-	err := common.NewValidCodeAppService(spanCtx).SendValidCode(body.Type, body.BizType, account)
+	validCodeAppService := common.InitValidCodeAppService()
+	err := validCodeAppService.SendValidCode(spanCtx, body.Type, body.BizType, account)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
@@ -59,7 +60,8 @@ func VerifyValidCode(ctx *gin.Context) {
 		account = body.Email
 	}
 
-	err := common.NewValidCodeAppService(spanCtx).VerifyValidCode(body.Type, body.BizType, account, body.ValidCode)
+	validCodeAppService := common.InitValidCodeAppService()
+	err := validCodeAppService.VerifyValidCode(spanCtx, body.Type, body.BizType, account, body.ValidCode)
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
