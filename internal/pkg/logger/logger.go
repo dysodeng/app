@@ -53,15 +53,15 @@ func (l *logger) trace(ctx context.Context) []Field {
 	span := trace.SpanFromContext(ctx)
 	var fields []Field
 	if span.SpanContext().HasTraceID() {
-		fields = append(fields, Field{Key: "traceId", Value: span.SpanContext().TraceID().String()})
+		fields = append(fields, Field{Key: "trace_id", Value: span.SpanContext().TraceID().String()})
 	}
 	if span.SpanContext().HasSpanID() {
-		fields = append(fields, Field{Key: "spanId", Value: span.SpanContext().SpanID().String()})
+		fields = append(fields, Field{Key: "span_id", Value: span.SpanContext().SpanID().String()})
 	}
 	if spanIns, ok := span.(sdktrace.ReadWriteSpan); ok {
-		fields = append(fields, Field{Key: "spanName", Value: spanIns.Name()})
+		fields = append(fields, Field{Key: "span_name", Value: spanIns.Name()})
 		if spanIns.Parent().HasSpanID() {
-			fields = append(fields, Field{Key: "parentSpanId", Value: spanIns.Parent().SpanID().String()})
+			fields = append(fields, Field{Key: "parent_span_id", Value: spanIns.Parent().SpanID().String()})
 		}
 	}
 	return fields

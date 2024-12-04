@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/pkg/telemetry"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -16,13 +17,13 @@ import (
 
 var meter metric.Meter
 
-// MetricProviderInit 初始化指标 meterProvider
-func MetricProviderInit() error {
+// Init 初始化指标 meterProvider
+func Init() error {
 	res, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceName(serviceName()),
+			semconv.ServiceName(telemetry.ServiceName()),
 			semconv.ServiceVersion(config.Monitor.ServiceVersion),
 			attribute.String("env", config.App.Env.String()),
 		),
@@ -54,14 +55,6 @@ func MetricProviderInit() error {
 	meter = otel.Meter(config.App.Name)
 
 	return nil
-}
-
-func serviceName() string {
-	name := config.App.Name
-	if config.Monitor.ServiceName != "" {
-		name = config.Monitor.ServiceName
-	}
-	return name
 }
 
 func Meter() metric.Meter {

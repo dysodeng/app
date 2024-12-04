@@ -8,6 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/telemetry"
+	telemetryLog "github.com/dysodeng/app/internal/pkg/telemetry/log"
+	"go.opentelemetry.io/contrib/bridges/otelzap"
+
 	"github.com/dysodeng/app/internal/config"
 
 	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
@@ -64,6 +68,11 @@ func newZapLogger() {
 			zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)),
 			zapcore.DebugLevel,
 		))
+	}
+
+	// 添加OpenTelemetry日志
+	if config.Monitor.Log.OtlpEnabled {
+		cores = append(cores, otelzap.NewCore(telemetry.ServiceName(), otelzap.WithLoggerProvider(telemetryLog.Provider())))
 	}
 
 	// 实现多个输出

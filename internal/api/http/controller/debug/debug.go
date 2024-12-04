@@ -186,7 +186,7 @@ func ChatMessage(ctx *gin.Context) {
 		},
 	})
 	statusCode, err := request.StreamRequest(
-		"", // api
+		"https://dify.ai.huaxisy.com/v1/chat-messages", // api
 		"POST",
 		bytes.NewBuffer(data),
 		func(chunk []byte) error {
@@ -203,11 +203,16 @@ func ChatMessage(ctx *gin.Context) {
 		request.WithTimeout(2*time.Minute),
 		request.WithContext(spanCtx),
 		request.WithStreamMaxBufferSize(1024*1024),
-		request.WithHeader("Authorization", "Bearer "), // api key
+		request.WithHeader("Authorization", "Bearer app-fGoa9v6z7RJGSo5CMXJn1RKR"), // api key
 		request.WithHeader("Content-Type", "application/json"),
 		request.WithTracer("Trace-Id", "Span-Id"),
 	)
 	log.Printf("statusCode: %d, err: %v", statusCode, err)
+	if err != nil {
+		logger.Error(spanCtx, "done", logger.Field{Key: "statusCode", Value: statusCode}, logger.ErrorField(err))
+	} else {
+		logger.Info(spanCtx, "done", logger.Field{Key: "statusCode", Value: statusCode})
+	}
 }
 
 func RemoteRequest(ctx *gin.Context) {

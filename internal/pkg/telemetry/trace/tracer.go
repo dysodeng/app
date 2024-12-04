@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/pkg/telemetry"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
@@ -24,13 +25,13 @@ var tracer trace.Tracer
 
 var traceCtx context.Context
 
-func TracerProviderInit() error {
+func Init() error {
 	traceCtx = context.Background()
 	res, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
 			semconv.SchemaURL,
-			semconv.ServiceName(serviceName()),
+			semconv.ServiceName(telemetry.ServiceName()),
 			semconv.ServiceVersion(config.Monitor.ServiceVersion),
 			attribute.String("env", config.App.Env.String()),
 		),
@@ -65,19 +66,11 @@ func TracerProviderInit() error {
 	))
 
 	tracer = NewTracer(
-		serviceName(),
+		telemetry.ServiceName(),
 		trace.WithInstrumentationVersion(config.Monitor.ServiceVersion),
 	)
 
 	return nil
-}
-
-func serviceName() string {
-	name := config.App.Name
-	if config.Monitor.ServiceName != "" {
-		name = config.Monitor.ServiceName
-	}
-	return name
 }
 
 func Context() context.Context {
