@@ -77,7 +77,7 @@ func (app *App) start() {
 	app.registerServer(
 		task.NewServer(),
 		cron.NewServer(),
-		grpc.NewGrpcServer(),
+		grpc.NewServer(),
 		http.NewServer(),
 		websocket.NewServer(),
 		health.NewServer(),
