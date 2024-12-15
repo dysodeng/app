@@ -16,7 +16,7 @@ func Invoke(tryFunc func() error, opts ...Option) {
 	nextTry := time.Now().Add(options.waitTimeFunc(currentRetry))
 
 	for {
-		log.Printf("第%d次请求", currentRetry+1)
+		log.Printf("第%d次执行", currentRetry+1)
 		err := tryFunc()
 		if err == nil {
 			break
