@@ -14,7 +14,7 @@ type cache struct {
 
 var Cache *cache
 
-func cacheConfigLoad() {
+func loadCacheConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

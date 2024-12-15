@@ -1,0 +1,9 @@
+third_party:
+  wx: # 微信平台
+    mini_program:
+      app_id:
+      secret:
+  dify: # dify.ai
+    api:
+    chat_app_key:
+    tool_secret:

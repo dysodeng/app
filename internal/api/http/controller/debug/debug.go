@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/config"
+
 	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
 	"go.opentelemetry.io/otel/metric"
 
@@ -166,12 +168,7 @@ func ChatMessage(ctx *gin.Context) {
 	defer span.End()
 
 	ctx.Writer.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
-
-	flusher, ok := ctx.Writer.(http.Flusher)
-	if !ok {
-		ctx.AbortWithStatus(http.StatusInternalServerError)
-		return
-	}
+	flusher := request.NewFlusher(ctx.Writer, ctx.Writer)
 
 	data, _ := json.Marshal(map[string]interface{}{
 		"query":              "你好，现在几点了",
@@ -186,7 +183,7 @@ func ChatMessage(ctx *gin.Context) {
 		},
 	})
 	statusCode, err := request.StreamRequest(
-		"", // api
+		config.ThirdParty.Dify.Api+"/chat-messages", // api
 		"POST",
 		bytes.NewBuffer(data),
 		func(chunk []byte) error {
@@ -195,15 +192,14 @@ func ChatMessage(ctx *gin.Context) {
 				chunkString = strings.Replace(chunkString, "data: ", "", 1)
 			}
 			if chunkString != "" && chunkString != "\n" && chunkString != "\n\n" {
-				_, _ = fmt.Fprintf(ctx.Writer, "data: "+chunkString+"\n\n")
-				flusher.Flush()
+				_, _ = flusher.WriterWithFlush("data: " + chunkString + "\n\n")
 			}
 			return nil
 		},
 		request.WithTimeout(2*time.Minute),
 		request.WithContext(spanCtx),
 		request.WithStreamMaxBufferSize(1024*1024),
-		request.WithHeader("Authorization", "Bearer "), // api key
+		request.WithHeader("Authorization", fmt.Sprintf("Bearer %s", config.ThirdParty.Dify.ChatAppKey)), // api key
 		request.WithHeader("Content-Type", "application/json"),
 		request.WithTracer("Trace-Id", "Span-Id"),
 	)

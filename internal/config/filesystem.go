@@ -33,7 +33,7 @@ type cloudStorage struct {
 
 var Filesystem *filesystem
 
-func filesystemConfigLoad() {
+func loadFilesystemConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

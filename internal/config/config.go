@@ -18,10 +18,10 @@ func (e Env) String() string {
 const (
 	// Prod 生产环境
 	Prod Env = "prod"
-	// Dev 开发环境
-	Dev Env = "dev"
 	// Test 测试环境
 	Test Env = "test"
+	// Dev 开发环境
+	Dev Env = "dev"
 )
 
 const (
@@ -36,20 +36,22 @@ func init() {
 	Database = &database{}
 	Cache = &cache{}
 	Redis = &redis{}
-	MQ = &mq{}
+	MessageQueue = &messageQueue{}
 	Filesystem = &filesystem{}
 	Monitor = &monitor{}
+	ThirdParty = &thirdParty{}
 
 	_ = godotenv.Load()
 
-	appConfigLoad()
-	databaseConfigLoad()
-	redisConfigLoad()
-	cacheConfigLoad()
-	mqConfigLoad()
-	etcdConfigLoad()
-	filesystemConfigLoad()
-	monitorConfigLoad()
+	loadAppConfig()
+	loadDatabaseConfig()
+	loadRedisConfig()
+	loadCacheConfig()
+	loadMessageQueueConfig()
+	loadEtcdConfig()
+	loadFilesystemConfig()
+	loadMonitorConfig()
+	loadThirdPartyConfig()
 
 	env := App.Env
 	if !env.Valid() {

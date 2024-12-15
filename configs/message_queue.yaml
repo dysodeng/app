@@ -1,4 +1,4 @@
-mq:
+message_queue:
   enabled: true
   driver: amqp
   amqp:

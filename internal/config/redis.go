@@ -23,7 +23,7 @@ type redisItem struct {
 
 var Redis *redis
 
-func redisConfigLoad() {
+func loadRedisConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

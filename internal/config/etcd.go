@@ -20,7 +20,7 @@ type etcdItem struct {
 
 var Etcd *etcd
 
-func etcdConfigLoad() {
+func loadEtcdConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

@@ -24,7 +24,7 @@ type otlp struct {
 
 var Monitor *monitor
 
-func monitorConfigLoad() {
+func loadMonitorConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

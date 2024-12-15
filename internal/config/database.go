@@ -29,7 +29,7 @@ type db struct {
 
 var Database *database
 
-func databaseConfigLoad() {
+func loadDatabaseConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

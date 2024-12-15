@@ -44,7 +44,7 @@ type serverConfig struct {
 var App *appConfig
 var Server *serverConfig
 
-func appConfigLoad() {
+func loadAppConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 

@@ -24,13 +24,13 @@ func QueueKey(queueKey string) string {
 
 // NewMessageQueueConsumer 创建消息队列消费者
 func NewMessageQueueConsumer(queueKey string) (contract.Consumer, error) {
-	switch config.MQ.Driver {
+	switch config.MessageQueue.Driver {
 	case string(mq.Amqp):
 		return mq.NewQueueConsumer(mq.Amqp, QueueKey(queueKey), &amqp.Config{
-			Host:     config.MQ.Amqp.Host + ":" + config.MQ.Amqp.Port,
-			Username: config.MQ.Amqp.Username,
-			Password: config.MQ.Amqp.Password,
-			VHost:    config.MQ.Amqp.Vhost,
+			Host:     config.MessageQueue.Amqp.Host + ":" + config.MessageQueue.Amqp.Port,
+			Username: config.MessageQueue.Amqp.Username,
+			Password: config.MessageQueue.Amqp.Password,
+			VHost:    config.MessageQueue.Amqp.Vhost,
 		})
 	case string(mq.Redis):
 		return mq.NewQueueConsumer(mq.Redis, QueueKey(queueKey), &redis.Config{
@@ -44,13 +44,13 @@ func NewMessageQueueConsumer(queueKey string) (contract.Consumer, error) {
 
 // NewMessageQueueProducer 创建消息队列生产者
 func NewMessageQueueProducer(pool *contract.Pool) (contract.Producer, error) {
-	switch config.MQ.Driver {
+	switch config.MessageQueue.Driver {
 	case string(mq.Amqp):
 		return mq.NewQueueProducer(mq.Amqp, &amqp.Config{
-			Host:     config.MQ.Amqp.Host + ":" + config.MQ.Amqp.Port,
-			Username: config.MQ.Amqp.Username,
-			Password: config.MQ.Amqp.Password,
-			VHost:    config.MQ.Amqp.Vhost,
+			Host:     config.MessageQueue.Amqp.Host + ":" + config.MessageQueue.Amqp.Port,
+			Username: config.MessageQueue.Amqp.Username,
+			Password: config.MessageQueue.Amqp.Password,
+			VHost:    config.MessageQueue.Amqp.Vhost,
 			Pool:     pool,
 		})
 	case string(mq.Redis):

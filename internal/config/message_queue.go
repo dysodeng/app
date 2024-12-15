@@ -7,7 +7,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-type mq struct {
+type messageQueue struct {
 	Enabled bool   `mapstructure:"enabled"`
 	Driver  string `mapstructure:"driver"`
 	Amqp    amqp   `mapstructure:"amqp"`
@@ -21,20 +21,20 @@ type amqp struct {
 	Vhost    string `mapstructure:"vhost"`
 }
 
-var MQ *mq
+var MessageQueue *messageQueue
 
-func mqConfigLoad() {
+func loadMessageQueueConfig() {
 	v := viper.New()
 	v.AutomaticEnv()
 
-	v.SetConfigName("mq")
+	v.SetConfigName("message_queue")
 	v.SetConfigType("yaml")
 	v.AddConfigPath("./configs")
 	if err := v.ReadInConfig(); err != nil {
 		panic(err)
 	}
 
-	d := v.Sub("mq")
+	d := v.Sub("message_queue")
 	_ = d.BindEnv("amqp.host", "MQ_AMQP_HOST")
 	_ = d.BindEnv("amqp.port", "MQ_AMQP_PORT")
 	_ = d.BindEnv("amqp.username", "MQ_AMQP_USERNAME")
@@ -49,16 +49,16 @@ func mqConfigLoad() {
 	d.SetDefault("amqp.password", "guest")
 	d.SetDefault("amqp.vhost", "/")
 
-	if err := d.Unmarshal(&MQ); err != nil {
+	if err := d.Unmarshal(&MessageQueue); err != nil {
 		panic(err)
 	}
 
-	log.Println("配置文件`configs/mq.yaml`加载完成")
+	log.Println("配置文件`configs/message_queue.yaml`加载完成")
 
 	v.WatchConfig()
 	v.OnConfigChange(func(in fsnotify.Event) {
-		log.Println("配置文件`configs/mq.yaml`已变更")
-		d = v.Sub("mq")
-		_ = d.Unmarshal(&MQ)
+		log.Println("配置文件`configs/message_queue.yaml`已变更")
+		d = v.Sub("message_queue")
+		_ = d.Unmarshal(&MessageQueue)
 	})
 }
