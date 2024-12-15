@@ -10,6 +10,9 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/retry"
+	"github.com/pkg/errors"
+
 	"github.com/dysodeng/app/internal/config"
 
 	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
@@ -238,4 +241,29 @@ func RemoteRequest(ctx *gin.Context) {
 	var res map[string]interface{}
 	_ = json.Unmarshal(body, &res)
 	ctx.JSON(http.StatusOK, api.Success(spanCtx, res))
+}
+
+// Retry 重试
+func Retry(ctx *gin.Context) {
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Retry")
+	defer span.End()
+
+	i := 0
+	waitTime := 3 * time.Second
+	retry.Invoke(
+		func() error {
+			if i == 3 {
+				return nil
+			}
+			i++
+			return errors.New("发生错误了")
+		},
+		retry.WithRetryNum(5),
+		retry.WithRetryWaitTime(waitTime), // 重试等待时间
+		retry.WithRetryWaitTimeFunc(func(retryNum int) time.Duration { // 自定义重试等待时间，每次按重试次数递增
+			return time.Duration(retryNum) * waitTime
+		}),
+	)
+
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, true))
 }

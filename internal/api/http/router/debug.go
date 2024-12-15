@@ -17,5 +17,6 @@ func debugRouter(router *gin.RouterGroup) {
 		debugApi.POST("grpc/user/create", debug.CreateUser)
 		debugApi.POST("chat/message", debug.ChatMessage)
 		debugApi.POST("remote_request", debug.RemoteRequest)
+		debugApi.POST("retry", debug.Retry)
 	}
 }

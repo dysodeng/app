@@ -6,10 +6,8 @@ import (
 	"context"
 	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
-	"time"
 
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/pkg/errors"
@@ -201,44 +199,4 @@ func FormRequest(requestUrl, method string, data map[string]string, opts ...Opti
 	reader := bytes.NewReader([]byte(body.Encode()))
 	opts = append(opts, WithHeader("Content-Type", "application/x-www-form-urlencoded"))
 	return request(requestUrl, method, reader, opts...)
-}
-
-// RetryRequest 带重试的请求
-func RetryRequest(requestFunc func() error, opts ...RetryOption) {
-	options := defaultRetryOptions()
-	for _, opt := range opts {
-		opt.apply(options)
-	}
-
-	// 重试次数
-	retry := 0
-
-	// 记录下一次尝试的时间
-	nextTry := time.Now().Add(options.initialWaitTime)
-
-	err := requestFunc()
-	if err == nil { // 请求成功
-		return
-	}
-
-	for {
-		log.Printf("第%d次请求", retry+1)
-		// 如果当前时间大于下一次重试的时间，则等待结束，进行下一次请求
-		if time.Now().After(nextTry) {
-			err = requestFunc()
-			if err == nil {
-				break
-			}
-			nextTry = nextTry.Add(options.incrementTime) // 更新下一次重试的时间
-		}
-
-		if retry >= options.retryNum {
-			break
-		}
-
-		retry++
-
-		// 等待到下一次尝试的时间
-		time.Sleep(nextTry.Sub(time.Now()))
-	}
 }
