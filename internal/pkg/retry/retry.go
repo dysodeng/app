@@ -12,34 +12,32 @@ func Invoke(tryFunc func() error, opts ...Option) {
 		opt.apply(options)
 	}
 
-	// 重试次数
-	retry := 0
+	// 当前重试次数
+	currentRetry := 0
 
 	// 记录下一次尝试的时间
-	nextTry := time.Now().Add(options.waitTime)
+	nextTry := time.Now().Add(options.waitTimeFunc(currentRetry))
 
-	err := tryFunc()
-	if err == nil { // 请求成功
-		return
-	}
+	// err := tryFunc()
+	// if err == nil { // 请求成功
+	// 	return
+	// }
 
 	for {
-		log.Printf("第%d次请求", retry+1)
-		// 如果当前时间大于下一次重试的时间，则等待结束，进行下一次请求
-		if time.Now().After(nextTry) {
-			err = tryFunc()
-			if err == nil {
-				break
-			}
-			nextWaitTime := options.waitTimeFunc(retry)
-			nextTry = nextTry.Add(nextWaitTime) // 更新下一次重试的时间
-		}
-
-		if retry >= options.retryNum {
+		log.Printf("第%d次请求", currentRetry+1)
+		err := tryFunc()
+		if err == nil {
 			break
 		}
 
-		retry++
+		currentRetry++
+
+		if currentRetry >= options.retryNum {
+			break
+		}
+
+		nextWaitTime := options.waitTimeFunc(currentRetry)
+		nextTry = nextTry.Add(nextWaitTime) // 更新下一次重试的时间
 
 		// 等待到下一次尝试的时间
 		time.Sleep(nextTry.Sub(time.Now()))

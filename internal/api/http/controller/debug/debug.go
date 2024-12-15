@@ -248,7 +248,7 @@ func Retry(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Retry")
 	defer span.End()
 
-	i := 0
+	i := 1
 	waitTime := 3 * time.Second
 	retry.Invoke(
 		func() error {
