@@ -3,13 +3,12 @@ package user
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
-
 	userDao "github.com/dysodeng/app/internal/dal/dao/user"
 	userModel "github.com/dysodeng/app/internal/dal/model/user"
 	"github.com/dysodeng/app/internal/pkg/filesystem"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/model"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	userDo "github.com/dysodeng/app/internal/service/do/user"
 )
 
@@ -51,7 +50,7 @@ func (ds *domainService) CreateUser(ctx context.Context, userInfo userDo.User) (
 		Nickname:  userInfo.Nickname,
 		Avatar:    filesystem.Instance().OriginalPath(userInfo.Avatar),
 		Gender:    userInfo.Gender,
-		Birthday:  userInfo.Birthday,
+		Birthday:  model.JSONDate{Time: userInfo.Birthday},
 		Status:    model.BinaryStatusYes,
 	})
 	if err != nil {
@@ -65,13 +64,15 @@ func (ds *domainService) CreateUser(ctx context.Context, userInfo userDo.User) (
 		Nickname:  user.Nickname,
 		Avatar:    filesystem.Instance().FullPath(user.Avatar),
 		Gender:    user.Gender,
-		Birthday:  user.Birthday,
+		Birthday:  user.Birthday.Time,
 		Status:    user.Status.Uint(),
 	}, nil
 }
 
 func (ds *domainService) Info(ctx context.Context, userId uint64) (*userDo.User, error) {
-	user, err := ds.userDao.Info(ctx, userId)
+	spanCtx, span := trace.Tracer().Start(ctx, ds.baseTraceSpanName+".Info")
+	defer span.End()
+	user, err := ds.userDao.Info(spanCtx, userId)
 	if err != nil {
 		return nil, err
 	}
@@ -82,7 +83,7 @@ func (ds *domainService) Info(ctx context.Context, userId uint64) (*userDo.User,
 		Nickname:  user.Nickname,
 		Avatar:    filesystem.Instance().FullPath(user.Avatar),
 		Gender:    user.Gender,
-		Birthday:  user.Birthday,
+		Birthday:  user.Birthday.Time,
 		Status:    user.Status.Uint(),
 	}, nil
 }
@@ -102,7 +103,7 @@ func (ds *domainService) ListUser(ctx context.Context, page, pageSize int, condi
 			Nickname:  userList[i].Nickname,
 			Avatar:    filesystem.Instance().FullPath(userList[i].Avatar),
 			Gender:    userList[i].Gender,
-			Birthday:  userList[i].Birthday,
+			Birthday:  userList[i].Birthday.Time,
 			Status:    userList[i].Status.Uint(),
 		})
 	}
@@ -118,7 +119,7 @@ func (ds *domainService) UpdateUser(ctx context.Context, userInfo userDo.User) (
 		Nickname:     userInfo.Nickname,
 		Avatar:       filesystem.Instance().OriginalPath(userInfo.Avatar),
 		Gender:       userInfo.Gender,
-		Birthday:     userInfo.Birthday,
+		Birthday:     model.JSONDate{Time: userInfo.Birthday},
 		Status:       model.BinaryStatusByUint(userInfo.Status),
 	}
 	if userInfo.Password != "" {
@@ -135,7 +136,7 @@ func (ds *domainService) UpdateUser(ctx context.Context, userInfo userDo.User) (
 		Nickname:  user.Nickname,
 		Avatar:    filesystem.Instance().FullPath(user.Avatar),
 		Gender:    user.Gender,
-		Birthday:  user.Birthday,
+		Birthday:  user.Birthday.Time,
 		Status:    user.Status.Uint(),
 	}, nil
 }

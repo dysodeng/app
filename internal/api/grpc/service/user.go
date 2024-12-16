@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/pkg/logger"
@@ -65,7 +66,7 @@ func (m *UserService) Info(ctx context.Context, req *proto.UserInfoRequest) (*pr
 		RealName:  userInfo.RealName,
 		Nickname:  userInfo.Nickname,
 		Avatar:    userInfo.Avatar,
-		Birthday:  userInfo.Birthday,
+		Birthday:  userInfo.Birthday.Format(time.DateOnly),
 		Gender:    uint32(userInfo.Gender),
 	}, nil
 }
@@ -101,7 +102,7 @@ func (m *UserService) ListUser(ctx context.Context, req *proto.UserListRequest) 
 			RealName:  item.RealName,
 			Nickname:  item.Nickname,
 			Avatar:    item.Avatar,
-			Birthday:  item.Birthday,
+			Birthday:  item.Birthday.Format(time.DateOnly),
 			Gender:    uint32(item.Gender),
 		}
 	}
@@ -137,6 +138,13 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 	if !validator.IsSafePassword(req.Password, 8) {
 		return nil, errors.New("密码格式不正确")
 	}
+	if req.Birthday == "" {
+		return nil, errors.New("缺少生日")
+	}
+	birthday, err := time.ParseInLocation(time.DateOnly, req.Birthday, time.Local)
+	if err != nil {
+		return nil, errors.New("生日格式不正确")
+	}
 
 	userDomainService := user.InitUserDomainService()
 	userInfo, err := userDomainService.CreateUser(spanCtx, userDo.User{
@@ -145,7 +153,7 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 		RealName:  req.RealName,
 		Nickname:  req.Nickname,
 		Avatar:    req.Avatar,
-		Birthday:  req.Birthday,
+		Birthday:  birthday,
 		Gender:    uint8(req.Gender),
 	})
 	if err != nil {
@@ -158,7 +166,7 @@ func (m *UserService) CreateUser(ctx context.Context, req *proto.UserRequest) (*
 		RealName:  userInfo.RealName,
 		Nickname:  userInfo.Nickname,
 		Avatar:    userInfo.Avatar,
-		Birthday:  userInfo.Birthday,
+		Birthday:  userInfo.Birthday.Format(time.DateOnly),
 		Gender:    uint32(userInfo.Gender),
 	}, nil
 }

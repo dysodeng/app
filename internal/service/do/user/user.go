@@ -1,5 +1,7 @@
 package user
 
+import "time"
+
 type User struct {
 	Id        uint64
 	Telephone string
@@ -7,7 +9,7 @@ type User struct {
 	RealName  string
 	Nickname  string
 	Avatar    string
-	Birthday  string
+	Birthday  time.Time
 	Gender    uint8
 	Status    uint8
 }

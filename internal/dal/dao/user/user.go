@@ -5,6 +5,7 @@ import (
 
 	"github.com/dysodeng/app/internal/dal/model/user"
 	"github.com/dysodeng/app/internal/pkg/db"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 )
 
 // Dao 用户数据访问层
@@ -27,8 +28,10 @@ func NewUserDao() Dao {
 }
 
 func (d *dao) Info(ctx context.Context, id uint64) (*user.User, error) {
+	spanCtx, span := trace.Tracer().Start(ctx, d.baseTraceSpanName+".Info")
+	defer span.End()
 	var userInfo user.User
-	db.DB().WithContext(ctx).Where("id=?", id).First(&userInfo)
+	db.DB().WithContext(spanCtx).Debug().Where("id=?", id).First(&userInfo)
 	return &userInfo, nil
 }
 
