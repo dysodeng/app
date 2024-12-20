@@ -10,27 +10,24 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dysodeng/app/internal/pkg/retry"
-	"github.com/pkg/errors"
-
-	"github.com/dysodeng/app/internal/config"
-
-	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
-	"go.opentelemetry.io/otel/metric"
-
 	"github.com/dysodeng/app/internal/api/grpc/proto"
+	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/request"
+	"github.com/dysodeng/app/internal/pkg/retry"
+	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/token"
 	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/dysodeng/app/internal/service/rpc"
 	"github.com/dysodeng/app/internal/service/rpc/user"
 	"github.com/gin-gonic/gin"
+	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 )
 
 func Token(ctx *gin.Context) {
@@ -179,9 +176,9 @@ func ChatMessage(ctx *gin.Context) {
 		"user":               "dds",
 		"auto_generate_name": true,
 		"inputs": map[string]interface{}{
-			"name":     "dds",
+			"call":     "王先生",
 			"gender":   "男",
-			"age":      "12",
+			"age":      "32",
 			"patBedId": 8,
 		},
 	})

@@ -2,6 +2,8 @@ package request
 
 import (
 	"net/http"
+
+	"github.com/dysodeng/app/internal/pkg/helper"
 )
 
 // Flusher is a wrapper for http.ResponseWriter with Flush method.
@@ -18,7 +20,7 @@ func NewFlusher(writer http.ResponseWriter, httpFlusher http.Flusher) *Flusher {
 }
 
 func (f *Flusher) writer(body string) (int, error) {
-	return f.responseWriter.Write([]byte(body))
+	return f.responseWriter.Write(helper.StringToBytes(body))
 }
 
 func (f *Flusher) flush() {

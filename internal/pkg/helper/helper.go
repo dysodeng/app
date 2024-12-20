@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unsafe"
 
 	"golang.org/x/text/language"
 	"golang.org/x/text/message"
@@ -659,4 +660,17 @@ func ReplaceString(str string, findSlice, replaceSlice []string) string {
 func RemoveMarkdownImages(markdown string) string {
 	regex := regexp.MustCompile(`!\[.*?\]\(.*?\)`)
 	return regex.ReplaceAllString(markdown, "")
+}
+
+// StringToBytes 字符串转字节数组
+func StringToBytes(s string) []byte {
+	x := (*[2]uintptr)(unsafe.Pointer(&s))
+	b := [3]uintptr{x[0], x[1], x[1]}
+	res := *(*[]byte)(unsafe.Pointer(&b))
+	return res
+}
+
+// BytesToString 字节数组转字符串
+func BytesToString(b []byte) string {
+	return *(*string)(unsafe.Pointer(&b))
 }
