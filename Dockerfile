@@ -1,5 +1,5 @@
 # builder
-FROM registry.cn-chengdu.aliyuncs.com/dysodeng/golang:1.22.2 AS builder
+FROM registry.cn-chengdu.aliyuncs.com/dysodeng/golang:1.23.2 AS builder
 
 RUN /bin/cp /usr/share/zoneinfo/Asia/Shanghai /etc/localtime \
  && echo 'Asia/Shanghai' >/etc/timezone
