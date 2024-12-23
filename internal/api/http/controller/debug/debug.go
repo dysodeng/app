@@ -10,6 +10,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/cache"
+
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/dal/model/common"
@@ -263,4 +265,57 @@ func Retry(ctx *gin.Context) {
 	)
 
 	ctx.JSON(http.StatusOK, api.Success(spanCtx, true))
+}
+
+// Cache 缓存
+func Cache(ctx *gin.Context) {
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Cache")
+	defer span.End()
+
+	userId := ctx.Query("user_id")
+	userID, _ := strconv.ParseUint(userId, 10, 64)
+	if userID <= 0 {
+		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少用户ID", api.CodeFail))
+		return
+	}
+
+	cli, err := cache.NewCache()
+	if err != nil {
+		logger.Error(spanCtx, "cache error", logger.ErrorField(err))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, "内部错误", api.CodeFail))
+		return
+	}
+
+	cacheKey := fmt.Sprintf("user_info_%d", userID)
+	userCache, err := cli.Get(cacheKey)
+	if err == nil {
+		var userInfo *proto.UserResponse
+		if err = json.Unmarshal(helper.StringToBytes(userCache), &userInfo); err != nil {
+			logger.Error(spanCtx, "cache error", logger.ErrorField(err))
+			ctx.JSON(http.StatusOK, api.Fail(ctx, "内部错误", api.CodeFail))
+			return
+		}
+		ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
+		return
+	}
+
+	userService, err := user.Service(spanCtx)
+	if err != nil {
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		return
+	}
+
+	userInfo, err := userService.Info(spanCtx, &proto.UserInfoRequest{
+		Id: userID,
+	})
+	if err != nil {
+		err, _ = rpc.Error(err)
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		return
+	}
+
+	userBytes, _ := json.Marshal(userInfo)
+	_ = cli.Put(cacheKey, helper.BytesToString(userBytes), 1*time.Hour)
+
+	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
 }
