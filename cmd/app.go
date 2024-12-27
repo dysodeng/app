@@ -8,8 +8,8 @@ import (
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/redis"
-	telemetryMetrics "github.com/dysodeng/app/internal/pkg/telemetry/metrics"
-	telemetryTrace "github.com/dysodeng/app/internal/pkg/telemetry/trace"
+	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/app/internal/server/cron"
 	"github.com/dysodeng/app/internal/server/grpc"
@@ -50,10 +50,10 @@ func (app *app) config() {
 }
 
 func (app *app) monitor() {
-	if err := telemetryTrace.Init(); err != nil {
+	if err := trace.Init(); err != nil {
 		panic(err)
 	}
-	if err := telemetryMetrics.Init(); err != nil {
+	if err := metrics.Init(); err != nil {
 		panic(err)
 	}
 }
