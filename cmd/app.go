@@ -20,15 +20,15 @@ import (
 	"github.com/dysodeng/app/migrations/migration"
 )
 
-type App struct {
+type app struct {
 	serverList []server.Interface
 }
 
-func NewApp() *App {
-	return &App{}
+func newApp() *app {
+	return &app{}
 }
 
-func (app *App) Run() {
+func (app *app) run() {
 	// 加载配置
 	app.config()
 
@@ -45,11 +45,11 @@ func (app *App) Run() {
 	app.listenForShutdown()
 }
 
-func (app *App) config() {
+func (app *app) config() {
 	config.Load()
 }
 
-func (app *App) monitor() {
+func (app *app) monitor() {
 	if err := telemetryTrace.Init(); err != nil {
 		panic(err)
 	}
@@ -58,7 +58,7 @@ func (app *App) monitor() {
 	}
 }
 
-func (app *App) initialize() {
+func (app *app) initialize() {
 	db.Initialize()
 	redis.Initialize()
 
@@ -70,7 +70,7 @@ func (app *App) initialize() {
 	}
 }
 
-func (app *App) start() {
+func (app *app) start() {
 	log.Println("start app server...")
 
 	// 注册服务
@@ -89,7 +89,7 @@ func (app *App) start() {
 	}
 }
 
-func (app *App) registerServer(servers ...server.Interface) {
+func (app *app) registerServer(servers ...server.Interface) {
 	for _, s := range servers {
 		if s.IsEnabled() {
 			app.serverList = append(app.serverList, s)
@@ -97,7 +97,7 @@ func (app *App) registerServer(servers ...server.Interface) {
 	}
 }
 
-func (app *App) listenForShutdown() {
+func (app *app) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, os.Interrupt)
 	<-quit
@@ -105,4 +105,8 @@ func (app *App) listenForShutdown() {
 		serverIns.Shutdown()
 	}
 	log.Println("shutdown app server...")
+}
+
+func Execute() {
+	newApp().run()
 }
