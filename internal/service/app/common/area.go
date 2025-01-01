@@ -39,7 +39,7 @@ func (area *areaAppService) Area(ctx context.Context, areaType string, parentAre
 	spanCtx, span := trace.Tracer().Start(ctx, area.baseTraceSpanName+".Area")
 	defer span.End()
 
-	if !helper.Contain(areaType, []string{"province", "city", "county"}) {
+	if !helper.Contain([]string{"province", "city", "county"}, areaType) {
 		return nil, errors.New("地区类型错误")
 	}
 

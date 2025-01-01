@@ -51,7 +51,7 @@ type Info struct {
 
 // NewFilesystem 创建Filesystem
 func NewFilesystem(userType string, userId uint64) (*Filesystem, error) {
-	if !helper.Contain(userType, []string{"user", "ams", "anonymous"}) {
+	if !helper.Contain([]string{"user", "ams", "anonymous"}, userType) {
 		return nil, errors.New("用户类型错误")
 	}
 

@@ -44,7 +44,8 @@ func Token(ctx *gin.Context) {
 func GenRandomString(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GenRandomString")
 	span.End()
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomStringBytesMask(24)))
+
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomString(24, helper.ModeAlphanumeric)))
 }
 
 func GormLogger(ctx *gin.Context) {

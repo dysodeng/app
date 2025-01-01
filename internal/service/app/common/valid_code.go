@@ -40,7 +40,7 @@ func (vc *validCodeAppService) SendValidCode(ctx context.Context, sender, bizTyp
 	spanCtx, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".SendValidCode")
 	defer span.End()
 
-	if !helper.Contain(sender, []string{"sms", "email"}) {
+	if !helper.Contain([]string{"sms", "email"}, sender) {
 		return errors.New("消息发送类型错误")
 	}
 
@@ -78,7 +78,7 @@ func (vc *validCodeAppService) VerifyValidCode(ctx context.Context, sender, bizT
 	spanCtx, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".VerifyValidCode")
 	defer span.End()
 
-	if !helper.Contain(sender, []string{"sms", "email"}) {
+	if !helper.Contain([]string{"sms", "email"}, sender) {
 		return errors.New("消息发送类型错误")
 	}
 

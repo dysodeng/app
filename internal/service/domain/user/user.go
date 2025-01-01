@@ -43,9 +43,15 @@ func (ds *domainService) CreateUser(ctx context.Context, userInfo userDo.User) (
 	spanCtx, span := trace.Tracer().Start(ctx, ds.baseTraceSpanName+".CreateUser")
 	defer span.End()
 
+	password, err := helper.GeneratePassword(userInfo.Password)
+	if err != nil {
+		trace.Error(err, span)
+		return nil, err
+	}
+
 	user, err := ds.userDao.CreateUser(spanCtx, userModel.User{
 		Telephone: userInfo.Telephone,
-		Password:  helper.GeneratePassword([]byte(userInfo.Password)),
+		Password:  password,
 		RealName:  userInfo.RealName,
 		Nickname:  userInfo.Nickname,
 		Avatar:    filesystem.Instance().OriginalPath(userInfo.Avatar),
@@ -123,7 +129,11 @@ func (ds *domainService) UpdateUser(ctx context.Context, userInfo userDo.User) (
 		Status:       model.BinaryStatusByUint(userInfo.Status),
 	}
 	if userInfo.Password != "" {
-		u.Password = helper.GeneratePassword([]byte(userInfo.Password))
+		password, err := helper.GeneratePassword(userInfo.Password)
+		if err != nil {
+			return nil, err
+		}
+		u.Password = password
 	}
 	user, err := ds.userDao.UpdateUser(ctx, u)
 	if err != nil {

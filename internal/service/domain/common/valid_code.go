@@ -78,7 +78,7 @@ func (vc *validCodeDomainService) SendValidCode(ctx context.Context, sender comm
 
 	templateParam := make(map[string]string)
 	var expire int64 = 10
-	templateParam["code"] = helper.GenValidateCode(6) // 验证码
+	templateParam["code"] = helper.RandomNumberString(6) // 验证码
 	templateParam["time"] = strconv.FormatInt(expire, 10)
 
 	codeCacheKey := redis.Key(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
