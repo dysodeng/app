@@ -2,6 +2,7 @@ package db
 
 import (
 	"fmt"
+	"log"
 	"time"
 
 	"github.com/dysodeng/app/internal/config"
@@ -34,7 +35,7 @@ func init() {
 		driver = config.Database.Main.Driver
 		break
 	default:
-		panic("database connection not found")
+		log.Fatalln("database source not found")
 	}
 
 	var dbConnector gorm.Dialector
@@ -53,7 +54,7 @@ func init() {
 		Logger: NewGormLogger(), // db日志
 	})
 	if err != nil {
-		panic("failed to connect database " + err.Error())
+		log.Fatalf("failed to connect database %+v", err)
 	}
 
 	sqlDB, _ := db.DB()
@@ -62,10 +63,21 @@ func init() {
 	sqlDB.SetMaxIdleConns(maxIdleConn)                                     // 连接池最大允许的空闲连接数，如果没有sql任务需要执行的连接数大于该值，超过的连接会被连接池关闭。
 	sqlDB.SetMaxOpenConns(maxOpenConn)                                     // 连接池最大连接数
 	sqlDB.SetConnMaxLifetime(time.Second * time.Duration(connMaxLifetime)) // 连接空闲超时
+
+	log.Println("database connection successful")
 }
 
 func Initialize() {}
 
 func DB() *gorm.DB {
 	return db
+}
+
+func Close() {
+	sqlDB, _ := db.DB()
+	if err := sqlDB.Close(); err != nil {
+		log.Printf("failed to close database connection: %+v", err)
+		return
+	}
+	log.Println("database connection closed")
 }

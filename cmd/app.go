@@ -4,6 +4,7 @@ import (
 	"log"
 	"os"
 	"os/signal"
+	"syscall"
 
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/db"
@@ -99,11 +100,16 @@ func (app *app) registerServer(servers ...server.Interface) {
 
 func (app *app) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt, os.Kill)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
+
 	for _, serverIns := range app.serverList {
 		serverIns.Shutdown()
 	}
+
+	db.Close()
+	redis.Close()
+
 	log.Println("shutdown app server...")
 }
 

@@ -2,7 +2,7 @@ package redis
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	"github.com/dysodeng/app/internal/config"
 	"github.com/go-redis/redis/v8"
@@ -20,7 +20,11 @@ func init() {
 	})
 
 	pong, err := redisPoolClient.Ping(context.Background()).Result()
-	fmt.Println(pong, err)
+	if err != nil {
+		log.Fatalf("failed to connect redis %+v", err)
+	}
+	log.Printf("redis state: %s", pong)
+	log.Println("redis connection successful")
 }
 
 func Initialize() {}
@@ -28,6 +32,15 @@ func Initialize() {}
 // Client 获取redis实例
 func Client() *redis.Client {
 	return redisPoolClient
+}
+
+func Close() {
+	err := redisPoolClient.Close()
+	if err != nil {
+		log.Printf("failed to close redis connection: %+v", err)
+		return
+	}
+	log.Println("redis connection closed")
 }
 
 // Key 构建安全缓存key
