@@ -100,7 +100,7 @@ func (app *app) registerServer(servers ...server.Interface) {
 
 func (app *app) listenForShutdown() {
 	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+	signal.Notify(quit, os.Interrupt, syscall.SIGINT, syscall.SIGTERM)
 	<-quit
 
 	for _, serverIns := range app.serverList {
