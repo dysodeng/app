@@ -26,7 +26,7 @@ func NewGormLogger() gormLogger.Interface {
 	return &GormLogger{
 		SlowThreshold: defaultSlowThresholdTime,
 		LogLevel:      gormLogger.Warn,
-		_zapLogger:    logger.WithOptions(zap.WithCaller(false)),
+		_zapLogger:    logger.WithOptions(zap.WithCaller(true)),
 	}
 }
 
@@ -34,7 +34,7 @@ func (l *GormLogger) LogMode(level gormLogger.LogLevel) gormLogger.Interface {
 	return &GormLogger{
 		SlowThreshold: defaultSlowThresholdTime,
 		LogLevel:      level,
-		_zapLogger:    logger.WithOptions(zap.WithCaller(false)),
+		_zapLogger:    logger.WithOptions(zap.WithCaller(true)),
 	}
 }
 
@@ -97,7 +97,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		// 错误日志
 		fields := []zap.Field{
 			zap.Any("error", err),
-			zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+			zap.Any("stack_file", fmt.Sprintf("%s:%d", file, line)),
 			zap.Any("rows", rows),
 			zap.Any("duration", fmt.Sprintf("%dms", duration)),
 		}
@@ -112,7 +112,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		// 慢查询日志
 		if duration > l.SlowThreshold.Milliseconds() {
 			fields := []zap.Field{
-				zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+				zap.Any("stack_file", fmt.Sprintf("%s:%d", file, line)),
 				zap.Any("rows", rows),
 				zap.Any("duration", fmt.Sprintf("%dms", duration)),
 			}
@@ -126,7 +126,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 		} else {
 			if l.LogLevel == gormLogger.Info {
 				fields := []zap.Field{
-					zap.Any("file", fmt.Sprintf("%s:%d", file, line)),
+					zap.Any("stack_file", fmt.Sprintf("%s:%d", file, line)),
 					zap.Any("rows", rows),
 					zap.Any("duration", fmt.Sprintf("%dms", duration)),
 				}
