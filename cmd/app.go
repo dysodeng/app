@@ -22,7 +22,7 @@ import (
 )
 
 type app struct {
-	serverList []server.Interface
+	serverList []server.Server
 }
 
 func newApp() *app {
@@ -90,7 +90,7 @@ func (app *app) start() {
 	}
 }
 
-func (app *app) registerServer(servers ...server.Interface) {
+func (app *app) registerServer(servers ...server.Server) {
 	for _, s := range servers {
 		if s.IsEnabled() {
 			app.serverList = append(app.serverList, s)

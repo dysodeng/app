@@ -16,7 +16,7 @@ type healthServer struct {
 	listener net.Listener
 }
 
-func NewServer() server.Interface {
+func NewServer() server.Server {
 	return &healthServer{}
 }
 

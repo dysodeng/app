@@ -13,14 +13,14 @@ import (
 // cronServer 定时任务服务
 type cronServer struct {
 	// jobs 任务注册表
-	jobs map[string]job.Interface
+	jobs map[string]job.Handler
 	// schedule 任务调度器
 	schedule *cron.Cron
 }
 
-func NewServer() server.Interface {
+func NewServer() server.Server {
 	jobServer := &cronServer{
-		jobs: make(map[string]job.Interface),
+		jobs: make(map[string]job.Handler),
 	}
 	return jobServer
 }
@@ -30,7 +30,7 @@ func (cronJob *cronServer) IsEnabled() bool {
 }
 
 // register 注册任务服务
-func (cronJob *cronServer) register(jobs ...job.Interface) {
+func (cronJob *cronServer) register(jobs ...job.Handler) {
 	for _, jobItem := range jobs {
 		if _, ok := cronJob.jobs[jobItem.JobKey()]; !ok {
 			cronJob.jobs[jobItem.JobKey()] = jobItem

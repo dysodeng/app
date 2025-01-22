@@ -21,7 +21,7 @@ type httpServer struct {
 	server *http.Server
 }
 
-func NewServer() server.Interface {
+func NewServer() server.Server {
 	return &httpServer{}
 }
 

@@ -1,6 +1,6 @@
 package server
 
-type Interface interface {
+type Server interface {
 	IsEnabled() bool
 	Serve()
 	Shutdown()

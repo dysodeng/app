@@ -22,7 +22,7 @@ type grpcServer struct {
 	rpcServer rpc.Server
 }
 
-func NewServer() server.Interface {
+func NewServer() server.Server {
 	return &grpcServer{}
 }
 

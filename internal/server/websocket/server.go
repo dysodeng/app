@@ -18,7 +18,7 @@ type websocketServer struct {
 	wss *http.Server
 }
 
-func NewServer() server.Interface {
+func NewServer() server.Server {
 	return &websocketServer{}
 }
 
