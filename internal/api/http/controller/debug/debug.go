@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strconv"
 	"strings"
@@ -45,7 +44,7 @@ func GenRandomString(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GenRandomString")
 	span.End()
 
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomString(24, helper.ModeAlphanumeric)))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomString(32, helper.ModeAlphanumeric)))
 }
 
 func GormLogger(ctx *gin.Context) {
@@ -185,6 +184,9 @@ func ChatMessage(ctx *gin.Context) {
 			"patBedId": 8,
 		},
 	})
+
+	var message string
+
 	statusCode, err := request.StreamRequest(
 		config.ThirdParty.Dify.Api+"/chat-messages", // api
 		"POST",
@@ -194,8 +196,14 @@ func ChatMessage(ctx *gin.Context) {
 			if strings.HasPrefix(chunkString, "data: ") {
 				chunkString = strings.Replace(chunkString, "data: ", "", 1)
 			}
+
 			if chunkString != "" && chunkString != "\n" && chunkString != "\n\n" {
 				_, _ = flusher.WriterWithFlush("data: " + chunkString + "\n\n")
+				var msg Message
+				_ = json.Unmarshal([]byte(chunkString), &msg)
+				if msg.Event == "agent_message" || msg.Event == "message" {
+					message += msg.Answer
+				}
 			}
 			return nil
 		},
@@ -206,12 +214,17 @@ func ChatMessage(ctx *gin.Context) {
 		request.WithHeader("Content-Type", "application/json"),
 		request.WithTracer("Trace-Id", "Span-Id"),
 	)
-	log.Printf("statusCode: %d, err: %v", statusCode, err)
 	if err != nil {
-		logger.Error(spanCtx, "done", logger.Field{Key: "statusCode", Value: statusCode}, logger.ErrorField(err))
+		logger.Error(spanCtx, "请求错误", logger.Field{Key: "statusCode", Value: statusCode}, logger.ErrorField(err))
 	} else {
 		logger.Info(spanCtx, "done", logger.Field{Key: "statusCode", Value: statusCode})
+		logger.Info(spanCtx, "完整消息", logger.Field{Key: "message", Value: message})
 	}
+}
+
+type Message struct {
+	Event  string `json:"event"`
+	Answer string `json:"answer"`
 }
 
 func RemoteRequest(ctx *gin.Context) {

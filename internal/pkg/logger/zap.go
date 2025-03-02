@@ -31,7 +31,7 @@ func newZapLogger() {
 		TimeKey:     "ts",                        // 结构化（json）输出：时间的key（INFO，WARN，ERROR等）
 		CallerKey:   "file",                      // 结构化（json）输出：打印日志的文件对应的Key
 		EncodeLevel: zapcore.CapitalLevelEncoder, // 将日志级别转换成大写（INFO，WARN，ERROR等）
-		EncodeCaller: func(caller zapcore.EntryCaller, encoder zapcore.PrimitiveArrayEncoder) { // 采用文件相对路径编码输出（test/main.go:14 ）
+		EncodeCaller: func(caller zapcore.EntryCaller, encoder zapcore.PrimitiveArrayEncoder) { // 采用文件相对路径编码输出
 			_, file, line, ok := runtime.Caller(6)
 			if !ok {
 				encoder.AppendString(caller.TrimmedPath())
