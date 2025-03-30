@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/dysodeng/app/internal/config"
+
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
@@ -29,8 +31,10 @@ func NewUserService() *UserService {
 
 func (m *UserService) RegisterMetadata() metadata.ServiceRegisterMetadata {
 	return metadata.ServiceRegisterMetadata{
+		AppName:     config.App.Name,
 		ServiceName: "user.UserService",
 		Version:     metadata.DefaultVersion,
+		Env:         config.App.Env.String(),
 	}
 }
 

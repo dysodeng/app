@@ -3,7 +3,12 @@ package grpc
 import (
 	"fmt"
 	"log"
+	"strings"
 	"time"
+
+	telemetryMetrics "github.com/dysodeng/app/internal/pkg/telemetry/metrics"
+	"github.com/dysodeng/rpc/logger"
+	"github.com/dysodeng/rpc/metrics"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/api/grpc/service"
@@ -12,6 +17,7 @@ import (
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/rpc"
+	rpcConfig "github.com/dysodeng/rpc/config"
 	"github.com/dysodeng/rpc/naming/etcd"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -40,7 +46,6 @@ func (grpcServer *grpcServer) register() {
 func (grpcServer *grpcServer) Serve() {
 	log.Println("start grpc server...")
 	opts := []etcd.RegistryOption{
-		etcd.WithRegistryNamespace(config.App.Name),
 		etcd.WithRegistryLease(10),
 		etcd.WithRegistryEtcdDialTimeout(5 * time.Second),
 	}
@@ -48,18 +53,34 @@ func (grpcServer *grpcServer) Serve() {
 		opts = append(opts, etcd.WithRegistryEtcdAuth(config.Etcd.Grpc.Username, config.Etcd.Grpc.Password))
 	}
 
-	registry, err := etcd.NewEtcdRegistry(
-		fmt.Sprintf("%s:%s", helper.GetLocalIp(), config.Server.Grpc.Port),
-		config.Etcd.Grpc.Addr,
-		opts...,
-	)
+	conf := &rpcConfig.ServerConfig{
+		AppName:     config.App.Name,
+		ServiceAddr: fmt.Sprintf("%s:%s", helper.GetLocalIp(), config.Server.Grpc.Port),
+		EtcdConfig: rpcConfig.EtcdConfig{
+			Endpoints:   strings.Split(config.Etcd.Grpc.Addr, ","),
+			DialTimeout: 5,
+			Namespace:   config.App.Name,
+		},
+	}
+	if config.Monitor.Metrics.OtlpEnabled {
+		conf.OtelCollectorEndpoint = config.Monitor.Metrics.OtlpEndpoint
+	}
+
+	logger.Init(config.App.Env == config.Prod)
+
+	// 设置 meter 到 RPC 框架
+	err := metrics.SetMeter(telemetryMetrics.Meter(), conf.AppName)
+	if err != nil {
+		log.Fatalf("grpc metrics set fiald: %+v\n", err)
+	}
+
+	registry, err := etcd.NewEtcdRegistry(conf, opts...)
 	if err != nil {
 		log.Fatalf("grpc etcd connent fiald: %+v\n", err)
 	}
 
 	grpcServer.rpcServer = rpc.NewServer(
-		config.App.Name,
-		fmt.Sprintf("0.0.0.0:%s", config.Server.Grpc.Port),
+		conf,
 		registry,
 		rpc.WithServerGrpcServerOption(
 			grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithTracerProvider(trace.TracerProvider()))),

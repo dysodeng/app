@@ -3,6 +3,9 @@ package user
 import (
 	"context"
 
+	"github.com/dysodeng/rpc/breaker"
+	"github.com/dysodeng/rpc/retry"
+
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	rpcService "github.com/dysodeng/app/internal/service/rpc"
 	"github.com/dysodeng/rpc"
@@ -22,6 +25,8 @@ func Service(ctx context.Context) (proto.UserServiceClient, error) {
 		conn, err := rpcService.ServiceDiscovery().ServiceConn(
 			"user.UserService",
 			rpc.WithServiceDiscoveryLB(rpc.RoundRobin),
+			rpc.WithServiceDiscoveryBreaker(breaker.NewCircuitBreaker()),
+			rpc.WithServiceDiscoveryRetry(retry.DefaultRetryPolicy),
 			rpc.WithServiceDiscoveryGrpcDialOption(
 				grpc.WithStatsHandler(otelgrpc.NewClientHandler(otelgrpc.WithTracerProvider(span.TracerProvider()))),
 			),
