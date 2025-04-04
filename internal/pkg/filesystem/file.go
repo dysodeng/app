@@ -231,7 +231,6 @@ func generateAdapter() (adapter.Adapter, error) {
 			BucketName: config.Filesystem.AliOss.Bucket,
 			StsRoleArn: config.Filesystem.AliOss.StsRoleArn,
 		})
-		break
 
 	case "hw_obs": // 华为云OBS
 		storage = adapter.NewHwObsAdapter(adapter.HwObsConfig{
@@ -240,7 +239,6 @@ func generateAdapter() (adapter.Adapter, error) {
 			EndPoint:   config.Filesystem.HwObs.Endpoint,
 			BucketName: config.Filesystem.HwObs.Bucket,
 		})
-		break
 
 	case "minio": // MinIO
 		storage = adapter.NewMinioAdapter(adapter.MinioConfig{
@@ -250,7 +248,6 @@ func generateAdapter() (adapter.Adapter, error) {
 			BucketName: config.Filesystem.Minio.Bucket,
 			UseSSL:     config.Filesystem.Minio.UseSSL,
 		})
-		break
 
 	case "local": // 本地文件系统
 		storage = adapter.NewLocalAdapter(adapter.LocalConfig{
@@ -258,7 +255,6 @@ func generateAdapter() (adapter.Adapter, error) {
 			LogicPath: config.Filesystem.Local.LogicPath,
 			BaseUrl:   config.Filesystem.Local.BaseUrl,
 		})
-		break
 
 	default:
 		log.Println("file storage error:" + config.Filesystem.Storage + " not found.")
