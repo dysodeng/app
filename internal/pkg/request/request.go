@@ -191,10 +191,8 @@ func JsonRequest(requestUrl, method string, data map[string]interface{}, opts ..
 // FormRequest form-data请求
 func FormRequest(requestUrl, method string, data map[string]string, opts ...Option) ([]byte, int, error) {
 	body := url.Values{}
-	if data != nil {
-		for key, val := range data {
-			body.Set(key, val)
-		}
+	for key, val := range data {
+		body.Set(key, val)
 	}
 	reader := bytes.NewReader([]byte(body.Encode()))
 	opts = append(opts, WithHeader("Content-Type", "application/x-www-form-urlencoded"))

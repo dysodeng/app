@@ -42,11 +42,7 @@ func Check(idCard string) bool {
 	// 取模
 	seek := sum % 11
 
-	if suffix == checksum[seek] {
-		return true
-	}
-
-	return false
+	return suffix == checksum[seek]
 }
 
 // Hide 隐藏身份证号中间位数

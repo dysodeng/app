@@ -26,7 +26,6 @@ func (d *DomainService) Check(linkType link.Type, params link.Params) (*link.Lin
 	switch linkType {
 	case link.Empty:
 		linkItem.Params = link.Params{}
-		break
 
 	case link.Navigation: // 导航
 		if params.Point == nil {
@@ -38,7 +37,6 @@ func (d *DomainService) Check(linkType link.Type, params link.Params) (*link.Lin
 		linkItem.Params = link.Params{
 			Point: params.Point,
 		}
-		break
 
 	case link.MiniProgram: // 小程序
 		if vars.StringValue(params.AppID) == "" {
@@ -51,7 +49,6 @@ func (d *DomainService) Check(linkType link.Type, params link.Params) (*link.Lin
 			AppID: params.AppID,
 			Path:  params.Path,
 		}
-		break
 
 	default:
 		return nil, errors.New("跳转链接类型错误")

@@ -31,6 +31,6 @@ func Invoke(tryFunc func() error, opts ...Option) {
 		nextWaitTime := options.waitTimeFunc(currentRetry)
 		nextTry = nextTry.Add(nextWaitTime)
 
-		time.Sleep(nextTry.Sub(time.Now()))
+		time.Sleep(time.Until(nextTry))
 	}
 }

@@ -37,10 +37,8 @@ func (d *dao) Info(ctx context.Context, id uint64) (*user.User, error) {
 
 func (d *dao) ListUser(ctx context.Context, page, pageSize int, condition map[string]interface{}) ([]user.User, int64, error) {
 	query := db.DB().Debug().WithContext(ctx).Model(&user.User{})
-	if condition != nil {
-		for where, val := range condition {
-			query = query.Where(where, val)
-		}
+	for where, val := range condition {
+		query = query.Where(where, val)
 	}
 
 	var userList []user.User
