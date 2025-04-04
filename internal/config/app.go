@@ -9,6 +9,7 @@ import (
 
 type appConfig struct {
 	Env    Env    `mapstructure:"env"`
+	Debug  bool   `mapstructure:"debug"`
 	Name   string `mapstructure:"name"`
 	Domain string `mapstructure:"domain"`
 	Jwt    struct {
@@ -57,6 +58,7 @@ func loadAppConfig() {
 
 	app := v.Sub("app")
 	_ = app.BindEnv("env", "APP_ENV")
+	_ = app.BindEnv("env", "APP_DEBUG")
 	_ = app.BindEnv("domain", "APP_DOMAIN")
 	_ = app.BindEnv("jwt.secret", "APP_JWT_SECRET")
 	app.SetDefault("env", "dev")

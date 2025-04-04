@@ -6,7 +6,7 @@ toolchain go1.23.2
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.63.77
-	github.com/dysodeng/filesystem v0.8.2
+	github.com/dysodeng/filesystem v0.8.3
 	github.com/dysodeng/mq v0.0.9
 	github.com/dysodeng/rpc v0.2.1
 	github.com/fsnotify/fsnotify v1.8.0

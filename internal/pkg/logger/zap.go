@@ -8,13 +8,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/telemetry"
 	telemetryLog "github.com/dysodeng/app/internal/pkg/telemetry/log"
-	"go.opentelemetry.io/contrib/bridges/otelzap"
-
-	"github.com/dysodeng/app/internal/config"
-
 	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
+	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.uber.org/zap"
 	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
@@ -53,20 +51,17 @@ func newZapLogger() {
 	}
 
 	var cores []zapcore.Core
-	switch config.App.Env {
-	case config.Prod:
-		cores = append(cores, zapcore.NewCore(
-			zapcore.NewJSONEncoder(zapEncoderConfig),
-			zapcore.NewMultiWriteSyncer(zapcore.AddSync(fileWriter)),
-			zapcore.InfoLevel,
-		))
-		break
-
-	default:
+	if config.App.Debug {
 		cores = append(cores, zapcore.NewCore(
 			zapcore.NewJSONEncoder(zapEncoderConfig),
 			zapcore.NewMultiWriteSyncer(zapcore.AddSync(os.Stdout), zapcore.AddSync(fileWriter)),
 			zapcore.DebugLevel,
+		))
+	} else {
+		cores = append(cores, zapcore.NewCore(
+			zapcore.NewJSONEncoder(zapEncoderConfig),
+			zapcore.NewMultiWriteSyncer(zapcore.AddSync(fileWriter)),
+			zapcore.InfoLevel,
 		))
 	}
 

@@ -2,6 +2,7 @@
 app:
   name: "app"
   env: "dev"
+  debug: false
   domain: "http://localhost:8080"
   jwt:
     secret:
