@@ -25,6 +25,7 @@ type db struct {
 	MaxIdleConns    int    `mapstructure:"max_idle_conns"`
 	MaxOpenConns    int    `mapstructure:"max_open_conns"`
 	MaxConnLifetime int    `mapstructure:"max_conn_lifetime"`
+	TracerEnable    bool   `mapstructure:"tracer_enable"`
 }
 
 var Database *database
@@ -46,6 +47,7 @@ func loadDatabaseConfig() {
 	_ = d.BindEnv("main.database", "MAIN_DB_DATABASE")
 	_ = d.BindEnv("main.username", "MAIN_DB_USERNAME")
 	_ = d.BindEnv("main.password", "MAIN_DB_PASSWORD")
+	_ = d.BindEnv("main.tracer_enable", "MAIN_DB_TRACER_ENABLE")
 	d.SetDefault("main.host", "127.0.0.1")
 	d.SetDefault("main.port", "3306")
 	if err := d.Unmarshal(&Database); err != nil {

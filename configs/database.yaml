@@ -12,3 +12,4 @@ database:
     max_idle_conns: 50
     max_open_conns: 200
     max_conn_lifetime: 300
+    tracer_enable: false

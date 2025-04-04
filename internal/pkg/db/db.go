@@ -19,6 +19,7 @@ func init() {
 	var driver string
 
 	var maxIdleConn, maxOpenConn, connMaxLifetime int
+	var traceEnable bool
 	switch config.Database.Default {
 	case "main":
 		dsn = fmt.Sprintf(
@@ -33,6 +34,7 @@ func init() {
 		maxOpenConn = config.Database.Main.MaxOpenConns
 		connMaxLifetime = config.Database.Main.MaxConnLifetime
 		driver = config.Database.Main.Driver
+		traceEnable = config.Database.Main.TracerEnable
 	default:
 		log.Fatalln("database source not found")
 	}
@@ -54,6 +56,11 @@ func init() {
 	})
 	if err != nil {
 		log.Fatalf("failed to connect database %+v", err)
+	}
+
+	// tracer
+	if traceEnable {
+		_ = db.Use(&TracerPlugin{})
 	}
 
 	sqlDB, _ := db.DB()

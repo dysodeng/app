@@ -6,10 +6,8 @@ import (
 	"net/url"
 
 	"github.com/dysodeng/app/internal/config"
-
-	"github.com/yeqown/go-qrcode"
-
 	"github.com/pkg/errors"
+	"github.com/yeqown/go-qrcode"
 )
 
 type QrCode struct {
