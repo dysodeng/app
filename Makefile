@@ -39,3 +39,4 @@ init: install-hooks
 	cp .env.example .env
 	@go mod tidy
 	@go mod download
+	@echo "Initialized successfully!"

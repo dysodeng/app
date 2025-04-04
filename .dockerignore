@@ -10,3 +10,4 @@ dev-run.conf
 pre-commit
 /var/logs/*
 /var/tmp/*
+scripts
