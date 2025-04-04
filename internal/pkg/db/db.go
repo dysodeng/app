@@ -33,7 +33,6 @@ func init() {
 		maxOpenConn = config.Database.Main.MaxOpenConns
 		connMaxLifetime = config.Database.Main.MaxConnLifetime
 		driver = config.Database.Main.Driver
-		break
 	default:
 		log.Fatalln("database source not found")
 	}

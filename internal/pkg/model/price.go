@@ -59,10 +59,7 @@ func PriceYuan(yuan float64) Price {
 type Percent uint
 
 func (p Percent) Valid() bool {
-	if p < 0 || p > 10000 {
-		return false
-	}
-	return true
+	return p <= 10000
 }
 
 // Numeric 换算为百分比形式 eg. 10%==>10
@@ -112,10 +109,7 @@ func CalculatePricePercent(price Price, percent Percent) Price {
 type Score uint8
 
 func (s Score) Valid() bool {
-	if s < 0 || s > 50 {
-		return false
-	}
-	return true
+	return s <= 50
 }
 
 func (s Score) Score() float32 {

@@ -101,9 +101,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 			zap.Any("rows", rows),
 			zap.Any("duration", fmt.Sprintf("%dms", duration)),
 		}
-		for _, field := range traceFields {
-			fields = append(fields, field)
-		}
+		fields = append(fields, traceFields...)
 		l._zapLogger.Error(
 			fmt.Sprintf("SQL ERROR: %s", sql),
 			fields...,
@@ -130,9 +128,7 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 					zap.Any("rows", rows),
 					zap.Any("duration", fmt.Sprintf("%dms", duration)),
 				}
-				for _, field := range traceFields {
-					fields = append(fields, field)
-				}
+				fields = append(fields, traceFields...)
 				l._zapLogger.Debug(
 					fmt.Sprintf("SQL DEBUG: %s", sql),
 					fields...,

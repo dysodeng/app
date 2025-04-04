@@ -119,11 +119,8 @@ func CompanyCreditCodeCheck(creditCode string) bool {
 
 	logicCode := availableString[seek]
 	checkCode := creditCode[17:]
-	if logicCode == checkCode {
-		return true
-	}
 
-	return false
+	return logicCode == checkCode
 }
 
 // CompanyCreditCodeHide 隐藏企业统一社会信用代码中间位数

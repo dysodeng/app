@@ -9,10 +9,7 @@ const (
 )
 
 func (s BinaryStatus) Bool() bool {
-	if s > 0 {
-		return true
-	}
-	return false
+	return s > 0
 }
 
 func (s BinaryStatus) Uint() uint8 {

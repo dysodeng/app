@@ -5,7 +5,6 @@ import (
 	"io"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 
 	"github.com/dysodeng/app/internal/config"
@@ -14,7 +13,6 @@ import (
 	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.opentelemetry.io/contrib/bridges/otelzap"
 	"go.uber.org/zap"
-	"go.uber.org/zap/buffer"
 	"go.uber.org/zap/zapcore"
 )
 
@@ -74,24 +72,6 @@ func newZapLogger() {
 	core := zapcore.NewTee(cores...)
 
 	_zapLogger = zap.New(core, zap.AddCaller(), zap.AddStacktrace(zap.WarnLevel))
-}
-
-func trimmedPath(file string) string {
-	idx := strings.LastIndexByte(file, '/')
-	if idx == -1 {
-		return file
-	}
-	// Find the penultimate separator.
-	idx = strings.LastIndexByte(file[:idx], '/')
-	if idx == -1 {
-		return file
-	}
-	buf := buffer.NewPool().Get()
-	// Keep everything after the penultimate separator.
-	buf.AppendString(file[idx+1:])
-	filePath := buf.String()
-	buf.Free()
-	return filePath
 }
 
 func logFileWriter() (io.Writer, error) {

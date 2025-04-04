@@ -3,6 +3,8 @@ package alicloud
 import (
 	"log"
 
+	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/credentials"
+
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
 	"github.com/pkg/errors"
@@ -37,7 +39,14 @@ func NewAliCloudSmsSender(phoneNumber string, templateId string, config Config, 
 
 // SendSms 发送短信
 func (aliCloud *AliCloud) SendSms() (bool, error) {
-	client, err := sdk.NewClientWithAccessKey("default", aliCloud.option.accessKey, aliCloud.option.accessSecret)
+	client, err := sdk.NewClientWithOptions(
+		"default",
+		sdk.NewConfig(),
+		&credentials.AccessKeyCredential{
+			AccessKeyId:     aliCloud.option.accessKey,
+			AccessKeySecret: aliCloud.option.accessSecret,
+		},
+	)
 	if err != nil {
 		return false, err
 	}

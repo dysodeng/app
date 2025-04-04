@@ -23,10 +23,6 @@ func (f *Flusher) writer(body string) (int, error) {
 	return f.responseWriter.Write(helper.StringToBytes(body))
 }
 
-func (f *Flusher) flush() {
-	f.flusher.Flush()
-}
-
 func (f *Flusher) Writer(body string) (int, error) {
 	return f.writer(body)
 }

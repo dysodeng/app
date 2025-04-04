@@ -3,7 +3,6 @@ package qrcode
 import (
 	"bytes"
 	"fmt"
-	"image"
 	"net/url"
 
 	"github.com/dysodeng/app/internal/config"
@@ -15,7 +14,6 @@ import (
 
 type QrCode struct {
 	content string
-	logo    image.Image
 	ptr     *qrcode.QRCode
 }
 

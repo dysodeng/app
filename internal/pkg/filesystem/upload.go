@@ -56,6 +56,9 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	}
 
 	file, err := fileHeader.Open()
+	if err != nil {
+		return Info{}, errors.New("文件读取错误")
+	}
 	dstFileReader, err := fileHeader.Open()
 	if err != nil {
 		log.Println(err.Error())

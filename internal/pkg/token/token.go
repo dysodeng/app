@@ -137,7 +137,7 @@ func GenerateToken(userType string, data map[string]interface{}, attach map[stri
 		RefreshTokenExpire: refreshTokenExpire,
 	}
 
-	if attach != nil && len(attach) > 0 {
+	if len(attach) > 0 {
 		t.Attach = attach
 	}
 

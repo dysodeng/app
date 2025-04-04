@@ -91,11 +91,10 @@ func IsUintNumber(value string) bool {
 		return false
 	}
 
-	var number uint64 = 0
 	if value == "0" {
 		return true
 	} else {
-		number, _ = strconv.ParseUint(value, 10, 64)
+		number, _ := strconv.ParseUint(value, 10, 64)
 		if number == 0 {
 			return false
 		}
