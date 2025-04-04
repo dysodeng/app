@@ -11,13 +11,12 @@ Installation
 ```sh
 git clone https://github.com/dysodeng/app.git
 cd app
-go mod tidy
-cp .env.example .env
+make init
 ```
 
 Usage
 -----
 使用以下命令启动服务：
 ```sh
-go run main.go
+make
 ```
