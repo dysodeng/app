@@ -221,7 +221,6 @@ func (ads *areaDomainService) Area(ctx context.Context, areaType string, parentA
 		for _, province := range provinceList {
 			areaCollection = append(areaCollection, commonDo.Area{AreaId: province.AreaId, AreaName: province.AreaName})
 		}
-		break
 
 	case "city":
 		cityList, err := ads.areaDao.CityList(spanCtx, parentAreaId)
@@ -236,7 +235,6 @@ func (ads *areaDomainService) Area(ctx context.Context, areaType string, parentA
 				ParentAreaId: city.ParentId,
 			})
 		}
-		break
 
 	case "county":
 		countyList, err := ads.areaDao.CountyList(spanCtx, parentAreaId)
@@ -251,7 +249,6 @@ func (ads *areaDomainService) Area(ctx context.Context, areaType string, parentA
 				ParentAreaId: county.ParentId,
 			})
 		}
-		break
 
 	default:
 		return nil, errors.New("地区类型错误")
