@@ -3,7 +3,7 @@ package api
 import (
 	"context"
 
-	"go.opentelemetry.io/otel/trace"
+	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 )
 
 // Response api 响应数据结构
@@ -30,7 +30,7 @@ func Success[T any](ctx context.Context, result T) Response[T] {
 		Code:    CodeOk,
 		Data:    result,
 		Message: "success",
-		TraceId: parseContextTraceId(ctx),
+		TraceId: trace.ParseContextTraceId(ctx),
 	}
 }
 
@@ -40,20 +40,6 @@ func Fail(ctx context.Context, error string, code Code) Response[any] {
 		Code:    code,
 		Data:    nil,
 		Message: error,
-		TraceId: parseContextTraceId(ctx),
+		TraceId: trace.ParseContextTraceId(ctx),
 	}
-}
-
-// parseContextTraceId 从上下文获取 traceId
-func parseContextTraceId(ctx context.Context) string {
-	var traceId string
-	if ctx.Value("Trace-Id") != nil {
-		traceId = ctx.Value("Trace-Id").(string)
-	} else {
-		span := trace.SpanFromContext(ctx)
-		if span.SpanContext().HasTraceID() {
-			traceId = span.SpanContext().TraceID().String()
-		}
-	}
-	return traceId
 }

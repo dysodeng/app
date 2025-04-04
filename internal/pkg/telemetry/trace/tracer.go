@@ -89,6 +89,20 @@ func Tracer() trace.Tracer {
 	return tracer
 }
 
+// ParseContextTraceId 从上下文获取 traceId
+func ParseContextTraceId(ctx context.Context) string {
+	var traceId string
+	if ctx.Value("Trace-Id") != nil {
+		traceId = ctx.Value("Trace-Id").(string)
+	} else {
+		span := trace.SpanFromContext(ctx)
+		if span.SpanContext().HasTraceID() {
+			traceId = span.SpanContext().TraceID().String()
+		}
+	}
+	return traceId
+}
+
 func Gin(ctx *gin.Context) context.Context {
 	return ctx.Request.Context()
 }
