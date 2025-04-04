@@ -23,11 +23,6 @@ type MessageHandler interface {
 
 var HubBus *Hub
 
-func init() {
-	HubBus = NewHub()
-	go HubBus.Run()
-}
-
 // Hub 维护了所有的客户端连接
 type Hub struct {
 	// 注册请求
