@@ -38,6 +38,15 @@ func Token(ctx *gin.Context) {
 	ctx.JSON(200, api.Success(ctx, t))
 }
 
+func VerifyToken(ctx *gin.Context) {
+	claims, err := token.VerifyToken(ctx.Query("token"))
+	if err != nil {
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		return
+	}
+	ctx.JSON(http.StatusOK, api.Success(ctx, claims))
+}
+
 // GenRandomString 生成随机字符串
 // @route GET /debug/random_string
 func GenRandomString(ctx *gin.Context) {

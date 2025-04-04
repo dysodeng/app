@@ -39,72 +39,49 @@ func GenerateToken(userType string, data map[string]interface{}, attach map[stri
 	var expire int64
 	var refreshTokenExpire int64
 
-	defer func() {
-		if err := recover(); err != nil {
-			log.Println(err)
-		}
-	}()
+	tokenClaims := jwt.MapClaims{
+		"is_refresh_token": false,
+		"token_type":       "biz", // 业务token
+		"iss":              JwtAuthIdentifier,
+		"aud":              JwtAuthIdentifier,
+		"user_type":        userType,
+	}
+	refreshTokenClaims := jwt.MapClaims{
+		"is_refresh_token": true,
+		"token_type":       "biz", // 业务token
+		"iss":              JwtAuthIdentifier,
+		"aud":              JwtAuthIdentifier,
+		"user_type":        userType,
+	}
 
 	switch userType {
 	case "user": // 终端用户
 		expire = 30 * 24 * 3600
 		refreshTokenExpire = 2 * 30 * 24 * 3600
-		// Token
-		tokenMethod = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id":          data["user_id"],
-			"platform_type":    data["platform_type"],
-			"user_type":        "user",
-			"is_refresh_token": false,
-			"token_type":       "biz", // 业务token
-			"iss":              JwtAuthIdentifier,
-			"aud":              JwtAuthIdentifier,
-			"iat":              currentTime,
-			"exp":              currentTime + int64(expire),
-		})
-
-		// RefreshToken
-		refreshTokenMethod = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"user_id":          data["user_id"],
-			"platform_type":    data["platform_type"],
-			"user_type":        "user",
-			"is_refresh_token": true,
-			"token_type":       "biz", // 业务token
-			"iss":              JwtAuthIdentifier,
-			"aud":              JwtAuthIdentifier,
-			"iat":              currentTime,
-			"exp":              currentTime + int64(expire),
-		})
 
 	case "ams": // 运营平台
 		expire = 12 * 3600
 		refreshTokenExpire = 24 * 3600
-		// Token
-		tokenMethod = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"admin_id":         data["admin_id"],
-			"is_super":         data["is_super"],
-			"user_type":        "ams",
-			"is_refresh_token": false,
-			"token_type":       "biz", // 业务token
-			"iss":              JwtAuthIdentifier,
-			"aud":              JwtAuthIdentifier,
-			"iat":              currentTime,
-			"exp":              currentTime + int64(expire),
-		})
 
-		refreshTokenMethod = jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-			"admin_id":         data["admin_id"],
-			"is_super":         data["is_super"],
-			"user_type":        "ams",
-			"is_refresh_token": true,
-			"token_type":       "biz", // 业务token
-			"iss":              JwtAuthIdentifier,
-			"aud":              JwtAuthIdentifier,
-			"iat":              currentTime,
-			"exp":              currentTime + int64(expire),
-		})
 	default:
 		return Token{}, errors.New("用户类型错误")
 	}
+
+	// biz payload
+	for key, value := range data {
+		tokenClaims[key] = value
+		refreshTokenClaims[key] = value
+	}
+
+	// BizToken
+	tokenClaims["iat"] = currentTime
+	tokenClaims["exp"] = currentTime + expire
+	tokenMethod = jwt.NewWithClaims(jwt.SigningMethodHS256, tokenClaims)
+
+	// RefreshToken
+	refreshTokenClaims["iat"] = currentTime
+	refreshTokenClaims["exp"] = currentTime + refreshTokenExpire
+	refreshTokenMethod = jwt.NewWithClaims(jwt.SigningMethodHS256, refreshTokenClaims)
 
 	if tokenMethod == nil {
 		log.Println("tokenMethod nil")

@@ -10,6 +10,7 @@ func debugRouter(router *gin.RouterGroup) {
 	debugApi := router.Group("debug")
 	{
 		debugApi.POST("token", debug.Token)
+		debugApi.POST("token/verify", debug.VerifyToken)
 		debugApi.POST("random_string", debug.GenRandomString)
 		debugApi.POST("gorm_logger", debug.GormLogger)
 		debugApi.POST("grpc/user", debug.User)
