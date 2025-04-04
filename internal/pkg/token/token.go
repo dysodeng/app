@@ -6,6 +6,8 @@ import (
 	"log"
 	"time"
 
+	"github.com/dysodeng/app/internal/pkg/helper"
+
 	"github.com/dysodeng/app/internal/config"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -93,7 +95,7 @@ func GenerateToken(userType string, data map[string]interface{}, attach map[stri
 	}
 
 	// token
-	var tokenSecret = []byte(config.App.Jwt.Secret)
+	tokenSecret := helper.StringToBytes(config.App.Jwt.Secret)
 	token, err := tokenMethod.SignedString(tokenSecret)
 	if err != nil {
 		return Token{}, errors.New("TOKEN生成错误")
