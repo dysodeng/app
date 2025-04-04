@@ -44,13 +44,10 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	switch userType {
 	case "user": // 终端用户
 		rootPath += "user/"
-		break
 	case "ams": // 管理端
 		rootPath += "ams/file/"
-		break
 	case "anonymous": // 匿名用户
 		rootPath += "anonymous/file/"
-		break
 	default:
 		return Info{}, errors.New("用户类型错误")
 	}
@@ -185,10 +182,8 @@ func (uploader *Uploader) EditorUpload(userType string, userId uint64, fileBytes
 			return Info{}, service.EMMissUserIdError
 		}
 		rootPath += fmt.Sprintf("user/%d/", userId)
-		break
 	case "ams":
 		rootPath += "ams/file/"
-		break
 	default:
 		return Info{}, errors.New("用户类型错误")
 	}

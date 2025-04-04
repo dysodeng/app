@@ -6,7 +6,6 @@ import (
 	"time"
 
 	"github.com/dysodeng/app/internal/config"
-
 	"github.com/pkg/errors"
 )
 
@@ -40,7 +39,6 @@ func NewCache() (Cache, error) {
 				config.Redis.Cache.KeyPrefix,
 				config.Redis.Cache.DB,
 			)
-			break
 		default:
 			panic("缓存驱动错误")
 		}

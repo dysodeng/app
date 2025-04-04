@@ -74,7 +74,6 @@ func GenerateToken(userType string, data map[string]interface{}, attach map[stri
 			"iat":              currentTime,
 			"exp":              currentTime + int64(expire),
 		})
-		break
 
 	case "ams": // 运营平台
 		expire = 12 * 3600
