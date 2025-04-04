@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/dysodeng/app/internal/event"
+
 	"github.com/dysodeng/app/internal/pkg/cache"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
@@ -35,6 +37,12 @@ func Token(ctx *gin.Context) {
 	t, _ := token.GenerateToken("user", map[string]interface{}{
 		"user_id": 1,
 	}, nil)
+
+	event.Dispatch(event.Logged, map[string]interface{}{
+		"user_type": "user",
+		"user_id":   1,
+	}, event.WithQueue())
+
 	ctx.JSON(200, api.Success(ctx, t))
 }
 

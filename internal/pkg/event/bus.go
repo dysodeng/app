@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"log"
 	"sync"
-	"time"
 
 	"github.com/dysodeng/app/internal/pkg/mq"
-
 	"github.com/dysodeng/mq/contract"
 )
 
@@ -39,24 +37,7 @@ func New(opts ...Option) Bus {
 		opt(b)
 	}
 
-	if b.withQueue {
-		queue, err := mq.NewMessageQueueConsumer(b.queuePrefixKey + eventDispatchQueueKey)
-		if err != nil {
-			log.Fatalf("%+v", err)
-		}
-
-		b.queue = queue
-
-		b.queueProducer, err = mq.NewMessageQueueProducer(&contract.Pool{
-			MinConn:     2,
-			MaxConn:     2,
-			MaxIdleConn: 2,
-			IdleTimeout: time.Hour,
-		})
-		if err != nil {
-			log.Fatalf("%+v", err)
-		}
-
+	if b.withQueue && b.queue != nil {
 		go b.queueConsume()
 	}
 
@@ -86,7 +67,7 @@ func (bus *bus) Dispatch(dispatcher Dispatcher, data map[string]interface{}, opt
 	if e, ok := bus.events.Load(dispatcher); ok {
 		if bus.withQueue && o.withQueue {
 			queueData, _ := json.Marshal(eventQueueData{Dispatcher: string(dispatcher), Data: data})
-			_, err := bus.queueProducer.QueuePublish(mq.QueueKey(bus.queuePrefixKey+eventDispatchQueueKey), string(queueData))
+			_, err := bus.queueProducer.QueuePublish(mq.QueueKey(bus.queuePrefixKey+DispatchQueueKey), string(queueData))
 			if err != nil {
 				log.Printf("%+v", err)
 			}
