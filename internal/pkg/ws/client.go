@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/dysodeng/app/internal/pkg/ws/message"
-
 	"github.com/gorilla/websocket"
 )
 
@@ -27,8 +26,12 @@ type Client struct {
 	// 缓冲发送消息的通道
 	send chan message.WsMessage
 
-	// 关联的用户 id
-	userId string
+	// 关联的用户id
+	userId   string
+	userType string
+
+	// 连接客户端id
+	clientId string
 
 	// 心跳计时器
 	heartbeatTicker *time.Ticker
@@ -63,12 +66,11 @@ func (c *Client) readMessage() {
 			break
 		}
 		if HubBus.messageHandler != nil {
-			err = HubBus.messageHandler.Handler(c.userId, messageType, body)
+			err = HubBus.messageHandler.Handler(c.clientId, c.userId, c.userType, messageType, body)
 			if err != nil {
 				log.Println("handler error: ", err)
 			}
 		}
-
 	}
 }
 

@@ -7,19 +7,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-func SendMessage(userId string, msgType message.Type, msg string) error {
-	// 从 hub 中获取 user_id 关联的 client
+func SendMessage(clientId string, msgType message.Type, msg string) error {
+	// 从 hub 中获取 client_id 关联的 client
 	HubBus.RLock()
-	client, ok := HubBus.userClients[userId]
+	client, ok := HubBus.clients[clientId]
 	HubBus.RUnlock()
 	if !ok {
-		return errors.New(fmt.Sprintf("client not found: %s", userId))
+		return errors.New(fmt.Sprintf("client not found: %s", clientId))
 	}
 
 	// 消息装箱
 	messageItem := message.WsMessage{
-		UserID:  userId,
-		Message: message.Message{Type: msgType, Data: msg},
+		ClientID: clientId,
+		Message:  message.Message{Type: msgType, Data: msg},
 	}
 
 	// 发送消息

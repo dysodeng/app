@@ -15,6 +15,6 @@ type Message struct {
 }
 
 type WsMessage struct {
-	UserID  string  `json:"user_id"`
-	Message Message `json:"message"`
+	ClientID string  `json:"client_id"`
+	Message  Message `json:"message"`
 }

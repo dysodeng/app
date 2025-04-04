@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/dysodeng/app/internal/pkg/ws/message"
-
+	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
 )
 
@@ -30,7 +30,7 @@ func WebsocketServe(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// 认证失败的时候，返回错误信息，并断开连接
-	userId, err := HubBus.authenticator.Authenticate(request)
+	userClaims, err := HubBus.authenticator.Authenticate(request)
 	if err != nil {
 		_ = conn.SetWriteDeadline(time.Now().Add(time.Second))
 		_ = conn.WriteMessage(
@@ -41,11 +41,20 @@ func WebsocketServe(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	userId := userClaims["user_id"].(string)
+	userType := userClaims["user_type"].(string)
+
 	// 注册 Client
+	clientId, err := uuid.NewV7()
+	if err != nil {
+		clientId = uuid.New()
+	}
 	client := &Client{
 		conn:            conn,
 		send:            make(chan message.WsMessage, bufferSize),
 		userId:          userId,
+		userType:        userType,
+		clientId:        clientId.String(),
 		heartbeatTicker: time.NewTicker(time.Second * 5),
 	}
 	client.conn.SetCloseHandler(closeHandler)

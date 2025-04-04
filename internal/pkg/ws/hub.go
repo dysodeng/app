@@ -18,7 +18,7 @@ type Handler func(msg message.WsMessage, err error)
 
 // MessageHandler 消息处理器
 type MessageHandler interface {
-	Handler(userId string, messageType int, message []byte) error
+	Handler(clientId, userId, userType string, messageType int, message []byte) error
 }
 
 var HubBus *Hub
@@ -34,8 +34,8 @@ type Hub struct {
 	register chan *Client
 	// 取消注册请求
 	unregister chan *Client
-	// 记录 uid 跟 client 的对应关系
-	userClients map[string]*Client
+	// 记录 clientId 跟 client 的对应关系
+	clients map[string]*Client
 	// 互斥锁，保护 userClients 以及 clients 的读写
 	sync.RWMutex
 	// 错误处理器
@@ -62,7 +62,7 @@ func NewHub() *Hub {
 	return &Hub{
 		register:      make(chan *Client),
 		unregister:    make(chan *Client),
-		userClients:   make(map[string]*Client, bufferSize),
+		clients:       make(map[string]*Client, bufferSize),
 		RWMutex:       sync.RWMutex{},
 		errorHandler:  defaultErrorHandler,
 		authenticator: &JWTAuthenticator{},
@@ -75,13 +75,13 @@ func (h *Hub) Run() {
 		select {
 		case client := <-h.register:
 			h.Lock()
-			h.userClients[client.userId] = client
+			h.clients[client.clientId] = client
 			h.Unlock()
 		case client := <-h.unregister:
 			h.Lock()
 			client.heartbeatTicker.Stop()
 			close(client.send)
-			delete(h.userClients, client.userId)
+			delete(h.clients, client.clientId)
 			h.Unlock()
 		}
 	}
@@ -90,7 +90,7 @@ func (h *Hub) Run() {
 // Metrics 返回 Hub 的当前的关键指标
 func Metrics(w http.ResponseWriter) {
 	pending := HubBus.pending.Load()
-	connections := len(HubBus.userClients)
+	connections := len(HubBus.clients)
 	_, _ = w.Write([]byte(fmt.Sprintf("# HELP connections 连接数\n# TYPE connections gauge\nconnections %d\n", connections)))
 	_, _ = w.Write([]byte(fmt.Sprintf("# HELP pending 等待发送的消息数量\n# TYPE pending gauge\npending %d\n", pending)))
 }
