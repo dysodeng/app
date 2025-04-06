@@ -35,8 +35,11 @@ install-hooks:
 .PHONY: init
 init: install-hooks
 	@echo "Initializing..."
-	@go get -u github.com/pilu/fresh
-	cp .env.example .env
+	@go install github.com/pilu/fresh@latest
+	@if [ ! -f .env ]; then \
+		cp .env.example .env; \
+		echo "Created .env file from .env.example"; \
+	fi
 	@go mod tidy
 	@go mod download
 	@echo "Initialized successfully!"
