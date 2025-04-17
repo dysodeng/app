@@ -229,7 +229,7 @@ func ChatMessage(ctx *gin.Context) {
 		request.WithStreamMaxBufferSize(1024*1024),
 		request.WithHeader("Authorization", fmt.Sprintf("Bearer %s", config.ThirdParty.Dify.ChatAppKey)), // api key
 		request.WithHeader("Content-Type", "application/json"),
-		request.WithTracer("Trace-Id", "Span-Id"),
+		request.WithTracer("X-Trace-Id", "X-Span-Id"),
 	)
 	if err != nil {
 		logger.Error(spanCtx, "请求错误", logger.Field{Key: "statusCode", Value: statusCode}, logger.ErrorField(err))
@@ -255,7 +255,7 @@ func RemoteRequest(ctx *gin.Context) {
 		"POST",
 		nil,
 		request.WithContext(spanCtx),
-		request.WithTracer("Trace-Id", "Span-Id"),
+		request.WithTracer("X-Trace-Id", "X-Span-Id"),
 	)
 	if err != nil {
 		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: err})

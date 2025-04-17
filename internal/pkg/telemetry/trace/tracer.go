@@ -92,8 +92,8 @@ func Tracer() trace.Tracer {
 // ParseContextTraceId 从上下文获取 traceId
 func ParseContextTraceId(ctx context.Context) string {
 	var traceId string
-	if ctx.Value("Trace-Id") != nil {
-		traceId = ctx.Value("Trace-Id").(string)
+	if ctx.Value("X-Trace-Id") != nil {
+		traceId = ctx.Value("X-Trace-Id").(string)
 	} else {
 		span := trace.SpanFromContext(ctx)
 		if span.SpanContext().HasTraceID() {
