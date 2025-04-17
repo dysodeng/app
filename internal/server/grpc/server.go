@@ -54,7 +54,6 @@ func (grpcServer *grpcServer) Serve() {
 	}
 
 	conf := &rpcConfig.ServerConfig{
-		AppName:     config.App.Name,
 		ServiceAddr: fmt.Sprintf("%s:%s", helper.GetLocalIp(), config.Server.Grpc.Port),
 		EtcdConfig: rpcConfig.EtcdConfig{
 			Endpoints:   strings.Split(config.Etcd.Grpc.Addr, ","),
@@ -69,7 +68,7 @@ func (grpcServer *grpcServer) Serve() {
 	logger.Init(config.App.Env == config.Prod)
 
 	// 设置 meter 到 RPC 框架
-	err := metrics.SetMeter(telemetryMetrics.Meter(), conf.AppName)
+	err := metrics.SetMeter(telemetryMetrics.Meter(), config.App.Name)
 	if err != nil {
 		log.Fatalf("grpc metrics set fiald: %+v\n", err)
 	}

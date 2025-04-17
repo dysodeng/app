@@ -24,7 +24,7 @@ func init() {
 	builder = etcd.NewEtcdBuilder(conf, etcd.WithBuilderNamespace(config.App.Name))
 	resolver.Register(builder)
 
-	discovery = rpc.NewServiceDiscovery(config.App.Name, builder)
+	discovery = rpc.NewServiceDiscovery(builder)
 }
 
 func ServiceDiscovery() rpc.ServiceDiscovery {
