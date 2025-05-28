@@ -3,7 +3,8 @@ package user
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/dal/model/user"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/user"
+
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 )

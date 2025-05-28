@@ -3,8 +3,9 @@ package user
 import (
 	"context"
 
+	userModel "github.com/dysodeng/app/internal/infrastructure/persistence/model/user"
+
 	userDao "github.com/dysodeng/app/internal/dal/dao/user"
-	userModel "github.com/dysodeng/app/internal/dal/model/user"
 	"github.com/dysodeng/app/internal/pkg/filesystem"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/model"

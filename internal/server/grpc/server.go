@@ -58,7 +58,7 @@ func (grpcServer *grpcServer) Serve() {
 		EtcdConfig: rpcConfig.EtcdConfig{
 			Endpoints:   strings.Split(config.Etcd.Grpc.Addr, ","),
 			DialTimeout: 5,
-			Namespace:   config.App.Name,
+			Namespace:   config.Server.Grpc.Namespce,
 		},
 	}
 	if config.Monitor.Metrics.OtlpEnabled {

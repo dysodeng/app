@@ -19,9 +19,9 @@ func init() {
 	conf := &rpcConfig.EtcdConfig{
 		Endpoints:   strings.Split(config.Etcd.Grpc.Addr, ","),
 		DialTimeout: 5,
-		Namespace:   config.App.Name,
+		Namespace:   config.Server.Grpc.Namespce,
 	}
-	builder = etcd.NewEtcdBuilder(conf, etcd.WithBuilderNamespace(config.App.Name))
+	builder = etcd.NewEtcdBuilder(conf, etcd.WithBuilderNamespace(config.Server.Grpc.Namespce))
 	resolver.Register(builder)
 
 	discovery = rpc.NewServiceDiscovery(builder)

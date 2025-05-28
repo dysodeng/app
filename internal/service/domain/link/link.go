@@ -3,7 +3,8 @@ package link
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/dal/model/link"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/link"
+
 	"github.com/dysodeng/app/internal/pkg/vars"
 	"github.com/pkg/errors"
 )

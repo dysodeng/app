@@ -1,7 +1,7 @@
 package migration
 
 import (
-	"github.com/dysodeng/app/internal/dal/model/user"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/user"
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )

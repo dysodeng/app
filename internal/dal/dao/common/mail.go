@@ -3,7 +3,8 @@ package common
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/dal/model/common"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
+
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"

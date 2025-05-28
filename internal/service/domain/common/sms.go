@@ -3,8 +3,9 @@ package common
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
+
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
-	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/sms"
 	"github.com/dysodeng/app/internal/pkg/sms/alicloud"

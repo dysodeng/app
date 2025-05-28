@@ -3,8 +3,9 @@ package common
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
+
 	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
-	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/mail"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	commonDo "github.com/dysodeng/app/internal/service/do/common"

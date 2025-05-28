@@ -3,12 +3,11 @@ package user
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/api/grpc/proto"
+	rpcService "github.com/dysodeng/app/internal/infrastructure/rpc"
+	"github.com/dysodeng/rpc"
 	"github.com/dysodeng/rpc/breaker"
 	"github.com/dysodeng/rpc/retry"
-
-	"github.com/dysodeng/app/internal/api/grpc/proto"
-	rpcService "github.com/dysodeng/app/internal/service/rpc"
-	"github.com/dysodeng/rpc"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"google.golang.org/grpc"

@@ -9,13 +9,16 @@ import (
 	"strings"
 	"time"
 
+	common2 "github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
+	"github.com/dysodeng/app/internal/infrastructure/rpc"
+	"github.com/dysodeng/app/internal/infrastructure/rpc/user"
+
 	"github.com/dysodeng/app/internal/event"
 
 	"github.com/dysodeng/app/internal/pkg/cache"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
 	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/dal/model/common"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
@@ -25,8 +28,6 @@ import (
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/token"
 	"github.com/dysodeng/app/internal/service/reply/api"
-	"github.com/dysodeng/app/internal/service/rpc"
-	"github.com/dysodeng/app/internal/service/rpc/user"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/codes"
@@ -71,9 +72,9 @@ func GormLogger(ctx *gin.Context) {
 	span.SetStatus(codes.Ok, "ok")
 	logger.Debug(spanCtx, "trace logger")
 
-	var mailConfig common.MailConfig
+	var mailConfig common2.MailConfig
 	db.DB().WithContext(spanCtx).First(&mailConfig)
-	var smsConfig common.SmsConfig
+	var smsConfig common2.SmsConfig
 	db.DB().WithContext(spanCtx).Where("a=?", "b").First(&smsConfig)
 
 	go func() {

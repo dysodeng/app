@@ -15,6 +15,7 @@ server:
   grpc:
     enabled: true
     port: 3000
+    namespace: "app"
   websocket:
     enabled: true
     port: 4000
