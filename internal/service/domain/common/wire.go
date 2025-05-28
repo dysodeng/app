@@ -8,15 +8,9 @@ import (
 	"github.com/google/wire"
 )
 
-var AreaDomainServiceSet = wire.NewSet(commonDao.NewAreaDao, NewAreaDomainService)
 var MailDomainServiceSet = wire.NewSet(commonDao.NewMailDao, NewMailDomainService)
 var SmsDomainServiceSet = wire.NewSet(commonDao.NewSmsDao, NewSmsDomainService)
 var ValidCodeDomainServiceSet = wire.NewSet(SmsDomainServiceSet, MailDomainServiceSet, NewValidCodeDomainService)
-
-func InitAreaDomainService() AreaDomainService {
-	wire.Build(AreaDomainServiceSet)
-	return &areaDomainService{}
-}
 
 func InitMailDomainService() MailDomainService {
 	wire.Build(MailDomainServiceSet)

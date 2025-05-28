@@ -9,7 +9,7 @@ IMAGE_VERSION=$(shell date +"%Y%m%d%H%M")
 .PHONY: run
 
 # go get github.com/pilu/fresh 全局安装fresh命令,热更新代码
-run:
+run:wire
 	cp -f ./.env ./var/tmp/.env && fresh -c dev-run.conf
 
 test:
@@ -19,6 +19,12 @@ test:
 lint:
 	@echo "Running linter..."
 	@golangci-lint run ./...
+
+wire:
+	wire ./internal/di
+
+wire-show:
+	wire show ./internal/di
 
 build:
 	docker buildx build --platform ${PLATFORM_ARCH} -t ${DOCKER_REGISTRY_NAME}:${IMAGE_VERSION} .

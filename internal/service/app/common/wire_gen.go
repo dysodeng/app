@@ -14,13 +14,6 @@ import (
 
 // Injectors from wire.go:
 
-func InitAreaAppService() AreaAppService {
-	areaDao := common.NewAreaDao()
-	areaDomainService := common2.NewAreaDomainService(areaDao)
-	commonAreaAppService := NewAreaAppService(areaDomainService)
-	return commonAreaAppService
-}
-
 func InitValidCodeAppService() ValidCodeAppService {
 	smsDao := common.NewSmsDao()
 	smsDomainService := common2.NewSmsDomainService(smsDao)
@@ -32,7 +25,5 @@ func InitValidCodeAppService() ValidCodeAppService {
 }
 
 // wire.go:
-
-var AreaAppServiceSet = wire.NewSet(NewAreaAppService, common2.AreaDomainServiceSet)
 
 var ValidCodeAppServiceSet = wire.NewSet(NewValidCodeAppService, common2.ValidCodeDomainServiceSet)

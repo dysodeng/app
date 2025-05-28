@@ -3,9 +3,11 @@ package router
 import (
 	"net/http"
 
+	"github.com/dysodeng/app/internal/di"
+
+	"github.com/dysodeng/app/internal/api/http/dto/response/api"
 	"github.com/dysodeng/app/internal/api/http/middleware"
 	"github.com/dysodeng/app/internal/config"
-	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/gin-gonic/gin"
 )
 
@@ -23,8 +25,10 @@ func Router() *gin.Engine {
 		debugRouter(baseApiRouter)
 	}
 
+	appApi := di.InitAPI()
+
 	// 公共组件路由
-	commonRouter(baseApiRouter)
+	commonRouter(baseApiRouter, appApi)
 
 	apiRouter := baseApiRouter.Group("")
 	{

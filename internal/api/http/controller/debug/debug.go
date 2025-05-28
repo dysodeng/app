@@ -9,6 +9,8 @@ import (
 	"strings"
 	"time"
 
+	api2 "github.com/dysodeng/app/internal/api/http/dto/response/api"
+
 	common2 "github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
 	"github.com/dysodeng/app/internal/infrastructure/rpc"
 	"github.com/dysodeng/app/internal/infrastructure/rpc/user"
@@ -27,7 +29,6 @@ import (
 	"github.com/dysodeng/app/internal/pkg/telemetry/metrics"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/token"
-	"github.com/dysodeng/app/internal/service/reply/api"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/codes"
@@ -44,16 +45,16 @@ func Token(ctx *gin.Context) {
 		"user_id":   1,
 	}, event.WithQueue())
 
-	ctx.JSON(200, api.Success(ctx, t))
+	ctx.JSON(200, api2.Success(ctx, t))
 }
 
 func VerifyToken(ctx *gin.Context) {
 	claims, err := token.VerifyToken(ctx.Query("token"))
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
-	ctx.JSON(http.StatusOK, api.Success(ctx, claims))
+	ctx.JSON(http.StatusOK, api2.Success(ctx, claims))
 }
 
 // GenRandomString 生成随机字符串
@@ -62,7 +63,7 @@ func GenRandomString(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GenRandomString")
 	span.End()
 
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomString(32, helper.ModeAlphanumeric)))
+	ctx.JSON(http.StatusOK, api2.Success(spanCtx, helper.RandomString(32, helper.ModeAlphanumeric)))
 }
 
 func GormLogger(ctx *gin.Context) {
@@ -84,7 +85,7 @@ func GormLogger(ctx *gin.Context) {
 		logger.Error(childSpanCtx, "child logger")
 	}()
 
-	ctx.JSON(200, api.Success(ctx, mailConfig))
+	ctx.JSON(200, api2.Success(ctx, mailConfig))
 }
 
 func User(ctx *gin.Context) {
@@ -94,13 +95,13 @@ func User(ctx *gin.Context) {
 	userId := ctx.Query("user_id")
 	userID, _ := strconv.ParseUint(userId, 10, 64)
 	if userID <= 0 {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少用户ID", api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, "缺少用户ID", api2.CodeFail))
 		return
 	}
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
 
@@ -109,7 +110,7 @@ func User(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, err.Error(), api2.CodeFail))
 
 		apiCounter, _ := metrics.Meter().Int64Counter(
 			"user.fail",
@@ -127,7 +128,7 @@ func User(ctx *gin.Context) {
 	)
 	apiCounter.Add(spanCtx, 1)
 
-	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
+	ctx.JSON(http.StatusOK, api2.Success(ctx, userInfo))
 }
 
 func ListUser(ctx *gin.Context) {
@@ -140,7 +141,7 @@ func ListUser(ctx *gin.Context) {
 	}})
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
 	res, err := userService.ListUser(spanCtx, &proto.UserListRequest{
@@ -149,11 +150,11 @@ func ListUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api.Success(ctx, res))
+	ctx.JSON(http.StatusOK, api2.Success(ctx, res))
 }
 
 func CreateUser(ctx *gin.Context) {
@@ -162,7 +163,7 @@ func CreateUser(ctx *gin.Context) {
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
 
@@ -177,10 +178,10 @@ func CreateUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
-	ctx.JSON(http.StatusOK, api.Success(ctx, true))
+	ctx.JSON(http.StatusOK, api2.Success(ctx, true))
 }
 
 func ChatMessage(ctx *gin.Context) {
@@ -260,18 +261,18 @@ func RemoteRequest(ctx *gin.Context) {
 	)
 	if err != nil {
 		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: err})
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "接口请求失败", api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, "接口请求失败", api2.CodeFail))
 		return
 	}
 	if statusCode != 200 {
 		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: string(body)}, logger.Field{Key: "status_code", Value: statusCode})
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "接口请求失败", api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, "接口请求失败", api2.CodeFail))
 		return
 	}
 
 	var res map[string]interface{}
 	_ = json.Unmarshal(body, &res)
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, res))
+	ctx.JSON(http.StatusOK, api2.Success(spanCtx, res))
 }
 
 // Retry 重试
@@ -296,7 +297,7 @@ func Retry(ctx *gin.Context) {
 		}),
 	)
 
-	ctx.JSON(http.StatusOK, api.Success(spanCtx, true))
+	ctx.JSON(http.StatusOK, api2.Success(spanCtx, true))
 }
 
 // Cache 缓存
@@ -307,14 +308,14 @@ func Cache(ctx *gin.Context) {
 	userId := ctx.Query("user_id")
 	userID, _ := strconv.ParseUint(userId, 10, 64)
 	if userID <= 0 {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少用户ID", api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, "缺少用户ID", api2.CodeFail))
 		return
 	}
 
 	cli, err := cache.NewCache()
 	if err != nil {
 		logger.Error(spanCtx, "cache error", logger.ErrorField(err))
-		ctx.JSON(http.StatusOK, api.Fail(ctx, "内部错误", api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, "内部错误", api2.CodeFail))
 		return
 	}
 
@@ -324,16 +325,16 @@ func Cache(ctx *gin.Context) {
 		var userInfo *proto.UserResponse
 		if err = json.Unmarshal(helper.StringToBytes(userCache), &userInfo); err != nil {
 			logger.Error(spanCtx, "cache error", logger.ErrorField(err))
-			ctx.JSON(http.StatusOK, api.Fail(ctx, "内部错误", api.CodeFail))
+			ctx.JSON(http.StatusOK, api2.Fail(ctx, "内部错误", api2.CodeFail))
 			return
 		}
-		ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
+		ctx.JSON(http.StatusOK, api2.Success(ctx, userInfo))
 		return
 	}
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
 		return
 	}
 
@@ -342,12 +343,12 @@ func Cache(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
+		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, err.Error(), api2.CodeFail))
 		return
 	}
 
 	userBytes, _ := json.Marshal(userInfo)
 	_ = cli.Put(cacheKey, helper.BytesToString(userBytes), 1*time.Hour)
 
-	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
+	ctx.JSON(http.StatusOK, api2.Success(ctx, userInfo))
 }
