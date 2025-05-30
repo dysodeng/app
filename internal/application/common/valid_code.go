@@ -2,42 +2,36 @@ package common
 
 import (
 	"context"
-
+	"github.com/dysodeng/app/internal/domain/common/model"
+	"github.com/dysodeng/app/internal/domain/common/service"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/pkg/validator"
-	commonDo "github.com/dysodeng/app/internal/service/do/common"
-	"github.com/dysodeng/app/internal/service/domain/common"
 	"github.com/pkg/errors"
 )
 
-// ValidCodeAppService 验证码应用服务
-type ValidCodeAppService interface {
+// ValidCodeApplicationService 验证码应用服务
+type ValidCodeApplicationService interface {
 	SendValidCode(ctx context.Context, sender, bizType, account string) error
 	VerifyValidCode(ctx context.Context, sender, bizType, account, code string) error
 }
 
-// validCodeAppService 验证码应用服务
-type validCodeAppService struct {
+// validCodeApplicationService 验证码应用服务
+type validCodeApplicationService struct {
 	baseTraceSpanName      string
-	validCodeDomainService common.ValidCodeDomainService
+	validCodeDomainService service.ValidCodeDomainService
 }
 
-var validCodeAppServiceInstance ValidCodeAppService
-
-func NewValidCodeAppService(validCodeDomainService common.ValidCodeDomainService) ValidCodeAppService {
-	if validCodeAppServiceInstance == nil {
-		validCodeAppServiceInstance = &validCodeAppService{
-			baseTraceSpanName:      "service.app.common.ValidCodeAppService",
-			validCodeDomainService: validCodeDomainService,
-		}
+func NewValidCodeAppService(validCodeDomainService service.ValidCodeDomainService) ValidCodeApplicationService {
+	return &validCodeApplicationService{
+		baseTraceSpanName:      "application.common.ValidCodeApplicationService",
+		validCodeDomainService: validCodeDomainService,
 	}
-	return validCodeAppServiceInstance
 }
 
-func (vc *validCodeAppService) SendValidCode(ctx context.Context, sender, bizType, account string) error {
-	spanCtx, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".SendValidCode")
+func (svc *validCodeApplicationService) SendValidCode(ctx context.Context, sender, bizType, account string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".SendValidCode")
 	defer span.End()
 
 	if !helper.Contain([]string{"sms", "email"}, sender) {
@@ -65,7 +59,7 @@ func (vc *validCodeAppService) SendValidCode(ctx context.Context, sender, bizTyp
 		}
 	}
 
-	err := vc.validCodeDomainService.SendValidCode(spanCtx, commonDo.SenderType(sender), bizType, account)
+	err := svc.validCodeDomainService.SendValidCode(spanCtx, model.SenderType(sender), bizType, account)
 	if err != nil {
 		logger.Error(spanCtx, "验证码发送失败", logger.ErrorField(err))
 		return errors.New("验证码发送失败")
@@ -74,8 +68,8 @@ func (vc *validCodeAppService) SendValidCode(ctx context.Context, sender, bizTyp
 	return nil
 }
 
-func (vc *validCodeAppService) VerifyValidCode(ctx context.Context, sender, bizType, account, code string) error {
-	spanCtx, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".VerifyValidCode")
+func (svc *validCodeApplicationService) VerifyValidCode(ctx context.Context, sender, bizType, account, code string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".VerifyValidCode")
 	defer span.End()
 
 	if !helper.Contain([]string{"sms", "email"}, sender) {
@@ -96,7 +90,7 @@ func (vc *validCodeAppService) VerifyValidCode(ctx context.Context, sender, bizT
 		return errors.New("验证码不能为空")
 	}
 
-	err := vc.validCodeDomainService.VerifyValidCode(spanCtx, commonDo.SenderType(sender), bizType, account, code)
+	err := svc.validCodeDomainService.VerifyValidCode(spanCtx, model.SenderType(sender), bizType, account, code)
 	if err != nil {
 		return err
 	}

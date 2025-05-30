@@ -1,63 +1,47 @@
-package common
+package service
 
 import (
 	"context"
-
-	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
-
-	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
+	"github.com/dysodeng/app/internal/domain/common/model"
+	"github.com/dysodeng/app/internal/domain/common/repository"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/sms"
 	"github.com/dysodeng/app/internal/pkg/sms/alicloud"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
-	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
 )
 
 // SmsDomainService 短信领域服务
 type SmsDomainService interface {
-	Config(ctx context.Context) (*commonDo.SmsConfig, error)
-	SaveSmsConfig(ctx context.Context, config commonDo.SmsConfig) error
+	Config(ctx context.Context) (*model.SmsConfig, error)
+	SaveSmsConfig(ctx context.Context, config *model.SmsConfig) error
+	Template(ctx context.Context, template string) (*model.SmsTemplate, error)
 	SendSms(ctx context.Context, telephone, template string, templateParams map[string]string) error
-	Template(ctx context.Context, template string) (*commonDo.SmsTemplate, error)
 }
 
 // smsDomainService 短信领域服务
 type smsDomainService struct {
 	baseTraceSpanName string
-	smsDao            commonDao.SmsDao
+	smsRepo           repository.SmsRepository
 }
 
-var smsDomainServiceInstance SmsDomainService
-
-func NewSmsDomainService(smsDao commonDao.SmsDao) SmsDomainService {
-	if smsDomainServiceInstance == nil {
-		smsDomainServiceInstance = &smsDomainService{
-			baseTraceSpanName: "service.domain.common.SmsDomainService",
-			smsDao:            smsDao,
-		}
+func NewSmsDomainService(smsRepo repository.SmsRepository) SmsDomainService {
+	return &smsDomainService{
+		baseTraceSpanName: "domain.common.service.SmsDomainService",
+		smsRepo:           smsRepo,
 	}
-	return smsDomainServiceInstance
 }
 
-// Config 获取短信配置
-func (ss *smsDomainService) Config(ctx context.Context) (*commonDo.SmsConfig, error) {
-	config, err := ss.smsDao.Config(ctx)
+func (svc *smsDomainService) Config(ctx context.Context) (*model.SmsConfig, error) {
+	config, err := svc.smsRepo.Config(ctx)
 	if err != nil {
 		logger.Error(ctx, "短信配置获取失败", logger.ErrorField(err))
 		return nil, errors.Wrap(err, "短信配置获取失败")
 	}
-	return &commonDo.SmsConfig{
-		AppKey:          config.AppKey,
-		FreeSignName:    config.FreeSignName,
-		SecretKey:       config.SecretKey,
-		SmsType:         config.SmsType,
-		ValidCodeExpire: config.ValidCodeExpire,
-	}, nil
+	return config, nil
 }
 
-// SaveSmsConfig 保存短信配置
-func (ss *smsDomainService) SaveSmsConfig(ctx context.Context, config commonDo.SmsConfig) error {
+func (svc *smsDomainService) SaveSmsConfig(ctx context.Context, config *model.SmsConfig) error {
 	if config.SmsType == "" {
 		return errors.New("短信类型不能为空")
 	}
@@ -69,7 +53,8 @@ func (ss *smsDomainService) SaveSmsConfig(ctx context.Context, config commonDo.S
 		return errors.New("暂不支持该短信类型")
 	}
 
-	err := ss.smsDao.SaveConfig(ctx, common.SmsConfig{
+	err := svc.smsRepo.SaveConfig(ctx, &model.SmsConfig{
+		ID:              config.ID,
 		AppKey:          config.AppKey,
 		FreeSignName:    config.FreeSignName,
 		SecretKey:       config.SecretKey,
@@ -83,26 +68,20 @@ func (ss *smsDomainService) SaveSmsConfig(ctx context.Context, config commonDo.S
 	return nil
 }
 
-// Template 获取短信模板
-func (ss *smsDomainService) Template(ctx context.Context, template string) (*commonDo.SmsTemplate, error) {
-	smsTemplate, err := ss.smsDao.Template(ctx, template)
+func (svc *smsDomainService) Template(ctx context.Context, template string) (*model.SmsTemplate, error) {
+	smsTemplate, err := svc.smsRepo.Template(ctx, template)
 	if err != nil {
 		logger.Error(ctx, "短信模板获取失败", logger.ErrorField(err))
 		return nil, errors.Wrap(err, "短信模板获取失败")
 	}
-	return &commonDo.SmsTemplate{
-		Template:     smsTemplate.Template,
-		TemplateId:   smsTemplate.TemplateId,
-		TemplateName: smsTemplate.TemplateName,
-	}, nil
+	return smsTemplate, nil
 }
 
-// SendSms 发送短信
-func (ss *smsDomainService) SendSms(ctx context.Context, telephone, template string, templateParams map[string]string) error {
-	spanCtx, span := trace.Tracer().Start(ctx, ss.baseTraceSpanName+".SendSms")
+func (svc *smsDomainService) SendSms(ctx context.Context, telephone, template string, templateParams map[string]string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".SendSms")
 	defer span.End()
 
-	config, err := ss.smsDao.Config(spanCtx)
+	config, err := svc.smsRepo.Config(spanCtx)
 	if err != nil {
 		trace.Error(errors.New("短信配置获取失败"), span)
 		return errors.Wrap(err, "短信配置获取失败")
@@ -112,7 +91,7 @@ func (ss *smsDomainService) SendSms(ctx context.Context, telephone, template str
 		return errors.New("短信配置不存在")
 	}
 
-	smsTemplate, err := ss.smsDao.Template(ctx, template)
+	smsTemplate, err := svc.smsRepo.Template(ctx, template)
 	if err != nil {
 		trace.Error(errors.New("短信模板获取失败"), span)
 		return errors.Wrap(err, "短信模板获取失败")

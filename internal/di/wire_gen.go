@@ -24,7 +24,14 @@ func InitAPI() *http.API {
 	areaDomainService := service.NewAreaDomainService(areaRepository)
 	areaApplicationService := common2.NewAreaApplicationService(areaDomainService)
 	areaController := common3.NewAreaController(areaApplicationService)
-	api := http.NewAPI(areaController)
+	smsRepository := common.NewSmsRepository(transactionManager)
+	smsDomainService := service.NewSmsDomainService(smsRepository)
+	mailRepository := common.NewMailRepository(transactionManager)
+	mailDomainService := service.NewMailDomainService(mailRepository)
+	validCodeDomainService := service.NewValidCodeDomainService(smsDomainService, mailDomainService)
+	validCodeApplicationService := common2.NewValidCodeAppService(validCodeDomainService)
+	validCodeController := common3.NewValidCodeController(validCodeApplicationService)
+	api := http.NewAPI(areaController, validCodeController)
 	return api
 }
 
@@ -32,20 +39,20 @@ func InitAPI() *http.API {
 
 var (
 	// 基础设施层
-	InfrastructureSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository)
+	InfrastructureSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository)
 
 	// 领域层
 	DomainSet = wire.NewSet(
-		InfrastructureSet, service.NewAreaDomainService,
+		InfrastructureSet, service.NewAreaDomainService, service.NewMailDomainService, service.NewSmsDomainService, service.NewValidCodeDomainService,
 	)
 
 	// 应用层
 	ApplicationSet = wire.NewSet(
-		DomainSet, common2.NewAreaApplicationService,
+		DomainSet, common2.NewAreaApplicationService, common2.NewValidCodeAppService,
 	)
 
 	// API聚合层
 	APISet = wire.NewSet(
-		ApplicationSet, common3.NewAreaController, http.NewAPI,
+		ApplicationSet, common3.NewAreaController, common3.NewValidCodeController, http.NewAPI,
 	)
 )

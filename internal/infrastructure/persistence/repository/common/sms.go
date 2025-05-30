@@ -2,41 +2,37 @@ package common
 
 import (
 	"context"
-
+	"github.com/dysodeng/app/internal/domain/common/model"
+	"github.com/dysodeng/app/internal/domain/common/repository"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
-
+	"github.com/dysodeng/app/internal/infrastructure/transactions"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
-// SmsDao 短信配置数据访问层
-type SmsDao interface {
-	Config(ctx context.Context) (*common.SmsConfig, error)
-	SaveConfig(ctx context.Context, config common.SmsConfig) error
-	Template(ctx context.Context, template string) (*common.SmsTemplate, error)
-}
-
-type smsDao struct {
+type smsRepository struct {
 	baseTraceSpanName string
+	txManager         transactions.TransactionManager
 }
 
-func NewSmsDao() SmsDao {
-	return &smsDao{
-		baseTraceSpanName: "dal.dao.common.SmsDao",
+func NewSmsRepository(txManager transactions.TransactionManager) repository.SmsRepository {
+	return &smsRepository{
+		baseTraceSpanName: "infrastructure.persistence.repository.common.SmsRepository",
+		txManager:         txManager,
 	}
 }
 
-func (dao *smsDao) Config(ctx context.Context) (*common.SmsConfig, error) {
+func (repo *smsRepository) Config(ctx context.Context) (*model.SmsConfig, error) {
 	var config common.SmsConfig
 	err := db.DB().WithContext(ctx).First(&config).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	return &config, nil
+	return model.SmsConfigFromModel(&config), nil
 }
 
-func (dao *smsDao) SaveConfig(ctx context.Context, config common.SmsConfig) error {
+func (repo *smsRepository) SaveConfig(ctx context.Context, config *model.SmsConfig) error {
 	var conf common.SmsConfig
 	db.DB().WithContext(ctx).First(&conf)
 	var err error
@@ -50,16 +46,17 @@ func (dao *smsDao) SaveConfig(ctx context.Context, config common.SmsConfig) erro
 				"valid_code_expire": config.ValidCodeExpire,
 			}).Error
 	} else {
-		err = db.DB().WithContext(ctx).Create(&config).Error
+		dataModel := config.ToModel()
+		err = db.DB().WithContext(ctx).Create(dataModel).Error
 	}
 	return err
 }
 
-func (dao *smsDao) Template(ctx context.Context, template string) (*common.SmsTemplate, error) {
+func (repo *smsRepository) Template(ctx context.Context, template string) (*model.SmsTemplate, error) {
 	var templateConfig common.SmsTemplate
 	err := db.DB().WithContext(ctx).Where("template=?", template).First(&templateConfig).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	return &templateConfig, nil
+	return model.SmsTemplateFromModel(&templateConfig), nil
 }

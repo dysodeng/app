@@ -1,4 +1,4 @@
-package common
+package model
 
 // SenderType 消息发送者类型
 type SenderType string

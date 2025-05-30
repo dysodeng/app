@@ -1,23 +1,22 @@
-package common
+package service
 
 import (
 	"context"
 	"fmt"
-	"strconv"
-	"time"
-
+	"github.com/dysodeng/app/internal/domain/common/model"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/redis"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/service"
-	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
+	"strconv"
+	"time"
 )
 
 // ValidCodeDomainService 验证码领域服务
 type ValidCodeDomainService interface {
-	SendValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account string) error
-	VerifyValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account, code string) error
+	SendValidCode(ctx context.Context, sender model.SenderType, bizType, account string) error
+	VerifyValidCode(ctx context.Context, sender model.SenderType, bizType, account, code string) error
 }
 
 // validCodeDomainService 验证码领域服务
@@ -27,30 +26,24 @@ type validCodeDomainService struct {
 	mailDomainService MailDomainService
 }
 
-var validCodeDomainServiceInstance ValidCodeDomainService
-
 func NewValidCodeDomainService(smsDomainService SmsDomainService, mailDomainService MailDomainService) ValidCodeDomainService {
-	if validCodeDomainServiceInstance == nil {
-		validCodeDomainServiceInstance = &validCodeDomainService{
-			baseTraceSpanName: "service.domain.common.ValidCodeDomainService",
-			smsDomainService:  smsDomainService,
-			mailDomainService: mailDomainService,
-		}
+	return &validCodeDomainService{
+		baseTraceSpanName: "domain.common.service.ValidCodeDomainService",
+		smsDomainService:  smsDomainService,
+		mailDomainService: mailDomainService,
 	}
-	return validCodeDomainServiceInstance
 }
 
-// SendValidCode 发送验证码
-func (vc *validCodeDomainService) SendValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account string) error {
-	spanCtx, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".SendValidCode")
+func (svc *validCodeDomainService) SendValidCode(ctx context.Context, sender model.SenderType, bizType, account string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".SendValidCode")
 	defer span.End()
 
 	switch sender {
-	case commonDo.SmsSender:
+	case model.SmsSender:
 		if account == "" {
 			return errors.New("缺少手机号")
 		}
-	case commonDo.EmailSender:
+	case model.EmailSender:
 		if account == "" {
 			return errors.New("缺少邮箱地址")
 		}
@@ -83,7 +76,7 @@ func (vc *validCodeDomainService) SendValidCode(ctx context.Context, sender comm
 
 	codeCacheKey := redis.Key(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
 
-	smsCode := commonDo.ValidCode{
+	smsCode := model.ValidCode{
 		Code:   templateParam["code"],
 		Time:   time.Now().Unix(),
 		Expire: 10,
@@ -98,10 +91,10 @@ func (vc *validCodeDomainService) SendValidCode(ctx context.Context, sender comm
 
 	// 发送验证码
 	var err error
-	if sender == commonDo.SmsSender {
-		err = vc.smsDomainService.SendSms(spanCtx, account, "code", templateParam)
+	if sender == model.SmsSender {
+		err = svc.smsDomainService.SendSms(spanCtx, account, "code", templateParam)
 	} else {
-		err = vc.mailDomainService.SendMail(spanCtx, []string{account}, "验证码", "code", templateParam)
+		err = svc.mailDomainService.SendMail(spanCtx, []string{account}, "验证码", "code", templateParam)
 	}
 	if err != nil {
 		return err
@@ -114,17 +107,16 @@ func (vc *validCodeDomainService) SendValidCode(ctx context.Context, sender comm
 	return nil
 }
 
-// VerifyValidCode 验证码验证
-func (vc *validCodeDomainService) VerifyValidCode(ctx context.Context, sender commonDo.SenderType, bizType, account, code string) error {
-	spanCtr, span := trace.Tracer().Start(ctx, vc.baseTraceSpanName+".VerifyValidCode")
+func (svc *validCodeDomainService) VerifyValidCode(ctx context.Context, sender model.SenderType, bizType, account, code string) error {
+	spanCtr, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".VerifyValidCode")
 	defer span.End()
 
 	switch sender {
-	case commonDo.SmsSender:
+	case model.SmsSender:
 		if account == "" {
 			return errors.New("缺少手机号")
 		}
-	case commonDo.EmailSender:
+	case model.EmailSender:
 		if account == "" {
 			return errors.New("缺少邮箱地址")
 		}

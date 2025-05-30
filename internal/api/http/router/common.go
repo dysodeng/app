@@ -12,8 +12,8 @@ func commonRouter(router *gin.RouterGroup, appApi *http.API) {
 	{
 		commonApi.POST("area", appApi.AreaController.Area)
 		commonApi.POST("area/cascade", appApi.AreaController.CascadeArea)
-		commonApi.POST("valid_code/send", common.SendValidCode)
-		commonApi.POST("valid_code/verify", common.VerifyValidCode)
+		commonApi.POST("valid_code/send", appApi.ValidCodeController.SendValidCode)
+		commonApi.POST("valid_code/verify", appApi.ValidCodeController.VerifyValidCode)
 		commonApi.GET("qr_code", common.QrCode)
 	}
 }

@@ -2,41 +2,37 @@ package common
 
 import (
 	"context"
-
+	"github.com/dysodeng/app/internal/domain/common/model"
+	"github.com/dysodeng/app/internal/domain/common/repository"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
-
+	"github.com/dysodeng/app/internal/infrastructure/transactions"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/pkg/errors"
 	"gorm.io/gorm"
 )
 
-// MailDao 邮件配置数据访问层
-type MailDao interface {
-	Config(ctx context.Context) (*common.MailConfig, error)
-	SaveConfig(ctx context.Context, config common.MailConfig) error
-}
-
-// mailDao 邮件配置数据访问对象
-type mailDao struct {
+type mailRepository struct {
 	baseTraceSpanName string
+	txManager         transactions.TransactionManager
 }
 
-func NewMailDao() MailDao {
-	return &mailDao{
-		baseTraceSpanName: "dal.dao.common.MailDao",
+func NewMailRepository(txManager transactions.TransactionManager) repository.MailRepository {
+	return &mailRepository{
+		baseTraceSpanName: "infrastructure.persistence.repository.common.MailRepository",
+		txManager:         txManager,
 	}
 }
 
-func (dao *mailDao) Config(ctx context.Context) (*common.MailConfig, error) {
+func (repo *mailRepository) Config(ctx context.Context) (*model.MailConfig, error) {
 	var config common.MailConfig
 	err := db.DB().WithContext(ctx).First(&config).Error
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, err
 	}
-	return &config, nil
+	return model.MailConfigFormModel(&config), nil
 }
 
-func (dao *mailDao) SaveConfig(ctx context.Context, config common.MailConfig) error {
+func (repo *mailRepository) SaveConfig(ctx context.Context, config *model.MailConfig) error {
 	var conf common.MailConfig
 	db.DB().WithContext(ctx).First(&conf)
 	var err error
@@ -52,7 +48,8 @@ func (dao *mailDao) SaveConfig(ctx context.Context, config common.MailConfig) er
 				"username":  config.Username,
 			}).Error
 	} else {
-		err = db.DB().WithContext(ctx).Create(&config).Error
+		dataModel := config.ToModel()
+		err = db.DB().WithContext(ctx).Create(dataModel).Error
 	}
 	return err
 }

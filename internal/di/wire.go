@@ -18,24 +18,31 @@ var (
 	InfrastructureSet = wire.NewSet(
 		transactions.NewGormTransactionManager,
 		commonRepository.NewAreaRepository,
+		commonRepository.NewMailRepository,
+		commonRepository.NewSmsRepository,
 	)
 
 	// 领域层
 	DomainSet = wire.NewSet(
 		InfrastructureSet, // 引入基础设施依赖
 		service.NewAreaDomainService,
+		service.NewMailDomainService,
+		service.NewSmsDomainService,
+		service.NewValidCodeDomainService,
 	)
 
 	// 应用层
 	ApplicationSet = wire.NewSet(
 		DomainSet, // 引入领域层依赖
 		common.NewAreaApplicationService,
+		common.NewValidCodeAppService,
 	)
 
 	// API聚合层
 	APISet = wire.NewSet(
 		ApplicationSet, // 引入应用层依赖
 		commonController.NewAreaController,
+		commonController.NewValidCodeController,
 		http.NewAPI,
 	)
 )

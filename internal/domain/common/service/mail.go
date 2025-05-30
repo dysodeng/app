@@ -1,61 +1,42 @@
-package common
+package service
 
 import (
 	"context"
-
-	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
-
-	commonDao "github.com/dysodeng/app/internal/dal/dao/common"
+	"github.com/dysodeng/app/internal/domain/common/model"
+	"github.com/dysodeng/app/internal/domain/common/repository"
 	"github.com/dysodeng/app/internal/pkg/mail"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
-	commonDo "github.com/dysodeng/app/internal/service/do/common"
 	"github.com/pkg/errors"
 )
 
 // MailDomainService 邮件领域服务
 type MailDomainService interface {
-	Config(ctx context.Context) (*commonDo.MailConfig, error)
-	SaveMailConfig(ctx context.Context, config commonDo.MailConfig) error
+	Config(ctx context.Context) (*model.MailConfig, error)
+	SaveMailConfig(ctx context.Context, config model.MailConfig) error
 	SendMail(ctx context.Context, email []string, subject, template string, templateParams map[string]string) error
 }
 
-// mailDomainService 邮件领域服务
 type mailDomainService struct {
 	baseTraceSpanName string
-	mailDao           commonDao.MailDao
+	mailRepo          repository.MailRepository
 }
 
-var mailDomainServiceInstance MailDomainService
-
-func NewMailDomainService(mailDao commonDao.MailDao) MailDomainService {
-	if mailDomainServiceInstance == nil {
-		mailDomainServiceInstance = &mailDomainService{
-			baseTraceSpanName: "service.domain.common.MailDomainService",
-			mailDao:           mailDao,
-		}
+func NewMailDomainService(mailRepo repository.MailRepository) MailDomainService {
+	return &mailDomainService{
+		baseTraceSpanName: "domain.common.service.MailDomainService",
+		mailRepo:          mailRepo,
 	}
-	return mailDomainServiceInstance
 }
 
-// Config 获取邮件配置
-func (ms *mailDomainService) Config(ctx context.Context) (*commonDo.MailConfig, error) {
-	config, err := ms.mailDao.Config(ctx)
+func (svc *mailDomainService) Config(ctx context.Context) (*model.MailConfig, error) {
+	config, err := svc.mailRepo.Config(ctx)
 	if err != nil {
 		return nil, errors.Wrap(err, "邮件配置获取失败")
 	}
-	return &commonDo.MailConfig{
-		Host:      config.Host,
-		Port:      config.Port,
-		FromName:  config.FromName,
-		Password:  config.Password,
-		Transport: config.Transport,
-		User:      config.User,
-		Username:  config.Username,
-	}, nil
+	return config, nil
 }
 
-// SaveMailConfig 保存邮件配置
-func (ms *mailDomainService) SaveMailConfig(ctx context.Context, config commonDo.MailConfig) error {
+func (svc *mailDomainService) SaveMailConfig(ctx context.Context, config model.MailConfig) error {
 	if config.Host == "" {
 		return errors.New("缺少邮件服务器地址")
 	}
@@ -78,7 +59,8 @@ func (ms *mailDomainService) SaveMailConfig(ctx context.Context, config commonDo
 		config.Transport = "smtp"
 	}
 
-	err := ms.mailDao.SaveConfig(ctx, common.MailConfig{
+	err := svc.mailRepo.SaveConfig(ctx, &model.MailConfig{
+		ID:        config.ID,
 		Host:      config.Host,
 		Port:      config.Port,
 		FromName:  config.FromName,
@@ -93,12 +75,11 @@ func (ms *mailDomainService) SaveMailConfig(ctx context.Context, config commonDo
 	return nil
 }
 
-// SendMail 发送邮件
-func (ms *mailDomainService) SendMail(ctx context.Context, email []string, subject, template string, templateParams map[string]string) error {
-	spanCtx, span := trace.Tracer().Start(ctx, ms.baseTraceSpanName+".SendMail")
+func (svc *mailDomainService) SendMail(ctx context.Context, email []string, subject, template string, templateParams map[string]string) error {
+	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".SendMail")
 	defer span.End()
 
-	config, err := ms.mailDao.Config(spanCtx)
+	config, err := svc.mailRepo.Config(spanCtx)
 	if err != nil {
 		trace.Error(errors.Wrap(err, "邮件配置获取失败"), span)
 		return errors.Wrap(err, "邮件配置获取失败")
