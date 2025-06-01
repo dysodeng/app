@@ -3,14 +3,14 @@ package service
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"time"
+
 	"github.com/dysodeng/app/internal/domain/common/model"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/redis"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
-	"github.com/dysodeng/app/internal/service"
 	"github.com/pkg/errors"
-	"strconv"
-	"time"
 )
 
 // ValidCodeDomainService 验证码领域服务
@@ -63,7 +63,7 @@ func (svc *validCodeDomainService) SendValidCode(ctx context.Context, sender mod
 	if client.Exists(spanCtx, limitKey).Val() > 0 {
 		limitTotal, _ = client.Get(spanCtx, limitKey).Int()
 		if limitTotal >= 5 {
-			return service.EMValidCodeLimitError
+			return errors.New("操作太频繁，请稍后再尝试")
 		}
 		ttl := client.TTL(spanCtx, limitKey).Val()
 		limitExpire = ttl.Seconds()
@@ -135,26 +135,26 @@ func (svc *validCodeDomainService) VerifyValidCode(ctx context.Context, sender m
 	client := redis.Client()
 	cacheCode, err := client.HGet(spanCtr, codeCacheKey, "Code").Result()
 	if err != nil {
-		return service.EMValidCodeExpireError
+		return errors.New("验证码已过期")
 	}
 	expire, _ := client.HGet(spanCtr, codeCacheKey, "Expire").Result()
 	codeTime, _ := client.HGet(spanCtr, codeCacheKey, "Time").Result()
 	expireInt, err := strconv.ParseInt(expire, 10, 64)
 	if err != nil {
-		return service.EMValidCodeExpireError
+		return errors.New("验证码已过期")
 	}
 	codeTimeInt, err := strconv.ParseInt(codeTime, 10, 64)
 	if err != nil {
-		return service.EMValidCodeExpireError
+		return errors.New("验证码已过期")
 	}
 
 	if codeTimeInt+expireInt*60 > time.Now().Unix() {
 		if code != cacheCode {
-			return service.EMValidCodeError
+			return errors.New("验证码错误")
 		}
 		client.Del(spanCtr, codeCacheKey)
 	} else {
-		return service.EMValidCodeExpireError
+		return errors.New("验证码已过期")
 	}
 
 	return nil

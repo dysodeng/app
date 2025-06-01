@@ -6,18 +6,18 @@ import (
 	"strings"
 	"time"
 
-	telemetryMetrics "github.com/dysodeng/app/internal/pkg/telemetry/metrics"
-	"github.com/dysodeng/rpc/logger"
-	"github.com/dysodeng/rpc/metrics"
+	"github.com/dysodeng/app/internal/di"
 
 	"github.com/dysodeng/app/internal/api/grpc/proto"
-	"github.com/dysodeng/app/internal/api/grpc/service"
 	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/helper"
+	telemetryMetrics "github.com/dysodeng/app/internal/pkg/telemetry/metrics"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"
 	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/rpc"
 	rpcConfig "github.com/dysodeng/rpc/config"
+	"github.com/dysodeng/rpc/logger"
+	"github.com/dysodeng/rpc/metrics"
 	"github.com/dysodeng/rpc/naming/etcd"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
@@ -37,7 +37,9 @@ func (grpcServer *grpcServer) IsEnabled() bool {
 }
 
 func (grpcServer *grpcServer) register() {
-	err := grpcServer.rpcServer.RegisterService(service.NewUserService(), proto.RegisterUserServiceServer)
+	// 注册gRPC服务
+	grpcService := di.InitGRPC()
+	err := grpcServer.rpcServer.RegisterService(grpcService.UserService, proto.RegisterUserServiceServer)
 	if err != nil {
 		log.Fatalf("grpc service register fiald: %+v\n", err)
 	}

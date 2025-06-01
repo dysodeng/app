@@ -16,13 +16,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dysodeng/app/internal/service"
-
-	"github.com/dysodeng/app/internal/pkg/helper"
-
 	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/filesystem/adapter"
-
 	"github.com/pkg/errors"
 )
 
@@ -75,7 +71,7 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	log.Printf("upload image: mime:%s ext:%s fType:%s, filename:%s", mime, ext, fType, filename)
 
 	if !ok || !IsExistsMimeAllow(fType, uploader.allow.AllowMimeType) {
-		return Info{}, service.EMFileTypeError
+		return Info{}, errors.New("文件类型不允许")
 	}
 
 	extSlice := strings.Split(filename, ".")
@@ -90,7 +86,7 @@ func (uploader *Uploader) Upload(userType string, fileHeader *multipart.FileHead
 	}
 
 	if size > uploader.allow.AllowCapacitySize {
-		return Info{}, service.EMFileSizeLimitError
+		return Info{}, errors.New("文件大小超过限制")
 	}
 
 	// 如果是图片，获取图片尺寸
@@ -179,7 +175,7 @@ func (uploader *Uploader) EditorUpload(userType string, userId uint64, fileBytes
 	switch userType {
 	case "user": // 终端用户
 		if userId <= 0 {
-			return Info{}, service.EMMissUserIdError
+			return Info{}, errors.New("缺少用户ID")
 		}
 		rootPath += fmt.Sprintf("user/%d/", userId)
 	case "ams":
@@ -199,7 +195,7 @@ func (uploader *Uploader) EditorUpload(userType string, userId uint64, fileBytes
 	log.Printf("upload image: mime:%s ext:%s fType:%s, filename:%s", mime, ext, fType, filename)
 
 	if !ok || !IsExistsMimeAllow(fType, uploader.allow.AllowMimeType) {
-		return Info{}, service.EMFileTypeError
+		return Info{}, errors.New("文件类型不允许")
 	}
 
 	// 计算文件大小
