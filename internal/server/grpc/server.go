@@ -38,8 +38,11 @@ func (grpcServer *grpcServer) IsEnabled() bool {
 
 func (grpcServer *grpcServer) register() {
 	// 注册gRPC服务
-	grpcService := di.InitGRPC()
-	err := grpcServer.rpcServer.RegisterService(grpcService.UserService, proto.RegisterUserServiceServer)
+	grpcService, err := di.InitGRPC()
+	if err != nil {
+		log.Fatal(err)
+	}
+	err = grpcServer.rpcServer.RegisterService(grpcService.UserService, proto.RegisterUserServiceServer)
 	if err != nil {
 		log.Fatalf("grpc service register fiald: %+v\n", err)
 	}

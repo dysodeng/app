@@ -3,12 +3,12 @@ package model
 import "github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
 
 type SmsConfig struct {
-	ID              uint64
-	SmsType         string
-	AppKey          string
-	SecretKey       string
-	FreeSignName    string
-	ValidCodeExpire uint
+	ID              uint64 `json:"id"`
+	SmsType         string `json:"sms_type"`
+	AppKey          string `json:"app_key"`
+	SecretKey       string `json:"secret_key"`
+	FreeSignName    string `json:"free_sign_name"`
+	ValidCodeExpire uint   `json:"valid_code_expire"`
 }
 
 func (conf *SmsConfig) ToModel() *common.SmsConfig {

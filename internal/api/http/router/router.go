@@ -20,7 +20,10 @@ func Router() *gin.Engine {
 	// api路由
 	baseApiRouter := router.Group("/api/v1")
 
-	appApi := di.InitAPI()
+	appApi, err := di.InitAPI()
+	if err != nil {
+		panic(err)
+	}
 
 	// debug路由
 	if config.App.Env != config.Prod {

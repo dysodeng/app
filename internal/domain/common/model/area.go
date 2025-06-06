@@ -4,9 +4,9 @@ import "github.com/dysodeng/app/internal/infrastructure/persistence/model/common
 
 // CascadeArea 级联地区
 type CascadeArea struct {
-	Province Province
-	City     City
-	County   County
+	Province Province `json:"province"`
+	City     City     `json:"city"`
+	County   County   `json:"county"`
 }
 
 func CascadeAreaFromAreas(province Province, city City, county County) *CascadeArea {
@@ -19,9 +19,9 @@ func CascadeAreaFromAreas(province Province, city City, county County) *CascadeA
 
 // Area 地区通用数据结构
 type Area struct {
-	AreaId       string
-	AreaName     string
-	ParentAreaId string
+	AreaId       string `json:"area_id"`
+	AreaName     string `json:"area_name"`
+	ParentAreaId string `json:"parent_area_id"`
 }
 
 func AreaFromProvince(area Province) *Area {
@@ -72,17 +72,17 @@ func AreaListFromCounty(areas []County) []Area {
 }
 
 type BigArea struct {
-	ID       uint64
-	AreaName string
-	Province []Province
+	ID       uint64     `json:"id"`
+	AreaName string     `json:"area_name"`
+	Province []Province `json:"province"`
 }
 
 type Province struct {
-	ID            uint64
-	AreaName      string
-	ShortAreaName string
-	AreaId        string
-	BigAreaID     uint64
+	ID            uint64 `json:"id"`
+	AreaName      string `json:"area_name"`
+	ShortAreaName string `json:"short_area_name"`
+	AreaId        string `json:"area_id"`
+	BigAreaID     uint64 `json:"big_area_id"`
 }
 
 func ProvinceFromModel(area common.Province) *Province {
@@ -104,14 +104,14 @@ func ProvinceListFromModel(areas []common.Province) []Province {
 }
 
 type City struct {
-	ID            uint64
-	AreaName      string
-	AreaId        string
-	ShortAreaName string
-	ParentId      string
-	ParentName    string
-	IsOpen        uint8
-	IsHot         uint8
+	ID            uint64 `json:"id"`
+	AreaName      string `json:"area_name"`
+	AreaId        string `json:"area_id"`
+	ShortAreaName string `json:"short_area_name"`
+	ParentId      string `json:"parent_id"`
+	ParentName    string `json:"parent_name"`
+	IsOpen        uint8  `json:"is_open"`
+	IsHot         uint8  `json:"is_hot"`
 }
 
 func CityFromModel(area common.City) *City {
@@ -136,11 +136,11 @@ func CityListFromModel(areas []common.City) []City {
 }
 
 type County struct {
-	ID         uint64
-	AreaName   string
-	AreaId     string
-	ParentId   string
-	ParentName string
+	ID         uint64 `json:"id"`
+	AreaName   string `json:"area_name"`
+	AreaId     string `json:"area_id"`
+	ParentId   string `json:"parent_id"`
+	ParentName string `json:"parent_name"`
 }
 
 func CountyFromModel(area common.County) *County {

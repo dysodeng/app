@@ -20,18 +20,24 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/event/bus"
 	"github.com/dysodeng/app/internal/infrastructure/event/manager"
 	"github.com/dysodeng/app/internal/infrastructure/event/publisher"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/common"
-	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/infrastructure/transactions"
 	"github.com/google/wire"
 )
 
 // Injectors from wire.go:
 
-func InitAPI() *http.API {
+func InitAPI() (*http.API, error) {
 	inMemoryEventBus := bus.NewInMemoryEventBus()
 	transactionManager := transactions.NewGormTransactionManager()
-	userRepository := user.NewUserRepository(transactionManager)
+	factory, err := cache.NewCacheFactory()
+	if err != nil {
+		return nil, err
+	}
+	typedCache := ProvideTypedCache(factory)
+	userRepository := ProvideUserRepository(transactionManager, typedCache)
 	domainEventPublisher := publisher.NewDomainEventPublisher(inMemoryEventBus)
 	userDomainService := service.NewUserDomainService(userRepository, domainEventPublisher)
 	userApplicationService := service2.NewUserApplicationService(userDomainService)
@@ -50,13 +56,18 @@ func InitAPI() *http.API {
 	validCodeController := common3.NewValidCodeController(validCodeApplicationService)
 	controller := debug.NewDebugController()
 	api := http.NewAPI(eventManager, areaController, validCodeController, controller)
-	return api
+	return api, nil
 }
 
-func InitGRPC() *grpc.GRPC {
+func InitGRPC() (*grpc.GRPC, error) {
 	inMemoryEventBus := bus.NewInMemoryEventBus()
 	transactionManager := transactions.NewGormTransactionManager()
-	userRepository := user.NewUserRepository(transactionManager)
+	factory, err := cache.NewCacheFactory()
+	if err != nil {
+		return nil, err
+	}
+	typedCache := ProvideTypedCache(factory)
+	userRepository := ProvideUserRepository(transactionManager, typedCache)
 	domainEventPublisher := publisher.NewDomainEventPublisher(inMemoryEventBus)
 	userDomainService := service.NewUserDomainService(userRepository, domainEventPublisher)
 	userApplicationService := service2.NewUserApplicationService(userDomainService)
@@ -64,14 +75,22 @@ func InitGRPC() *grpc.GRPC {
 	eventManager := NewEventManagerWithHandlers(inMemoryEventBus, userCreatedHandler)
 	userService := service4.NewUserService(userApplicationService)
 	grpcGRPC := grpc.NewGRPC(eventManager, userService)
-	return grpcGRPC
+	return grpcGRPC, nil
 }
 
 // wire.go:
 
 var (
+	// 数据持久化层
+	PersistenceSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository, cache.NewCacheFactory, ProvideTypedCache,
+
+		ProvideUserRepository,
+	)
+
 	// 基础设施层
-	InfrastructureSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository, user.NewUserRepository, bus.NewInMemoryEventBus, publisher.NewDomainEventPublisher, wire.Bind(new(bus.EventBus), new(*bus.InMemoryEventBus)))
+	InfrastructureSet = wire.NewSet(
+		PersistenceSet, bus.NewInMemoryEventBus, publisher.NewDomainEventPublisher, wire.Bind(new(bus.EventBus), new(*bus.InMemoryEventBus)),
+	)
 
 	// 领域层
 	DomainSet = wire.NewSet(
@@ -103,4 +122,9 @@ func NewEventManagerWithHandlers(
 		eventBus,
 		userCreatedHandler,
 	)
+}
+
+// ProvideTypedCache 缓存工厂
+func ProvideTypedCache(factory *cache.Factory) contract.TypedCache {
+	return factory.GetTypedCache()
 }

@@ -9,15 +9,15 @@ import (
 )
 
 type User struct {
-	ID        uint64
-	Telephone string
-	Password  string
-	RealName  string
-	Avatar    string
-	Nickname  string
-	Gender    uint8
-	Birthday  time.Time
-	Status    model.BinaryStatus
+	ID        uint64             `json:"id"`
+	Telephone string             `json:"telephone"`
+	Password  string             `json:"password"`
+	RealName  string             `json:"real_name"`
+	Avatar    string             `json:"avatar"`
+	Nickname  string             `json:"nickname"`
+	Gender    uint8              `json:"gender"`
+	Birthday  time.Time          `json:"birthday"`
+	Status    model.BinaryStatus `json:"status"`
 }
 
 func (u *User) Validate() error {

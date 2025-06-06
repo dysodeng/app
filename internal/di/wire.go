@@ -17,21 +17,33 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/event/bus"
 	"github.com/dysodeng/app/internal/infrastructure/event/manager"
 	"github.com/dysodeng/app/internal/infrastructure/event/publisher"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
 	commonRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/common"
-	userRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/infrastructure/transactions"
 	"github.com/google/wire"
 )
 
 var (
-	// 基础设施层
-	InfrastructureSet = wire.NewSet(
+	// 数据持久化层
+	PersistenceSet = wire.NewSet(
 		// 数据持久化
 		transactions.NewGormTransactionManager,
 		commonRepository.NewAreaRepository,
 		commonRepository.NewMailRepository,
 		commonRepository.NewSmsRepository,
-		userRepository.NewUserRepository,
+
+		// 缓存基础设施
+		cache.NewCacheFactory,
+		ProvideTypedCache,
+
+		// 用户仓储提供者
+		ProvideUserRepository,
+	)
+
+	// 基础设施层
+	InfrastructureSet = wire.NewSet(
+		PersistenceSet, // 引入数据持久化层
 
 		// 事件处理器
 		bus.NewInMemoryEventBus,
@@ -90,14 +102,14 @@ var (
 	)
 )
 
-func InitAPI() *http.API {
+func InitAPI() (*http.API, error) {
 	wire.Build(APISet)
-	return &http.API{}
+	return &http.API{}, nil
 }
 
-func InitGRPC() *grpc.GRPC {
+func InitGRPC() (*grpc.GRPC, error) {
 	wire.Build(GRPCSet)
-	return &grpc.GRPC{}
+	return &grpc.GRPC{}, nil
 }
 
 // NewEventManagerWithHandlers 注册事件处理器
@@ -109,4 +121,9 @@ func NewEventManagerWithHandlers(
 		eventBus,
 		userCreatedHandler,
 	)
+}
+
+// ProvideTypedCache 缓存工厂
+func ProvideTypedCache(factory *cache.Factory) contract.TypedCache {
+	return factory.GetTypedCache()
 }

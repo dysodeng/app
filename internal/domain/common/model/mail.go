@@ -3,14 +3,14 @@ package model
 import "github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
 
 type MailConfig struct {
-	ID        uint64
-	User      string
-	FromName  string
-	Transport string
-	Username  string
-	Password  string
-	Host      string
-	Port      int
+	ID        uint64 `json:"id"`
+	User      string `json:"user"`
+	FromName  string `json:"from_name"`
+	Transport string `json:"transport"`
+	Username  string `json:"username"`
+	Password  string `json:"password"`
+	Host      string `json:"host"`
+	Port      int    `json:"port"`
 }
 
 func (c *MailConfig) ToModel() *common.MailConfig {

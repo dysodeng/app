@@ -54,10 +54,10 @@ func (svc *validCodeDomainService) SendValidCode(ctx context.Context, sender mod
 		return errors.New("缺少业务类型")
 	}
 
-	client := redis.Client()
+	client := redis.MainClient()
 
 	// 验证码速率限制key
-	limitKey := redis.Key(fmt.Sprintf("%s_code_limit:%s:%s", sender, bizType, account))
+	limitKey := redis.MainKey(fmt.Sprintf("%s_code_limit:%s:%s", sender, bizType, account))
 	var limitTotal int = 0
 	var limitExpire float64 = 3600
 	if client.Exists(spanCtx, limitKey).Val() > 0 {
@@ -74,7 +74,7 @@ func (svc *validCodeDomainService) SendValidCode(ctx context.Context, sender mod
 	templateParam["code"] = helper.RandomNumberString(6) // 验证码
 	templateParam["time"] = strconv.FormatInt(expire, 10)
 
-	codeCacheKey := redis.Key(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
+	codeCacheKey := redis.MainKey(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
 
 	smsCode := model.ValidCode{
 		Code:   templateParam["code"],
@@ -130,9 +130,9 @@ func (svc *validCodeDomainService) VerifyValidCode(ctx context.Context, sender m
 		return errors.New("缺少验证码")
 	}
 
-	codeCacheKey := redis.Key(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
+	codeCacheKey := redis.MainKey(fmt.Sprintf("%s_code_%s:%s", sender, bizType, account))
 
-	client := redis.Client()
+	client := redis.MainClient()
 	cacheCode, err := client.HGet(spanCtr, codeCacheKey, "Code").Result()
 	if err != nil {
 		return errors.New("验证码已过期")
