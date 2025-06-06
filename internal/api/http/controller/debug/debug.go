@@ -35,7 +35,9 @@ type Controller struct {
 }
 
 func NewDebugController() *Controller {
-	return &Controller{}
+	return &Controller{
+		baseTraceSpanName: "api.http.controller.debug.Controller",
+	}
 }
 
 func (c *Controller) Token(ctx *gin.Context) {
@@ -58,14 +60,14 @@ func (c *Controller) VerifyToken(ctx *gin.Context) {
 // GenRandomString 生成随机字符串
 // @route GET /debug/random_string
 func (c *Controller) GenRandomString(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GenRandomString")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".GenRandomString")
 	span.End()
 
 	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomString(32, helper.ModeAlphanumeric)))
 }
 
 func (c *Controller) GormLogger(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GormLogger")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".GormLogger")
 	defer span.End()
 
 	span.SetStatus(codes.Ok, "ok")
@@ -77,7 +79,7 @@ func (c *Controller) GormLogger(ctx *gin.Context) {
 	db.DB().WithContext(spanCtx).Where("a=?", "b").First(&smsConfig)
 
 	go func() {
-		childSpanCtx, childSpan := trace.Tracer().Start(spanCtx, "debug.GormLogger.child")
+		childSpanCtx, childSpan := trace.Tracer().Start(spanCtx, c.baseTraceSpanName+".GormLogger.child")
 		defer childSpan.End()
 		logger.Debug(childSpanCtx, "child logger")
 		logger.Error(childSpanCtx, "child logger")
@@ -87,7 +89,7 @@ func (c *Controller) GormLogger(ctx *gin.Context) {
 }
 
 func (c *Controller) User(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.User")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".User")
 	defer span.End()
 
 	userId := ctx.Query("user_id")
@@ -130,7 +132,7 @@ func (c *Controller) User(ctx *gin.Context) {
 }
 
 func (c *Controller) ListUser(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.ListUser")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".ListUser")
 	defer span.End()
 
 	logger.Debug(spanCtx, "获取用户列表接口", logger.Field{Key: "params", Value: proto.UserListRequest{
@@ -156,7 +158,7 @@ func (c *Controller) ListUser(ctx *gin.Context) {
 }
 
 func (c *Controller) CreateUser(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.CreateUser")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".CreateUser")
 	defer span.End()
 
 	userService, err := user.Service(spanCtx)
@@ -183,7 +185,7 @@ func (c *Controller) CreateUser(ctx *gin.Context) {
 }
 
 func (c *Controller) ChatMessage(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Message")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".Message")
 	defer span.End()
 
 	ctx.Writer.Header().Add("Content-Type", "text/event-stream; charset=utf-8")
@@ -245,7 +247,7 @@ type Message struct {
 }
 
 func (c *Controller) RemoteRequest(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.RemoteRequest")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".RemoteRequest")
 	defer span.End()
 
 	userId := ctx.Query("user_id")
@@ -275,7 +277,7 @@ func (c *Controller) RemoteRequest(ctx *gin.Context) {
 
 // Retry 重试
 func (c *Controller) Retry(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Retry")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".Retry")
 	defer span.End()
 
 	i := 1
@@ -300,7 +302,7 @@ func (c *Controller) Retry(ctx *gin.Context) {
 
 // Cache 缓存
 func (c *Controller) Cache(ctx *gin.Context) {
-	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Cache")
+	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".Cache")
 	defer span.End()
 
 	userId := ctx.Query("user_id")
