@@ -11,10 +11,15 @@ import (
 	service4 "github.com/dysodeng/app/internal/api/grpc/service"
 	"github.com/dysodeng/app/internal/api/http"
 	common3 "github.com/dysodeng/app/internal/api/http/controller/common"
+	"github.com/dysodeng/app/internal/api/http/controller/debug"
 	common2 "github.com/dysodeng/app/internal/application/common"
-	service3 "github.com/dysodeng/app/internal/application/user/service"
-	"github.com/dysodeng/app/internal/domain/common/service"
-	service2 "github.com/dysodeng/app/internal/domain/user/service"
+	"github.com/dysodeng/app/internal/application/user/event/handler"
+	service2 "github.com/dysodeng/app/internal/application/user/service"
+	service3 "github.com/dysodeng/app/internal/domain/common/service"
+	"github.com/dysodeng/app/internal/domain/user/service"
+	"github.com/dysodeng/app/internal/infrastructure/event/bus"
+	"github.com/dysodeng/app/internal/infrastructure/event/manager"
+	"github.com/dysodeng/app/internal/infrastructure/event/publisher"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/common"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/infrastructure/transactions"
@@ -24,29 +29,41 @@ import (
 // Injectors from wire.go:
 
 func InitAPI() *http.API {
+	inMemoryEventBus := bus.NewInMemoryEventBus()
 	transactionManager := transactions.NewGormTransactionManager()
+	userRepository := user.NewUserRepository(transactionManager)
+	domainEventPublisher := publisher.NewDomainEventPublisher(inMemoryEventBus)
+	userDomainService := service.NewUserDomainService(userRepository, domainEventPublisher)
+	userApplicationService := service2.NewUserApplicationService(userDomainService)
+	userCreatedHandler := handler.NewUserCreatedHandler(userApplicationService)
+	eventManager := NewEventManagerWithHandlers(inMemoryEventBus, userCreatedHandler)
 	areaRepository := common.NewAreaRepository(transactionManager)
-	areaDomainService := service.NewAreaDomainService(areaRepository)
+	areaDomainService := service3.NewAreaDomainService(areaRepository)
 	areaApplicationService := common2.NewAreaApplicationService(areaDomainService)
 	areaController := common3.NewAreaController(areaApplicationService)
 	smsRepository := common.NewSmsRepository(transactionManager)
-	smsDomainService := service.NewSmsDomainService(smsRepository)
+	smsDomainService := service3.NewSmsDomainService(smsRepository)
 	mailRepository := common.NewMailRepository(transactionManager)
-	mailDomainService := service.NewMailDomainService(mailRepository)
-	validCodeDomainService := service.NewValidCodeDomainService(smsDomainService, mailDomainService)
+	mailDomainService := service3.NewMailDomainService(mailRepository)
+	validCodeDomainService := service3.NewValidCodeDomainService(smsDomainService, mailDomainService)
 	validCodeApplicationService := common2.NewValidCodeAppService(validCodeDomainService)
 	validCodeController := common3.NewValidCodeController(validCodeApplicationService)
-	api := http.NewAPI(areaController, validCodeController)
+	controller := debug.NewDebugController()
+	api := http.NewAPI(eventManager, areaController, validCodeController, controller)
 	return api
 }
 
 func InitGRPC() *grpc.GRPC {
+	inMemoryEventBus := bus.NewInMemoryEventBus()
 	transactionManager := transactions.NewGormTransactionManager()
 	userRepository := user.NewUserRepository(transactionManager)
-	userDomainService := service2.NewUserDomainService(userRepository)
-	applicationService := service3.NewUserApplication(userDomainService)
-	userService := service4.NewUserService(applicationService)
-	grpcGRPC := grpc.NewGRPC(userService)
+	domainEventPublisher := publisher.NewDomainEventPublisher(inMemoryEventBus)
+	userDomainService := service.NewUserDomainService(userRepository, domainEventPublisher)
+	userApplicationService := service2.NewUserApplicationService(userDomainService)
+	userCreatedHandler := handler.NewUserCreatedHandler(userApplicationService)
+	eventManager := NewEventManagerWithHandlers(inMemoryEventBus, userCreatedHandler)
+	userService := service4.NewUserService(userApplicationService)
+	grpcGRPC := grpc.NewGRPC(eventManager, userService)
 	return grpcGRPC
 }
 
@@ -54,21 +71,21 @@ func InitGRPC() *grpc.GRPC {
 
 var (
 	// 基础设施层
-	InfrastructureSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository, user.NewUserRepository)
+	InfrastructureSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository, user.NewUserRepository, bus.NewInMemoryEventBus, publisher.NewDomainEventPublisher, wire.Bind(new(bus.EventBus), new(*bus.InMemoryEventBus)))
 
 	// 领域层
 	DomainSet = wire.NewSet(
-		InfrastructureSet, service.NewAreaDomainService, service.NewMailDomainService, service.NewSmsDomainService, service.NewValidCodeDomainService, service2.NewUserDomainService,
+		InfrastructureSet, service3.NewAreaDomainService, service3.NewMailDomainService, service3.NewSmsDomainService, service3.NewValidCodeDomainService, service.NewUserDomainService,
 	)
 
 	// 应用层
 	ApplicationSet = wire.NewSet(
-		DomainSet, common2.NewAreaApplicationService, common2.NewValidCodeAppService, service3.NewUserApplication,
+		DomainSet, common2.NewAreaApplicationService, common2.NewValidCodeAppService, service2.NewUserApplicationService, NewEventManagerWithHandlers, handler.NewUserCreatedHandler,
 	)
 
 	// API聚合层
 	APISet = wire.NewSet(
-		ApplicationSet, common3.NewAreaController, common3.NewValidCodeController, http.NewAPI,
+		ApplicationSet, common3.NewAreaController, common3.NewValidCodeController, debug.NewDebugController, http.NewAPI,
 	)
 
 	// gRPC聚合层
@@ -76,3 +93,14 @@ var (
 		ApplicationSet, service4.NewUserService, grpc.NewGRPC,
 	)
 )
+
+// NewEventManagerWithHandlers 注册事件处理器
+func NewEventManagerWithHandlers(
+	eventBus bus.EventBus,
+	userCreatedHandler *handler.UserCreatedHandler,
+) *manager.EventManager {
+	return manager.NewEventManager(
+		eventBus,
+		userCreatedHandler,
+	)
+}

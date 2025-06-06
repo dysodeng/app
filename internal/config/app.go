@@ -23,9 +23,9 @@ type serverConfig struct {
 		Port    string `mapstructure:"port"`
 	} `mapstructure:"http"`
 	Grpc struct {
-		Enabled  bool   `mapstructure:"enabled"`
-		Port     string `mapstructure:"port"`
-		Namespce string `mapstructure:"namespce"`
+		Enabled   bool   `mapstructure:"enabled"`
+		Port      string `mapstructure:"port"`
+		Namespace string `mapstructure:"namespace"`
 	} `mapstructure:"grpc"`
 	Task struct {
 		Enabled bool `mapstructure:"enabled"`

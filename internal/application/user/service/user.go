@@ -14,26 +14,26 @@ import (
 	"github.com/pkg/errors"
 )
 
-// ApplicationService 用户应用服务
-type ApplicationService interface {
+// UserApplicationService 用户应用服务
+type UserApplicationService interface {
 	Info(ctx context.Context, id uint64) (*response.UserResponse, error)
 	UserList(ctx context.Context, query query.UserListQuery) (*response.UserListResponse, error)
 	CreateUser(ctx context.Context, cmd *command.UserCreateCommand) (*response.UserResponse, error)
 }
 
-type userApplication struct {
+type userApplicationService struct {
 	baseTraceSpanName string
 	userDomainService service.UserDomainService
 }
 
-func NewUserApplication(userDomainService service.UserDomainService) ApplicationService {
-	return &userApplication{
-		baseTraceSpanName: "application.user.ApplicationService",
+func NewUserApplicationService(userDomainService service.UserDomainService) UserApplicationService {
+	return &userApplicationService{
+		baseTraceSpanName: "application.user.service.UserApplicationService",
 		userDomainService: userDomainService,
 	}
 }
 
-func (svc *userApplication) Info(ctx context.Context, id uint64) (*response.UserResponse, error) {
+func (svc *userApplicationService) Info(ctx context.Context, id uint64) (*response.UserResponse, error) {
 	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".Info")
 	defer span.End()
 
@@ -45,7 +45,7 @@ func (svc *userApplication) Info(ctx context.Context, id uint64) (*response.User
 	return response.FromDomainUser(user), nil
 }
 
-func (svc *userApplication) UserList(ctx context.Context, query query.UserListQuery) (*response.UserListResponse, error) {
+func (svc *userApplicationService) UserList(ctx context.Context, query query.UserListQuery) (*response.UserListResponse, error) {
 	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".UserList")
 	defer span.End()
 
@@ -62,7 +62,7 @@ func (svc *userApplication) UserList(ctx context.Context, query query.UserListQu
 	}, nil
 }
 
-func (svc *userApplication) CreateUser(ctx context.Context, cmd *command.UserCreateCommand) (*response.UserResponse, error) {
+func (svc *userApplicationService) CreateUser(ctx context.Context, cmd *command.UserCreateCommand) (*response.UserResponse, error) {
 	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".CreateUser")
 	defer span.End()
 
@@ -77,6 +77,7 @@ func (svc *userApplication) CreateUser(ctx context.Context, cmd *command.UserCre
 
 	user := &model.User{
 		Telephone: cmd.Telephone,
+		Password:  cmd.Password,
 		Nickname:  cmd.Nickname,
 		RealName:  cmd.RealName,
 		Avatar:    cmd.Avatar,

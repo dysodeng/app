@@ -21,12 +21,12 @@ import (
 
 // UserService 用户服务
 type UserService struct {
-	userApplicationService service.ApplicationService
+	userApplicationService service.UserApplicationService
 	proto.UnimplementedUserServiceServer
 	metadata.UnimplementedServiceRegister
 }
 
-func NewUserService(userApplicationService service.ApplicationService) *UserService {
+func NewUserService(userApplicationService service.UserApplicationService) *UserService {
 	return &UserService{
 		userApplicationService: userApplicationService,
 	}

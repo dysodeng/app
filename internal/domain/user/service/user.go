@@ -3,6 +3,9 @@ package service
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/domain/user/event"
+	"github.com/dysodeng/app/internal/infrastructure/event/publisher"
+
 	"github.com/dysodeng/app/internal/domain/user/model"
 	"github.com/dysodeng/app/internal/domain/user/repository"
 	"github.com/dysodeng/app/internal/pkg/helper"
@@ -23,12 +26,17 @@ type UserDomainService interface {
 type userDomainService struct {
 	baseTraceSpanName string
 	userRepo          repository.UserRepository
+	eventPublisher    *publisher.DomainEventPublisher
 }
 
-func NewUserDomainService(userRepo repository.UserRepository) UserDomainService {
+func NewUserDomainService(
+	userRepo repository.UserRepository,
+	eventPublisher *publisher.DomainEventPublisher,
+) UserDomainService {
 	return &userDomainService{
 		baseTraceSpanName: "domain.user.service.UserDomainService",
 		userRepo:          userRepo,
+		eventPublisher:    eventPublisher,
 	}
 }
 
@@ -86,6 +94,9 @@ func (svc *userDomainService) CreateUser(ctx context.Context, userInfo *model.Us
 		logger.Error(spanCtx, "用户创建失败", logger.ErrorField(err))
 		return errors.New("用户创建失败")
 	}
+
+	// 发布领域事件
+	_ = svc.eventPublisher.Publish(spanCtx, event.NewUserCreatedEvent(userInfo.ID, userInfo.Telephone))
 
 	return nil
 }

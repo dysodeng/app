@@ -20,12 +20,12 @@ func Router() *gin.Engine {
 	// api路由
 	baseApiRouter := router.Group("/api/v1")
 
+	appApi := di.InitAPI()
+
 	// debug路由
 	if config.App.Env != config.Prod {
-		debugRouter(baseApiRouter)
+		debugRouter(baseApiRouter, appApi)
 	}
-
-	appApi := di.InitAPI()
 
 	// 公共组件路由
 	commonRouter(baseApiRouter, appApi)

@@ -9,18 +9,13 @@ import (
 	"strings"
 	"time"
 
-	api2 "github.com/dysodeng/app/internal/api/http/dto/response/api"
-
-	common2 "github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
+	"github.com/dysodeng/app/internal/api/grpc/proto"
+	"github.com/dysodeng/app/internal/api/http/dto/response/api"
+	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/model/common"
 	"github.com/dysodeng/app/internal/infrastructure/rpc"
 	"github.com/dysodeng/app/internal/infrastructure/rpc/user"
-
-	"github.com/dysodeng/app/internal/event"
-
 	"github.com/dysodeng/app/internal/pkg/cache"
-
-	"github.com/dysodeng/app/internal/api/grpc/proto"
-	"github.com/dysodeng/app/internal/config"
 	"github.com/dysodeng/app/internal/pkg/db"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
@@ -35,47 +30,50 @@ import (
 	"go.opentelemetry.io/otel/metric"
 )
 
-func Token(ctx *gin.Context) {
+type Controller struct {
+	baseTraceSpanName string
+}
+
+func NewDebugController() *Controller {
+	return &Controller{}
+}
+
+func (c *Controller) Token(ctx *gin.Context) {
 	t, _ := token.GenerateToken("user", map[string]interface{}{
 		"user_id": 1,
 	}, nil)
 
-	event.Dispatch(event.Logged, map[string]interface{}{
-		"user_type": "user",
-		"user_id":   1,
-	}, event.WithQueue())
-
-	ctx.JSON(200, api2.Success(ctx, t))
+	ctx.JSON(200, api.Success(ctx, t))
 }
 
-func VerifyToken(ctx *gin.Context) {
+func (c *Controller) VerifyToken(ctx *gin.Context) {
 	claims, err := token.VerifyToken(ctx.Query("token"))
 	if err != nil {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
-	ctx.JSON(http.StatusOK, api2.Success(ctx, claims))
+	ctx.JSON(http.StatusOK, api.Success(ctx, claims))
 }
 
 // GenRandomString 生成随机字符串
 // @route GET /debug/random_string
-func GenRandomString(ctx *gin.Context) {
+func (c *Controller) GenRandomString(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GenRandomString")
 	span.End()
 
-	ctx.JSON(http.StatusOK, api2.Success(spanCtx, helper.RandomString(32, helper.ModeAlphanumeric)))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, helper.RandomString(32, helper.ModeAlphanumeric)))
 }
 
-func GormLogger(ctx *gin.Context) {
+func (c *Controller) GormLogger(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.GormLogger")
 	defer span.End()
 
 	span.SetStatus(codes.Ok, "ok")
 	logger.Debug(spanCtx, "trace logger")
 
-	var mailConfig common2.MailConfig
+	var mailConfig common.MailConfig
 	db.DB().WithContext(spanCtx).First(&mailConfig)
-	var smsConfig common2.SmsConfig
+	var smsConfig common.SmsConfig
 	db.DB().WithContext(spanCtx).Where("a=?", "b").First(&smsConfig)
 
 	go func() {
@@ -85,23 +83,23 @@ func GormLogger(ctx *gin.Context) {
 		logger.Error(childSpanCtx, "child logger")
 	}()
 
-	ctx.JSON(200, api2.Success(ctx, mailConfig))
+	ctx.JSON(200, api.Success(ctx, mailConfig))
 }
 
-func User(ctx *gin.Context) {
+func (c *Controller) User(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.User")
 	defer span.End()
 
 	userId := ctx.Query("user_id")
 	userID, _ := strconv.ParseUint(userId, 10, 64)
 	if userID <= 0 {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, "缺少用户ID", api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少用户ID", api.CodeFail))
 		return
 	}
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
@@ -110,7 +108,7 @@ func User(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 
 		apiCounter, _ := metrics.Meter().Int64Counter(
 			"user.fail",
@@ -128,10 +126,10 @@ func User(ctx *gin.Context) {
 	)
 	apiCounter.Add(spanCtx, 1)
 
-	ctx.JSON(http.StatusOK, api2.Success(ctx, userInfo))
+	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
 }
 
-func ListUser(ctx *gin.Context) {
+func (c *Controller) ListUser(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.ListUser")
 	defer span.End()
 
@@ -141,7 +139,7 @@ func ListUser(ctx *gin.Context) {
 	}})
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 	res, err := userService.ListUser(spanCtx, &proto.UserListRequest{
@@ -150,20 +148,20 @@ func ListUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
-	ctx.JSON(http.StatusOK, api2.Success(ctx, res))
+	ctx.JSON(http.StatusOK, api.Success(ctx, res))
 }
 
-func CreateUser(ctx *gin.Context) {
+func (c *Controller) CreateUser(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.CreateUser")
 	defer span.End()
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
@@ -178,13 +176,13 @@ func CreateUser(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
-	ctx.JSON(http.StatusOK, api2.Success(ctx, true))
+	ctx.JSON(http.StatusOK, api.Success(ctx, true))
 }
 
-func ChatMessage(ctx *gin.Context) {
+func (c *Controller) ChatMessage(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Message")
 	defer span.End()
 
@@ -246,7 +244,7 @@ type Message struct {
 	Answer string `json:"answer"`
 }
 
-func RemoteRequest(ctx *gin.Context) {
+func (c *Controller) RemoteRequest(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.RemoteRequest")
 	defer span.End()
 
@@ -261,22 +259,22 @@ func RemoteRequest(ctx *gin.Context) {
 	)
 	if err != nil {
 		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: err})
-		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, "接口请求失败", api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "接口请求失败", api.CodeFail))
 		return
 	}
 	if statusCode != 200 {
 		logger.Error(spanCtx, "request error", logger.Field{Key: "error", Value: string(body)}, logger.Field{Key: "status_code", Value: statusCode})
-		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, "接口请求失败", api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "接口请求失败", api.CodeFail))
 		return
 	}
 
 	var res map[string]interface{}
 	_ = json.Unmarshal(body, &res)
-	ctx.JSON(http.StatusOK, api2.Success(spanCtx, res))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, res))
 }
 
 // Retry 重试
-func Retry(ctx *gin.Context) {
+func (c *Controller) Retry(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Retry")
 	defer span.End()
 
@@ -297,25 +295,25 @@ func Retry(ctx *gin.Context) {
 		}),
 	)
 
-	ctx.JSON(http.StatusOK, api2.Success(spanCtx, true))
+	ctx.JSON(http.StatusOK, api.Success(spanCtx, true))
 }
 
 // Cache 缓存
-func Cache(ctx *gin.Context) {
+func (c *Controller) Cache(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), "debug.Cache")
 	defer span.End()
 
 	userId := ctx.Query("user_id")
 	userID, _ := strconv.ParseUint(userId, 10, 64)
 	if userID <= 0 {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, "缺少用户ID", api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, "缺少用户ID", api.CodeFail))
 		return
 	}
 
 	cli, err := cache.NewCache()
 	if err != nil {
 		logger.Error(spanCtx, "cache error", logger.ErrorField(err))
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, "内部错误", api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, "内部错误", api.CodeFail))
 		return
 	}
 
@@ -325,16 +323,16 @@ func Cache(ctx *gin.Context) {
 		var userInfo *proto.UserResponse
 		if err = json.Unmarshal(helper.StringToBytes(userCache), &userInfo); err != nil {
 			logger.Error(spanCtx, "cache error", logger.ErrorField(err))
-			ctx.JSON(http.StatusOK, api2.Fail(ctx, "内部错误", api2.CodeFail))
+			ctx.JSON(http.StatusOK, api.Fail(ctx, "内部错误", api.CodeFail))
 			return
 		}
-		ctx.JSON(http.StatusOK, api2.Success(ctx, userInfo))
+		ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
 		return
 	}
 
 	userService, err := user.Service(spanCtx)
 	if err != nil {
-		ctx.JSON(http.StatusOK, api2.Fail(ctx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
 
@@ -343,12 +341,12 @@ func Cache(ctx *gin.Context) {
 	})
 	if err != nil {
 		err, _ = rpc.Error(err)
-		ctx.JSON(http.StatusOK, api2.Fail(spanCtx, err.Error(), api2.CodeFail))
+		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}
 
 	userBytes, _ := json.Marshal(userInfo)
 	_ = cli.Put(cacheKey, helper.BytesToString(userBytes), 1*time.Hour)
 
-	ctx.JSON(http.StatusOK, api2.Success(ctx, userInfo))
+	ctx.JSON(http.StatusOK, api.Success(ctx, userInfo))
 }
