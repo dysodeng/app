@@ -1,0 +1,45 @@
+storage:
+  driver: local
+  cdn_domain: ""
+  local:
+    root_path: "upload"
+    multipart_storage: "file"
+  minio:
+    endpoint: ""
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    region: ""
+    use_ssl: true
+    access_mode: "private"
+  ali_oss:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+  hw_obs:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+  tx_cos:
+    access_key_id: ""
+    access_key_secret: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+  s3:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"

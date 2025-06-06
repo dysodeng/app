@@ -1,11 +1,12 @@
 package model
 
 import (
+	"context"
 	"time"
 
 	"github.com/dysodeng/app/internal/infrastructure/persistence/model/user"
-	"github.com/dysodeng/app/internal/pkg/filesystem"
 	"github.com/dysodeng/app/internal/pkg/model"
+	"github.com/dysodeng/app/internal/pkg/storage"
 )
 
 type User struct {
@@ -27,7 +28,7 @@ func (u *User) Validate() error {
 func UserFromModel(user *user.User) *User {
 	avatar := user.Avatar
 	if avatar != "" {
-		avatar = filesystem.Instance().FullPath(avatar)
+		avatar = storage.Instance().FullUrl(context.Background(), avatar)
 	}
 	return &User{
 		ID:        user.ID,
@@ -47,7 +48,7 @@ func UserListFromModel(users []user.User) []User {
 	for i, u := range users {
 		avatar := u.Avatar
 		if avatar != "" {
-			avatar = filesystem.Instance().FullPath(avatar)
+			avatar = storage.Instance().FullUrl(context.Background(), avatar)
 		}
 		result[i] = User{
 			ID:        u.ID,
@@ -67,7 +68,7 @@ func UserListFromModel(users []user.User) []User {
 func (u *User) ToModel() *user.User {
 	avatar := u.Avatar
 	if avatar != "" {
-		avatar = filesystem.Instance().OriginalPath(avatar)
+		avatar = storage.Instance().FullUrl(context.Background(), avatar)
 	}
 	dataModel := &user.User{
 		Telephone: u.Telephone,

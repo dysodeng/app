@@ -37,7 +37,7 @@ func init() {
 	Cache = &cache{}
 	Redis = &redis{}
 	MessageQueue = &messageQueue{}
-	Filesystem = &filesystem{}
+	Storage = &storage{}
 	Monitor = &monitor{}
 	ThirdParty = &thirdParty{}
 
@@ -49,7 +49,7 @@ func init() {
 	loadCacheConfig()
 	loadMessageQueueConfig()
 	loadEtcdConfig()
-	loadFilesystemConfig()
+	loadStorageConfig()
 	loadMonitorConfig()
 	loadThirdPartyConfig()
 
