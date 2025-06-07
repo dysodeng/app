@@ -37,7 +37,7 @@ func (repo *fileRepository) FindList(ctx context.Context, query domainRepository
 	}
 
 	if query.Keyword != "" {
-		tx = repository.WhereLike(tx, "name", query.Keyword)
+		db = repository.WhereLike(db, "name", query.Keyword)
 	}
 
 	if query.StartTime != nil {
