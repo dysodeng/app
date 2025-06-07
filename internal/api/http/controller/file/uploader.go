@@ -31,11 +31,6 @@ func (c *UploaderController) UploadFile(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".UploadFile")
 	defer span.End()
 
-	groupId := ctx.DefaultPostForm("group_id", "")
-	if groupId == "" {
-		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "请选择分组", api.CodeFail))
-		return
-	}
 	fileForm, header, err := ctx.Request.FormFile("file")
 	if err != nil {
 		ctx.JSON(http.StatusOK, api.Fail(spanCtx, "文件上传失败", api.CodeFail))
