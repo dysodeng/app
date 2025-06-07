@@ -8,14 +8,18 @@ package di
 
 import (
 	"github.com/dysodeng/app/internal/api/grpc"
-	service4 "github.com/dysodeng/app/internal/api/grpc/service"
+	service6 "github.com/dysodeng/app/internal/api/grpc/service"
 	"github.com/dysodeng/app/internal/api/http"
 	common3 "github.com/dysodeng/app/internal/api/http/controller/common"
 	"github.com/dysodeng/app/internal/api/http/controller/debug"
+	file2 "github.com/dysodeng/app/internal/api/http/controller/file"
 	common2 "github.com/dysodeng/app/internal/application/common"
+	handler2 "github.com/dysodeng/app/internal/application/file/event/handler"
+	service5 "github.com/dysodeng/app/internal/application/file/service"
 	"github.com/dysodeng/app/internal/application/user/event/handler"
 	service2 "github.com/dysodeng/app/internal/application/user/service"
 	service3 "github.com/dysodeng/app/internal/domain/common/service"
+	service4 "github.com/dysodeng/app/internal/domain/file/service"
 	"github.com/dysodeng/app/internal/domain/user/service"
 	"github.com/dysodeng/app/internal/infrastructure/event/bus"
 	"github.com/dysodeng/app/internal/infrastructure/event/manager"
@@ -23,6 +27,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/common"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	"github.com/dysodeng/app/internal/infrastructure/transactions"
 	"github.com/google/wire"
 )
@@ -54,8 +59,13 @@ func InitAPI() (*http.API, error) {
 	validCodeDomainService := service3.NewValidCodeDomainService(smsDomainService, mailDomainService)
 	validCodeApplicationService := common2.NewValidCodeAppService(validCodeDomainService)
 	validCodeController := common3.NewValidCodeController(validCodeApplicationService)
+	fileRepository := file.NewFileRepository(transactionManager)
+	uploaderRepository := file.NewUploaderRepository(transactionManager)
+	uploaderDomainService := service4.NewUploaderDomainService(transactionManager, fileRepository, uploaderRepository, domainEventPublisher)
+	uploaderApplicationService := service5.NewUploaderApplicationService(uploaderDomainService)
+	uploaderController := file2.NewUploaderController(uploaderApplicationService)
 	controller := debug.NewDebugController()
-	api := http.NewAPI(eventManager, areaController, validCodeController, controller)
+	api := http.NewAPI(eventManager, areaController, validCodeController, uploaderController, controller)
 	return api, nil
 }
 
@@ -73,7 +83,7 @@ func InitGRPC() (*grpc.GRPC, error) {
 	userApplicationService := service2.NewUserApplicationService(userDomainService)
 	userCreatedHandler := handler.NewUserCreatedHandler(userApplicationService)
 	eventManager := NewEventManagerWithHandlers(inMemoryEventBus, userCreatedHandler)
-	userService := service4.NewUserService(userApplicationService)
+	userService := service6.NewUserService(userApplicationService)
 	grpcGRPC := grpc.NewGRPC(eventManager, userService)
 	return grpcGRPC, nil
 }
@@ -82,7 +92,7 @@ func InitGRPC() (*grpc.GRPC, error) {
 
 var (
 	// 数据持久化层
-	PersistenceSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository, cache.NewCacheFactory, ProvideTypedCache,
+	PersistenceSet = wire.NewSet(transactions.NewGormTransactionManager, common.NewAreaRepository, common.NewMailRepository, common.NewSmsRepository, file.NewFileRepository, file.NewUploaderRepository, cache.NewCacheFactory, ProvideTypedCache,
 
 		ProvideUserRepository,
 	)
@@ -94,22 +104,22 @@ var (
 
 	// 领域层
 	DomainSet = wire.NewSet(
-		InfrastructureSet, service3.NewAreaDomainService, service3.NewMailDomainService, service3.NewSmsDomainService, service3.NewValidCodeDomainService, service.NewUserDomainService,
+		InfrastructureSet, service3.NewAreaDomainService, service3.NewMailDomainService, service3.NewSmsDomainService, service3.NewValidCodeDomainService, service.NewUserDomainService, service4.NewFileDomainService, service4.NewUploaderDomainService,
 	)
 
 	// 应用层
 	ApplicationSet = wire.NewSet(
-		DomainSet, common2.NewAreaApplicationService, common2.NewValidCodeAppService, service2.NewUserApplicationService, NewEventManagerWithHandlers, handler.NewUserCreatedHandler,
+		DomainSet, common2.NewAreaApplicationService, common2.NewValidCodeAppService, service2.NewUserApplicationService, service5.NewUploaderApplicationService, NewEventManagerWithHandlers, handler.NewUserCreatedHandler, handler2.NewFileUploadedHandler,
 	)
 
 	// API聚合层
 	APISet = wire.NewSet(
-		ApplicationSet, common3.NewAreaController, common3.NewValidCodeController, debug.NewDebugController, http.NewAPI,
+		ApplicationSet, common3.NewAreaController, common3.NewValidCodeController, debug.NewDebugController, file2.NewUploaderController, http.NewAPI,
 	)
 
 	// gRPC聚合层
 	GRPCSet = wire.NewSet(
-		ApplicationSet, service4.NewUserService, grpc.NewGRPC,
+		ApplicationSet, service6.NewUserService, grpc.NewGRPC,
 	)
 )
 

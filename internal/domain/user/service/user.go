@@ -4,10 +4,9 @@ import (
 	"context"
 
 	"github.com/dysodeng/app/internal/domain/user/event"
-	"github.com/dysodeng/app/internal/infrastructure/event/publisher"
-
 	"github.com/dysodeng/app/internal/domain/user/model"
 	"github.com/dysodeng/app/internal/domain/user/repository"
+	"github.com/dysodeng/app/internal/infrastructure/event/publisher"
 	"github.com/dysodeng/app/internal/pkg/helper"
 	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/telemetry/trace"

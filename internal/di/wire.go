@@ -9,10 +9,14 @@ import (
 	"github.com/dysodeng/app/internal/api/http"
 	commonController "github.com/dysodeng/app/internal/api/http/controller/common"
 	debugController "github.com/dysodeng/app/internal/api/http/controller/debug"
+	fileController "github.com/dysodeng/app/internal/api/http/controller/file"
 	"github.com/dysodeng/app/internal/application/common"
+	fileEventHandler "github.com/dysodeng/app/internal/application/file/event/handler"
+	fileAppService "github.com/dysodeng/app/internal/application/file/service"
 	userEventHandler "github.com/dysodeng/app/internal/application/user/event/handler"
 	userAppService "github.com/dysodeng/app/internal/application/user/service"
 	commonService "github.com/dysodeng/app/internal/domain/common/service"
+	fileDomainService "github.com/dysodeng/app/internal/domain/file/service"
 	userService "github.com/dysodeng/app/internal/domain/user/service"
 	"github.com/dysodeng/app/internal/infrastructure/event/bus"
 	"github.com/dysodeng/app/internal/infrastructure/event/manager"
@@ -20,6 +24,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
 	commonRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/common"
+	fileRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	"github.com/dysodeng/app/internal/infrastructure/transactions"
 	"github.com/google/wire"
 )
@@ -32,6 +37,8 @@ var (
 		commonRepository.NewAreaRepository,
 		commonRepository.NewMailRepository,
 		commonRepository.NewSmsRepository,
+		fileRepository.NewFileRepository,
+		fileRepository.NewUploaderRepository,
 
 		// 缓存基础设施
 		cache.NewCacheFactory,
@@ -61,6 +68,8 @@ var (
 		commonService.NewSmsDomainService,
 		commonService.NewValidCodeDomainService,
 		userService.NewUserDomainService,
+		fileDomainService.NewFileDomainService,
+		fileDomainService.NewUploaderDomainService,
 	)
 
 	// 应用层
@@ -71,10 +80,12 @@ var (
 		common.NewAreaApplicationService,
 		common.NewValidCodeAppService,
 		userAppService.NewUserApplicationService,
+		fileAppService.NewUploaderApplicationService,
 
 		// 事件处理器
 		NewEventManagerWithHandlers,
 		userEventHandler.NewUserCreatedHandler,
+		fileEventHandler.NewFileUploadedHandler,
 	)
 
 	// API聚合层
@@ -85,6 +96,7 @@ var (
 		commonController.NewAreaController,
 		commonController.NewValidCodeController,
 		debugController.NewDebugController,
+		fileController.NewUploaderController,
 
 		// api聚合器
 		http.NewAPI,

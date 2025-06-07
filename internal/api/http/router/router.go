@@ -18,7 +18,7 @@ func Router() *gin.Engine {
 	router.Use(middleware.CrossDomain, middleware.StartTrace)
 
 	// api路由
-	baseApiRouter := router.Group("/api/v1")
+	baseApiRouter := router.Group("/v1")
 
 	appApi, err := di.InitAPI()
 	if err != nil {
@@ -32,6 +32,16 @@ func Router() *gin.Engine {
 
 	// 公共组件路由
 	commonRouter(baseApiRouter, appApi)
+
+	// 文件上传路由组
+	uploaderRouter := baseApiRouter.Group("/file")
+	{
+		uploaderRouter.POST("upload", appApi.FileUploaderController.UploadFile)
+		uploaderRouter.POST("/upload/multipart/init", appApi.FileUploaderController.InitMultipartUpload)
+		uploaderRouter.POST("/upload/multipart/part", appApi.FileUploaderController.UploadPart)
+		uploaderRouter.POST("/upload/multipart/complete", appApi.FileUploaderController.CompleteMultipartUpload)
+		uploaderRouter.POST("/upload/multipart/status", appApi.FileUploaderController.MultipartUploadStatus)
+	}
 
 	apiRouter := baseApiRouter.Group("")
 	{

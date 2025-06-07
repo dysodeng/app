@@ -1,6 +1,8 @@
 package migration
 
 import (
+	"log"
+
 	"github.com/go-gormigrate/gormigrate/v2"
 	"gorm.io/gorm"
 )
@@ -11,9 +13,11 @@ var migration []*gormigrate.Migration
 func margeMigration() {
 	migration = append(migration, commonMigration...)
 	migration = append(migration, userMigration...)
+	migration = append(migration, fileMigration...)
 }
 
 func Migrate(db *gorm.DB, version ...string) (err error) {
+	log.Println("Migration in progress...")
 	margeMigration()
 	if len(migration) == 0 {
 		return
