@@ -17,8 +17,8 @@ import (
 
 var meter metric.Meter
 
-// Init 初始化指标 meterProvider
-func Init() error {
+// 初始化指标 meterProvider
+func init() {
 	res, err := resource.Merge(
 		resource.Default(),
 		resource.NewWithAttributes(
@@ -29,7 +29,7 @@ func Init() error {
 		),
 	)
 	if err != nil {
-		return err
+		panic(err)
 	}
 
 	mpOpts := []sdkmetric.Option{
@@ -37,14 +37,14 @@ func Init() error {
 	}
 	if config.Monitor.Metrics.OtlpEnabled {
 		if config.Monitor.Metrics.OtlpEndpoint == "" {
-			return errors.New("metrics otel endpoint is empty")
+			panic(errors.New("missing metrics endpoint"))
 		}
 		exp, err := otlpmetrichttp.New(
 			context.Background(),
 			otlpmetrichttp.WithEndpointURL(config.Monitor.Tracer.OtlpEndpoint),
 		)
 		if err != nil {
-			return err
+			panic(err)
 		}
 		mpOpts = append(mpOpts, sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exp)))
 	}
@@ -53,7 +53,9 @@ func Init() error {
 	otel.SetMeterProvider(meterProvider)
 
 	meter = otel.Meter(config.App.Name)
+}
 
+func Init() error {
 	return nil
 }
 

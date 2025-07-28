@@ -1,9 +1,12 @@
 package task
 
 import (
+	"context"
 	"log"
+	"time"
 
 	"github.com/dysodeng/app/internal/config"
+	"github.com/dysodeng/app/internal/pkg/logger"
 	"github.com/dysodeng/app/internal/pkg/mq"
 	"github.com/dysodeng/app/internal/server"
 	"github.com/dysodeng/app/internal/server/task/job"
@@ -32,8 +35,8 @@ func (server *taskServer) register(jobs ...job.Handler) {
 		server.jobs = make(map[string]job.Handler)
 	}
 	for _, jobItem := range jobs {
-		if _, ok := server.jobs[jobItem.QueueKey()]; !ok {
-			server.jobs[jobItem.QueueKey()] = jobItem
+		if _, ok := server.jobs[jobItem.TopicKey()]; !ok {
+			server.jobs[jobItem.TopicKey()] = jobItem
 		}
 	}
 }
@@ -43,30 +46,30 @@ func (server *taskServer) Serve() {
 	server.register(
 		job.TaskTestTask{},
 	)
+
+	ctx := context.Background()
+
 	for _, jobHandler := range server.jobs {
 		go func(jobHandler job.Handler) {
-			consumer, err := mq.NewMessageQueueConsumer(jobHandler.QueueKey())
-			if err != nil {
-				log.Printf("%+v", errors.Wrap(err, "消息队列任务创建失败"))
-			}
+			// 创建中间件链
+			middlewareChain := contract.NewMiddlewareChain(
+				contract.LoggingMiddleware(logger.ZapLogger()),
+				contract.TimeoutMiddleware(30*time.Second),
+				contract.RetryMiddleware(3, time.Second),
+			)
 
-			if jobHandler.IsDelay() {
-				err = consumer.DelayQueueConsume(jobHandler)
-			} else {
-				err = consumer.QueueConsume(jobHandler)
-			}
+			handler := middlewareChain.Apply(jobHandler.Handle)
+
+			err := mq.Consumer().Subscribe(ctx, jobHandler.TopicKey(), handler)
 			if err != nil {
 				log.Printf("%+v", errors.Wrap(err, "消息队列消费者启动失败"))
 			}
-
-			server.jobConsumerList = append(server.jobConsumerList, consumer)
 		}(jobHandler)
 	}
 }
 
 func (server *taskServer) Shutdown() {
 	log.Println("shutdown task server...")
-	for _, consumer := range server.jobConsumerList {
-		_ = consumer.Close()
-	}
+	_ = mq.Consumer().Close()
+	_ = mq.Instance().Close()
 }

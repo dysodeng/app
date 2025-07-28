@@ -23,6 +23,10 @@ func ErrorField(err error) Field {
 	return Field{Key: "error_field", Value: err}
 }
 
+func ZapLogger() *zap.Logger {
+	return _logger._logger
+}
+
 var _logger *logger
 
 func init() {
