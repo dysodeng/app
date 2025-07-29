@@ -2,7 +2,6 @@ package helper
 
 import (
 	"fmt"
-	"math"
 	"math/rand"
 	"time"
 
@@ -26,17 +25,22 @@ func BigNumberThousandFormat[T ~uint | ~uint16 | ~uint32 | ~uint64 | int | int16
 // @param uint64 fileSize 文件大小(字节)
 // @return string
 func FileSizeFormat(fileSize uint64) string {
-	var byteNum float64 = 1024 // byte
+	if fileSize == 0 {
+		return "0B"
+	}
+
+	units := []string{"B", "KB", "MB", "GB", "TB"}
 	size := float64(fileSize)
 
-	if size < byteNum { // B
-		return fmt.Sprintf("%f", size) + "B"
-	} else if size < math.Pow(byteNum, 2) { // KB
-		return fmt.Sprintf("%.2f", size/byteNum) + "KB"
-	} else if size < math.Pow(byteNum, 3) { // MB
-		return fmt.Sprintf("%.2f", size/math.Pow(byteNum, 2)) + "MB"
-	} else if size < math.Pow(byteNum, 4) { // GB
-		return fmt.Sprintf("%.2f", size/math.Pow(byteNum, 3)) + "GB"
+	for i, unit := range units {
+		if size < 1024 || i == len(units)-1 {
+			if unit == "B" {
+				return fmt.Sprintf("%.0f%s", size, unit)
+			}
+			return fmt.Sprintf("%.2f%s", size, unit)
+		}
+		size /= 1024
 	}
-	return fmt.Sprintf("%.2f", size/math.Pow(byteNum, 4)) + "TB"
+
+	return fmt.Sprintf("%.2fTB", size)
 }

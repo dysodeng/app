@@ -31,7 +31,7 @@ func ServiceDiscovery() rpc.ServiceDiscovery {
 	return discovery
 }
 
-func Error(err error) (error, int32) {
+func Error(err error) (int32, error) {
 	grpcStatus := status.Convert(err)
-	return errors.New(grpcStatus.Message()), int32(grpcStatus.Code())
+	return int32(grpcStatus.Code()), errors.New(grpcStatus.Message())
 }

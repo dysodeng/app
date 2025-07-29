@@ -86,6 +86,6 @@ func (h *Hub) Run() {
 func Metrics(w http.ResponseWriter) {
 	pending := HubBus.pending.Load()
 	connections := len(HubBus.clients)
-	_, _ = w.Write([]byte(fmt.Sprintf("# HELP connections 连接数\n# TYPE connections gauge\nconnections %d\n", connections)))
-	_, _ = w.Write([]byte(fmt.Sprintf("# HELP pending 等待发送的消息数量\n# TYPE pending gauge\npending %d\n", pending)))
+	_, _ = fmt.Fprintf(w, "# HELP connections 连接数\n# TYPE connections gauge\nconnections %d\n", connections)
+	_, _ = fmt.Fprintf(w, "# HELP pending 等待发送的消息数量\n# TYPE pending gauge\npending %d\n", pending)
 }

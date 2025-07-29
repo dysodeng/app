@@ -58,7 +58,7 @@ func Hide(idCard, symbol string) string {
 	newIdCard := idCard
 	if Check(idCard) {
 		hideStr := idCard[4:14]
-		newIdCard = strings.Replace(idCard, hideStr, symbol, -1)
+		newIdCard = strings.ReplaceAll(idCard, hideStr, symbol)
 	}
 
 	return newIdCard
@@ -130,7 +130,7 @@ func CompanyCreditCodeHide(creditCode, symbol string) string {
 	newCreditCode := creditCode
 	if CompanyCreditCodeCheck(creditCode) {
 		hideStr := creditCode[1:17]
-		newCreditCode = strings.Replace(creditCode, hideStr, symbol, -1)
+		newCreditCode = strings.ReplaceAll(creditCode, hideStr, symbol)
 	}
 
 	return newCreditCode

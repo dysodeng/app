@@ -4,7 +4,6 @@ import (
 	"context"
 	"strings"
 
-	"github.com/dysodeng/app/internal/domain/file/model"
 	fileDomainModel "github.com/dysodeng/app/internal/domain/file/model"
 	domainRepository "github.com/dysodeng/app/internal/domain/file/repository"
 	fileDataModel "github.com/dysodeng/app/internal/infrastructure/persistence/model/file"
@@ -26,7 +25,7 @@ func NewFileRepository(txManager transactions.TransactionManager) domainReposito
 	}
 }
 
-func (repo *fileRepository) FindList(ctx context.Context, query domainRepository.FileQuery) ([]model.File, int64, error) {
+func (repo *fileRepository) FindList(ctx context.Context, query domainRepository.FileQuery) ([]fileDomainModel.File, int64, error) {
 	tx := repo.txManager.GetTx(ctx)
 
 	// 构建查询条件
@@ -79,7 +78,7 @@ func (repo *fileRepository) FindList(ctx context.Context, query domainRepository
 	return fileDomainModel.FileListFromModel(ctx, files), total, nil
 }
 
-func (repo *fileRepository) FindByID(ctx context.Context, id uint64) (*model.File, error) {
+func (repo *fileRepository) FindByID(ctx context.Context, id uint64) (*fileDomainModel.File, error) {
 	tx := repo.txManager.GetTx(ctx)
 
 	var file fileDataModel.File
@@ -90,7 +89,7 @@ func (repo *fileRepository) FindByID(ctx context.Context, id uint64) (*model.Fil
 	return fileDomainModel.FileFromModel(ctx, file), nil
 }
 
-func (repo *fileRepository) FindListByIds(ctx context.Context, ids []uint64) ([]model.File, error) {
+func (repo *fileRepository) FindListByIds(ctx context.Context, ids []uint64) ([]fileDomainModel.File, error) {
 	tx := repo.txManager.GetTx(ctx)
 
 	var files []fileDataModel.File
@@ -101,7 +100,7 @@ func (repo *fileRepository) FindListByIds(ctx context.Context, ids []uint64) ([]
 	return fileDomainModel.FileListFromModel(ctx, files), nil
 }
 
-func (repo *fileRepository) Save(ctx context.Context, file *model.File) error {
+func (repo *fileRepository) Save(ctx context.Context, file *fileDomainModel.File) error {
 	if file == nil {
 		return errors.New("file cannot be nil")
 	}

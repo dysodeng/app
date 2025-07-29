@@ -29,7 +29,7 @@ func IsPhone400(value string) bool {
 
 // IsTel 判断是否为电话号码
 func IsTel(value string) bool {
-	return !(!IsMobile(value) && !IsPhone(value) && !IsPhone400(value))
+	return IsMobile(value) || IsPhone(value) || IsPhone400(value)
 }
 
 // IsEmail 判断是否为邮箱
@@ -157,7 +157,7 @@ func IsDomain(domain string) bool {
 			continue
 		}
 		// test label character validity, note: tests are ordered by decreasing validity frequency
-		if !(b >= 'a' && b <= 'z' || b >= '0' && b <= '9' || b == '-' || b >= 'A' && b <= 'Z') {
+		if (b < 'a' || b > 'z') && (b < '0' || b > '9') && b != '-' && (b < 'A' || b > 'Z') {
 			// show the printable unicode character starting at byte offset i
 			c, _ := utf8.DecodeRuneInString(domain[i:])
 			if c == utf8.RuneError {

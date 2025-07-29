@@ -50,7 +50,7 @@ func (t *JSONTime) UnmarshalJSON(data []byte) (err error) {
 // Value insert timestamp into mysql need this function.
 func (t JSONTime) Value() (driver.Value, error) {
 	var zeroTime time.Time
-	if t.Time.UnixNano() == zeroTime.UnixNano() {
+	if t.UnixNano() == zeroTime.UnixNano() {
 		return nil, nil
 	}
 	return t.Time, nil
@@ -96,7 +96,7 @@ func (t *JSONDate) UnmarshalJSON(data []byte) (err error) {
 // Value insert timestamp into mysql need this function.
 func (t JSONDate) Value() (driver.Value, error) {
 	var zeroTime time.Time
-	if t.Time.UnixNano() == zeroTime.UnixNano() {
+	if t.UnixNano() == zeroTime.UnixNano() {
 		return nil, nil
 	}
 	return t.Time, nil

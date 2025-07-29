@@ -25,7 +25,7 @@ func WebsocketServe(writer http.ResponseWriter, request *http.Request) {
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		_, _ = writer.Write([]byte(fmt.Sprintf("upgrade error: %s", err.Error())))
+		_, _ = fmt.Fprintf(writer, "upgrade error: %s", err.Error())
 		return
 	}
 

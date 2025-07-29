@@ -113,7 +113,7 @@ func ReplaceString(str string, findSlice, replaceSlice []string) string {
 	}
 
 	for i, find := range findSlice {
-		str = strings.Replace(str, find, replaceSlice[i], -1)
+		str = strings.ReplaceAll(str, find, replaceSlice[i])
 	}
 
 	return str

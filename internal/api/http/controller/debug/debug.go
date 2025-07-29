@@ -109,7 +109,7 @@ func (c *Controller) User(ctx *gin.Context) {
 		Id: userID,
 	})
 	if err != nil {
-		err, _ = rpc.Error(err)
+		_, err = rpc.Error(err)
 		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 
 		apiCounter, _ := metrics.Meter().Int64Counter(
@@ -149,7 +149,7 @@ func (c *Controller) ListUser(ctx *gin.Context) {
 		PageSize: 10,
 	})
 	if err != nil {
-		err, _ = rpc.Error(err)
+		_, err = rpc.Error(err)
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
@@ -177,7 +177,7 @@ func (c *Controller) CreateUser(ctx *gin.Context) {
 		Birthday:  "1999-01-01",
 	})
 	if err != nil {
-		err, _ = rpc.Error(err)
+		_, err = rpc.Error(err)
 		ctx.JSON(http.StatusOK, api.Fail(ctx, err.Error(), api.CodeFail))
 		return
 	}
@@ -342,7 +342,7 @@ func (c *Controller) Cache(ctx *gin.Context) {
 		Id: userID,
 	})
 	if err != nil {
-		err, _ = rpc.Error(err)
+		_, err = rpc.Error(err)
 		ctx.JSON(http.StatusOK, api.Fail(spanCtx, err.Error(), api.CodeFail))
 		return
 	}

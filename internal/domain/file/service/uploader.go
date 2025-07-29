@@ -70,7 +70,7 @@ func (svc *uploaderDomainService) generateFilePath(ext string) (string, error) {
 	if !strings.HasPrefix(ext, ".") {
 		ext = "." + ext
 	}
-	ext = "." + strings.Replace(ext, ".", "", -1)
+	ext = "." + strings.ReplaceAll(ext, ".", "")
 
 	now := time.Now()
 	dateDir := now.Format("2006/01/02")

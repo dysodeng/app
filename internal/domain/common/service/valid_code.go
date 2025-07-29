@@ -58,7 +58,7 @@ func (svc *validCodeDomainService) SendValidCode(ctx context.Context, sender mod
 
 	// 验证码速率限制key
 	limitKey := redis.MainKey(fmt.Sprintf("%s_code_limit:%s:%s", sender, bizType, account))
-	var limitTotal int = 0
+	var limitTotal = 0
 	var limitExpire float64 = 3600
 	if client.Exists(spanCtx, limitKey).Val() > 0 {
 		limitTotal, _ = client.Get(spanCtx, limitKey).Int()

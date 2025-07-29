@@ -16,8 +16,7 @@ import (
 
 // taskServer MessageQueue消费者服务，支持即时消息和延迟消息的消费
 type taskServer struct {
-	jobs            map[string]job.Handler
-	jobConsumerList []contract.Consumer
+	jobs map[string]job.Handler
 }
 
 func NewServer() server.Server {

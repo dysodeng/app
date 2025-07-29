@@ -54,6 +54,7 @@ if [[ -n "$files" ]]; then
     if [ $? != 0 ]; then
         printf "shadow error \n"
         PASS=false
+        break
     fi
 
     # 运行 golangci-lint
@@ -67,10 +68,10 @@ if [[ -n "$files" ]]; then
 fi
 
 if ! $PASS; then
-    printf "\033[31m commit failed \033[0m\n"
+    printf "\033[31m pre-commit checks failed \033[0m\n"
     exit 1
 else
-    printf "\033[32m commit successfully \033[0m\n"
+    printf "\033[32m pre-commit checks passed \033[0m\n"
 fi
 
 exit 0
