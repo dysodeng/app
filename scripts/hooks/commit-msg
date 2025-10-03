@@ -1,0 +1,55 @@
+#!/bin/bash
+
+# commit-msg hook
+commit_regex='^(feat|fix|hotfix|docs|style|refactor|perf|test|build|ci|chore|revert|init)(\(.+\))?: .{5,50}'
+
+# 检查基本格式
+if ! grep -qE "$commit_regex" "$1"; then
+    printf "\033[31m Invalid commit message format! \033[0m\n"
+    printf "\033[31m Format: <type>(<scope>): <subject> \033[0m\n"
+    printf "\033[31m Subject must be 6-50 characters long \033[0m\n"
+    exit 1
+fi
+
+# 提取提交消息的主题部分（去掉type和scope）
+subject=$(grep -oE ': .+' "$1" | sed 's/^: //')
+
+# 检查是否包含无意义的词汇
+invalid_patterns=(
+    "^(fix|bug|修复|修改)$"
+    "^(test|测试)$"
+    "^(update|更新)$"
+    "^(change|改变|修改)$"
+    "^(add|添加)$"
+    "^(remove|删除)$"
+    "^(feat|feature|功能)$"
+    "^(refactor|重构)$"
+    "^(style|样式)$"
+    "^(docs|文档)$"
+    "^(chore|杂项)$"
+    "^(perf|性能)$"
+    "^(build|构建)$"
+    "^(ci|集成)$"
+    "^(revert|回滚)$"
+)
+
+# 检查主题是否过于简单
+for pattern in "${invalid_patterns[@]}"; do
+    if echo "$subject" | grep -qiE "$pattern"; then
+        printf "\033[31m Commit message is too simple! \033[0m\n"
+        printf "\033[31m Please provide a more descriptive subject \033[0m\n"
+        printf "\033[31m Bad examples: 'fix: fix', 'feat: test', 'fix: bug' \033[0m\n"
+        printf "\033[31m Good examples: 'fix: 修复用户登录验证失败问题', 'feat: 添加用户头像上传功能' \033[0m\n"
+        exit 1
+    fi
+done
+
+# 检查是否包含重复词汇（如 fix: fix bug, feat: add feature）
+commit_type=$(echo "$1" | grep -oE '^[a-z]+' < "$1")
+if echo "$subject" | grep -qiE "\b$commit_type\b"; then
+    printf "\033[31m Commit subject should not repeat the commit type! \033[0m\n"
+    printf "\033[31m Don't use '$commit_type' in the subject when type is already '$commit_type' \033[0m\n"
+    exit 1
+fi
+
+printf "\033[32m Commit message format is valid \033[0m\n"
