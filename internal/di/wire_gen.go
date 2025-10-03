@@ -35,7 +35,7 @@ func InitApp() (*App, error) {
 	server := ProvideHTTPServer(config, moduleRegistrar)
 	grpcServer := ProvideGRPCServer(config, moduleRegistrar)
 	websocketServer := ProvideWebSocketServer(config)
-	eventBus := ProvideEventBus(moduleRegistrar)
-	app := NewApp(config, transactionManager, moduleRegistrar, server, grpcServer, websocketServer, eventBus)
+	bus := ProvideEventBus(moduleRegistrar)
+	app := NewApp(config, transactionManager, moduleRegistrar, server, grpcServer, websocketServer, bus)
 	return app, nil
 }

@@ -11,7 +11,7 @@ type Handler interface {
 // RegisterHandlers 注册所有处理器
 func RegisterHandlers(r *gin.Engine, handlers ...Handler) {
 	// API路由组
-	api := r.Group("/api")
+	api := r.Group("/v1")
 
 	// 注册所有处理器
 	for _, h := range handlers {

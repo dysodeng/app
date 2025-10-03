@@ -4,8 +4,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/dysodeng/app/internal/application/service"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dysodeng/app/internal/application/service"
 )
 
 // UserHandler 用户HTTP处理器

@@ -2,12 +2,16 @@ package http
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/gin-gonic/gin"
+
+	"github.com/dysodeng/app/internal/infrastructure/config"
+	ifaceHttp "github.com/dysodeng/app/internal/interfaces/http"
+	"github.com/dysodeng/app/internal/interfaces/http/handler"
 )
 
 // Server HTTP服务
@@ -18,16 +22,16 @@ type Server struct {
 }
 
 // NewServer 创建HTTP服务
-func NewServer(config *config.Config, handlers ...interface{}) *Server {
+func NewServer(config *config.Config, handlers ...handler.Handler) *Server {
 	// 设置gin模式
 	if !config.App.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
 	engine := gin.Default()
-	
+
 	// 注册处理器
-	RegisterHandlers(engine, handlers...)
+	ifaceHttp.RegisterHandlers(engine, handlers...)
 
 	return &Server{
 		config: config,
@@ -44,14 +48,35 @@ func (s *Server) Engine() *gin.Engine {
 	return s.engine
 }
 
+func (s *Server) IsEnabled() bool {
+	return true
+}
+
 // Addr 获取服务地址
 func (s *Server) Addr() string {
 	return fmt.Sprintf("%s:%d", s.config.HTTP.Host, s.config.HTTP.Port)
 }
 
+func (s *Server) Name() string {
+	return "HTTP"
+}
+
 // Start 启动HTTP服务
 func (s *Server) Start() error {
-	return s.httpServer.ListenAndServe()
+	var errChan = make(chan error, 1)
+	go func() {
+		// ListenAndServe 只有在服务器关闭或发生错误时才会返回
+		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errChan <- err
+		}
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	default:
+		return nil
+	}
 }
 
 // Stop 停止HTTP服务

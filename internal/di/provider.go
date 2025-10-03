@@ -4,11 +4,11 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
+	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
+	"github.com/dysodeng/app/internal/infrastructure/server/http"
+	"github.com/dysodeng/app/internal/infrastructure/server/websocket"
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
-	"github.com/dysodeng/app/internal/interfaces/grpc"
-	"github.com/dysodeng/app/internal/interfaces/http"
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
-	"github.com/dysodeng/app/internal/interfaces/websocket"
 )
 
 // App 应用程序
@@ -63,7 +63,7 @@ func ProvideHTTPServer(config *config.Config, moduleRegistry *ModuleRegistrar) *
 	for _, module := range moduleRegistry.GetAllModules() {
 		handlers = append(handlers, module.Handlers()...)
 	}
-	return http.NewServer(config, handlers)
+	return http.NewServer(config, handlers...)
 }
 
 // ProvideGRPCServer 提供gRPC服务器

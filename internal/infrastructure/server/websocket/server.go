@@ -2,12 +2,14 @@ package websocket
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"sync"
 
-	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/gorilla/websocket"
+
+	"github.com/dysodeng/app/internal/infrastructure/config"
 )
 
 // Server WebSocket服务
@@ -36,12 +38,33 @@ func NewServer(config *config.Config) *Server {
 	}
 }
 
+func (s *Server) IsEnabled() bool {
+	return true
+}
+
+func (s *Server) Name() string {
+	return "WebSocket"
+}
+
 // Start 启动WebSocket服务
 func (s *Server) Start() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws", s.handleWebSocket)
 	s.httpServer.Handler = mux
-	return s.httpServer.ListenAndServe()
+
+	var errChan = make(chan error, 1)
+	go func() {
+		if err := s.httpServer.ListenAndServe(); err != nil && !errors.Is(err, http.ErrServerClosed) {
+			errChan <- err
+		}
+	}()
+
+	select {
+	case err := <-errChan:
+		return err
+	default:
+		return nil
+	}
 }
 
 // Addr 获取服务地址

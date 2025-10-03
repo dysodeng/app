@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"net"
 
-	"github.com/dysodeng/app/internal/infrastructure/config"
 	"google.golang.org/grpc"
+
+	"github.com/dysodeng/app/internal/infrastructure/config"
 )
 
 // Server gRPC服务
@@ -30,6 +31,14 @@ func (s *Server) Server() *grpc.Server {
 	return s.grpcServer
 }
 
+func (s *Server) IsEnabled() bool {
+	return true
+}
+
+func (s *Server) Name() string {
+	return "gRPC"
+}
+
 // Start 启动gRPC服务
 func (s *Server) Start() error {
 	addr := fmt.Sprintf("%s:%d", s.config.GRPC.Host, s.config.GRPC.Port)
@@ -37,7 +46,20 @@ func (s *Server) Start() error {
 	if err != nil {
 		return err
 	}
-	return s.grpcServer.Serve(lis)
+
+	var errChan = make(chan error, 1)
+	go func() {
+		if err = s.grpcServer.Serve(lis); err != nil {
+			errChan <- err
+		}
+	}()
+
+	select {
+	case err = <-errChan:
+		return err
+	default:
+		return nil
+	}
 }
 
 // Addr 获取服务地址
@@ -46,6 +68,7 @@ func (s *Server) Addr() string {
 }
 
 // Stop 停止gRPC服务
-func (s *Server) Stop(ctx context.Context) {
+func (s *Server) Stop(ctx context.Context) error {
 	s.grpcServer.GracefulStop()
+	return nil
 }
