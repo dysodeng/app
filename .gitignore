@@ -1,0 +1,8 @@
+/.idea
+/.vscode
+/go_build_main_go
+/lastupdate.tmp
+.env
+/client
+.DS_Store
+*/.DS_Store
