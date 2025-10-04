@@ -18,7 +18,7 @@ func Logger() gin.HandlerFunc {
 
 		// 记录请求日志
 		statusCode := c.Writer.Status()
-		gin.DefaultWriter.Write([]byte(
+		_, _ = gin.DefaultWriter.Write([]byte(
 			"[GIN] " + time.Now().Format("2006/01/02 - 15:04:05") +
 				" | " + method +
 				" | " + path +

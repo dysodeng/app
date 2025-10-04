@@ -28,7 +28,7 @@ func initMainDB(cfg *config.Config) *gorm.DB {
 	switch cfg.Database.Driver {
 	case "mysql":
 		dsn = fmt.Sprintf(
-			"%s:%s@tcp(%s:%s)/%s",
+			"%s:%s@tcp(%s:%d)/%s",
 			cfg.Database.Username,
 			cfg.Database.Password,
 			cfg.Database.Host,
@@ -38,7 +38,7 @@ func initMainDB(cfg *config.Config) *gorm.DB {
 		dbConnector = mysql.Open(dsn)
 	case "postgres":
 		dsn = fmt.Sprintf(
-			"host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai",
+			"host=%s user=%s password=%s dbname=%s port=%d sslmode=disable TimeZone=Asia/Shanghai",
 			cfg.Database.Host,
 			cfg.Database.Username,
 			cfg.Database.Password,

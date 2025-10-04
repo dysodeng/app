@@ -83,7 +83,9 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	defer conn.Close()
+	defer func() {
+		_ = conn.Close()
+	}()
 
 	// 生成客户端ID
 	clientID := r.RemoteAddr
@@ -112,14 +114,14 @@ func (s *Server) handleWebSocket(w http.ResponseWriter, r *http.Request) {
 func (s *Server) handleMessage(client *Client, messageType int, message []byte) {
 	// 这里可以根据业务需求处理消息
 	// 示例：简单回显消息
-	client.Conn.WriteMessage(messageType, message)
+	_ = client.Conn.WriteMessage(messageType, message)
 }
 
 // BroadcastMessage 广播消息给所有客户端
 func (s *Server) BroadcastMessage(messageType int, message []byte) {
 	s.clients.Range(func(key, value interface{}) bool {
 		client := value.(*Client)
-		client.Conn.WriteMessage(messageType, message)
+		_ = client.Conn.WriteMessage(messageType, message)
 		return true
 	})
 }

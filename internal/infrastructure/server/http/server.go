@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -81,7 +80,5 @@ func (s *Server) Start() error {
 
 // Stop 停止HTTP服务
 func (s *Server) Stop(ctx context.Context) error {
-	ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
-	defer cancel()
 	return s.httpServer.Shutdown(ctx)
 }
