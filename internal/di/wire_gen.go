@@ -7,6 +7,8 @@
 package di
 
 import (
+	"context"
+
 	service2 "github.com/dysodeng/app/internal/application/service"
 	"github.com/dysodeng/app/internal/di/modules"
 	"github.com/dysodeng/app/internal/domain/service"
@@ -17,12 +19,16 @@ import (
 // Injectors from wire.go:
 
 // InitApp 初始化应用程序
-func InitApp() (*App, error) {
+func InitApp(ctx context.Context) (*App, error) {
 	config, err := ProvideConfig()
 	if err != nil {
 		return nil, err
 	}
-	transactionManager, err := ProvideDB(config)
+	transactionManager, err := ProvideDB(ctx, config)
+	if err != nil {
+		return nil, err
+	}
+	client, err := ProvideRedis(config)
 	if err != nil {
 		return nil, err
 	}
@@ -36,6 +42,6 @@ func InitApp() (*App, error) {
 	grpcServer := ProvideGRPCServer(config, moduleRegistrar)
 	websocketServer := ProvideWebSocketServer(config)
 	bus := ProvideEventBus(moduleRegistrar)
-	app := NewApp(config, transactionManager, moduleRegistrar, server, grpcServer, websocketServer, bus)
+	app := NewApp(config, transactionManager, client, moduleRegistrar, server, grpcServer, websocketServer, bus)
 	return app, nil
 }

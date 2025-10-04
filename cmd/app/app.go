@@ -5,12 +5,10 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
-	"runtime/debug"
 	"syscall"
 	"time"
 
 	"github.com/dysodeng/app/internal/di"
-	"github.com/dysodeng/app/internal/infrastructure/migration"
 	"github.com/dysodeng/app/internal/infrastructure/server"
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
@@ -29,21 +27,8 @@ func newApp(ctx context.Context) *app {
 }
 
 func (app *app) run() {
-	defer func() {
-		if r := recover(); r != nil {
-			logger.Error(
-				app.ctx,
-				"Application panic recovered",
-				logger.AddField("StackTrace", string(debug.Stack())),
-			)
-		}
-	}()
-
 	// 应用初始化
 	app.initialize()
-
-	// 数据迁移
-	app.migrate()
 
 	// 启动服务
 	app.serve()
@@ -57,26 +42,12 @@ func (app *app) initialize() {
 	logger.InitLogger(true)
 	logger.Info(app.ctx, "应用启动中...")
 
-	mainApp, err := di.InitApp()
+	mainApp, err := di.InitApp(app.ctx)
 	if err != nil {
 		logger.Fatal(app.ctx, "初始化应用失败", logger.ErrorField(err))
 	}
 
 	app.mainApp = mainApp
-}
-
-func (app *app) migrate() {
-	if app.mainApp.Config.Database.Migration.Enabled {
-		// 执行数据库迁移
-		if err := migration.Migrate(app.ctx, app.mainApp.TxManager); err != nil {
-			logger.Fatal(app.ctx, "数据库迁移失败", logger.ErrorField(err))
-		}
-
-		// 填充初始数据
-		if err := migration.Seed(app.ctx, app.mainApp.TxManager); err != nil {
-			logger.Fatal(app.ctx, "初始数据填充失败", logger.ErrorField(err))
-		}
-	}
 }
 
 func (app *app) registerServer(servers ...server.Server) {

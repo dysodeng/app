@@ -4,12 +4,15 @@ import (
 	"github.com/spf13/viper"
 )
 
+var GlobalConfig *Config
+
 // Config 应用配置
 type Config struct {
 	App      AppConfig      `mapstructure:"app"`
 	Server   Server         `mapstructure:"server"`
+	Security Security       `mapstructure:"security"`
 	Database DatabaseConfig `mapstructure:"database"`
-	Security string         `mapstructure:"security"`
+	Redis    Redis          `mapstructure:"redis"`
 }
 
 // AppConfig 应用基本配置
@@ -39,6 +42,8 @@ func LoadConfig(configPath string) (*Config, error) {
 	if err := viper.Unmarshal(&config); err != nil {
 		return nil, err
 	}
+
+	GlobalConfig = &config
 
 	return &config, nil
 }

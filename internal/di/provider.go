@@ -1,13 +1,18 @@
 package di
 
 import (
+	"context"
+
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
+	"github.com/dysodeng/app/internal/infrastructure/migration"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
 	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
 	"github.com/dysodeng/app/internal/infrastructure/server/http"
 	"github.com/dysodeng/app/internal/infrastructure/server/websocket"
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
+	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
 )
 
@@ -15,6 +20,7 @@ import (
 type App struct {
 	Config         *config.Config
 	TxManager      transactions.TransactionManager
+	RedisClient    redis.Client
 	ModuleRegistry *ModuleRegistrar
 	HTTPServer     *http.Server
 	GRPCServer     *grpc.Server
@@ -26,6 +32,7 @@ type App struct {
 func NewApp(
 	config *config.Config,
 	txManager transactions.TransactionManager,
+	redisClient redis.Client,
 	moduleRegistry *ModuleRegistrar,
 	httpServer *http.Server,
 	grpcServer *grpc.Server,
@@ -35,6 +42,7 @@ func NewApp(
 	return &App{
 		Config:         config,
 		TxManager:      txManager,
+		RedisClient:    redisClient,
 		ModuleRegistry: moduleRegistry,
 		HTTPServer:     httpServer,
 		GRPCServer:     grpcServer,
@@ -49,12 +57,35 @@ func ProvideConfig() (*config.Config, error) {
 }
 
 // ProvideDB 提供数据库
-func ProvideDB(cfg *config.Config) (transactions.TransactionManager, error) {
+func ProvideDB(ctx context.Context, cfg *config.Config) (transactions.TransactionManager, error) {
 	tx, err := db.Initialize(cfg)
 	if err != nil {
 		return nil, err
 	}
-	return transactions.NewGormTransactionManager(tx), nil
+
+	txManager := transactions.NewGormTransactionManager(tx)
+
+	if cfg.Database.Migration.Enabled {
+		// 执行数据库迁移
+		if err = migration.Migrate(ctx, txManager); err != nil {
+			logger.Fatal(ctx, "数据库迁移失败", logger.ErrorField(err))
+		}
+
+		// 填充初始数据
+		if err = migration.Seed(ctx, txManager); err != nil {
+			logger.Fatal(ctx, "初始数据填充失败", logger.ErrorField(err))
+		}
+	}
+	return txManager, nil
+}
+
+// ProvideRedis 提供redis
+func ProvideRedis(cfg *config.Config) (redis.Client, error) {
+	cli, err := redis.Initialize(cfg)
+	if err != nil {
+		return nil, err
+	}
+	return cli, nil
 }
 
 // ProvideHTTPServer 提供HTTP服务器
