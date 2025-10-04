@@ -40,7 +40,7 @@ func (app *app) run() {
 func (app *app) initialize() {
 	mainApp, err := di.InitApp(app.ctx)
 	if err != nil {
-		logger.Fatal(app.ctx, "初始化应用失败", logger.ErrorField(err))
+		logger.Fatal(app.ctx, "应用初始化失败", logger.ErrorField(err))
 	}
 	app.mainApp = mainApp
 }
