@@ -5,8 +5,10 @@ import (
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/dysodeng/app/internal/application/service"
+	"github.com/dysodeng/app/internal/interfaces/http/dto/response/api"
 )
 
 // UserHandler 用户HTTP处理器
@@ -60,13 +62,12 @@ func (h *UserHandler) Register(c *gin.Context) {
 // GetUser 获取用户信息
 func (h *UserHandler) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
+	userId, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户ID"})
+		c.JSON(http.StatusOK, api.Fail(c, "无效的用户ID", api.CodeFail))
 		return
 	}
-
-	user, err := h.userAppService.GetUser(c.Request.Context(), uint(id))
+	user, err := h.userAppService.GetUser(c.Request.Context(), userId)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
 		return
@@ -120,13 +121,13 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // DeleteUser 删除用户
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 64)
+	userId, err := uuid.Parse(idStr)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "无效的用户ID"})
+		c.JSON(http.StatusOK, api.Fail(c, "无效的用户ID", api.CodeFail))
 		return
 	}
 
-	err = h.userAppService.DeleteUser(c.Request.Context(), uint(id))
+	err = h.userAppService.DeleteUser(c.Request.Context(), userId)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

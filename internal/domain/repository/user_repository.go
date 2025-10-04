@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/dysodeng/app/internal/domain/model"
+	"github.com/google/uuid"
 )
 
 // UserRepository 用户仓储接口
@@ -12,7 +13,7 @@ type UserRepository interface {
 	Save(ctx context.Context, user *model.User) error
 
 	// FindByID 根据ID查找用户
-	FindByID(ctx context.Context, id uint) (*model.User, error)
+	FindByID(ctx context.Context, id uuid.UUID) (*model.User, error)
 
 	// FindByUsername 根据用户名查找用户
 	FindByUsername(ctx context.Context, username string) (*model.User, error)
@@ -24,5 +25,5 @@ type UserRepository interface {
 	List(ctx context.Context, page, pageSize int) ([]*model.User, int64, error)
 
 	// Delete 删除用户
-	Delete(ctx context.Context, id uint) error
+	Delete(ctx context.Context, id uuid.UUID) error
 }

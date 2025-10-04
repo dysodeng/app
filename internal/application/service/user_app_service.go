@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/dysodeng/app/internal/domain/model"
 	domainService "github.com/dysodeng/app/internal/domain/service"
 )
@@ -25,7 +27,7 @@ func (s *UserAppService) RegisterUser(ctx context.Context, username, email, pass
 }
 
 // GetUser 获取用户信息
-func (s *UserAppService) GetUser(ctx context.Context, id uint) (*model.User, error) {
+func (s *UserAppService) GetUser(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	return s.userService.GetUserByID(ctx, id)
 }
 
@@ -35,6 +37,6 @@ func (s *UserAppService) GetUserList(ctx context.Context, page, pageSize int) ([
 }
 
 // DeleteUser 删除用户
-func (s *UserAppService) DeleteUser(ctx context.Context, id uint) error {
+func (s *UserAppService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return s.userService.DeleteUser(ctx, id)
 }

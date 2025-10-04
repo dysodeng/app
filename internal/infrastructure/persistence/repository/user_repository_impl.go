@@ -3,6 +3,8 @@ package repository
 import (
 	"context"
 
+	"github.com/google/uuid"
+
 	"github.com/dysodeng/app/internal/domain/model"
 	"github.com/dysodeng/app/internal/domain/repository"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/entity"
@@ -24,25 +26,30 @@ func NewUserRepository(tx transactions.TransactionManager) repository.UserReposi
 // Save 保存用户
 func (r *UserRepositoryImpl) Save(ctx context.Context, user *model.User) error {
 	userEntity := &entity.User{
-		ID:        user.ID,
-		Username:  user.Username,
-		Email:     user.Email,
-		Password:  user.Password,
-		CreatedAt: user.CreatedAt,
-		UpdatedAt: user.UpdatedAt,
+		Username: user.Username,
+		Email:    user.Email,
+		Password: user.Password,
 	}
 
-	result := r.tx.GetTx(ctx).Debug().Save(userEntity)
-	if result.Error != nil {
-		return result.Error
+	if user.ID == uuid.Nil {
+		if err := r.tx.GetTx(ctx).Create(userEntity).Error; err != nil {
+			return err
+		}
+		user.ID = userEntity.ID
+		user.CreatedAt = userEntity.CreatedAt.Time
+		user.UpdatedAt = userEntity.UpdatedAt.Time
+	} else {
+		if err := r.tx.GetTx(ctx).Save(userEntity).Error; err != nil {
+			return err
+		}
+		user.UpdatedAt = userEntity.UpdatedAt.Time
 	}
 
-	user.ID = userEntity.ID
 	return nil
 }
 
 // FindByID 根据ID查找用户
-func (r *UserRepositoryImpl) FindByID(ctx context.Context, id uint) (*model.User, error) {
+func (r *UserRepositoryImpl) FindByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	var userEntity entity.User
 	result := r.tx.GetTx(ctx).Debug().First(&userEntity, id)
 	if result.Error != nil {
@@ -54,8 +61,8 @@ func (r *UserRepositoryImpl) FindByID(ctx context.Context, id uint) (*model.User
 		Username:  userEntity.Username,
 		Email:     userEntity.Email,
 		Password:  userEntity.Password,
-		CreatedAt: userEntity.CreatedAt,
-		UpdatedAt: userEntity.UpdatedAt,
+		CreatedAt: userEntity.CreatedAt.Time,
+		UpdatedAt: userEntity.UpdatedAt.Time,
 	}, nil
 }
 
@@ -72,8 +79,8 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, username string
 		Username:  userEntity.Username,
 		Email:     userEntity.Email,
 		Password:  userEntity.Password,
-		CreatedAt: userEntity.CreatedAt,
-		UpdatedAt: userEntity.UpdatedAt,
+		CreatedAt: userEntity.CreatedAt.Time,
+		UpdatedAt: userEntity.UpdatedAt.Time,
 	}, nil
 }
 
@@ -90,8 +97,8 @@ func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, email string) (*mo
 		Username:  userEntity.Username,
 		Email:     userEntity.Email,
 		Password:  userEntity.Password,
-		CreatedAt: userEntity.CreatedAt,
-		UpdatedAt: userEntity.UpdatedAt,
+		CreatedAt: userEntity.CreatedAt.Time,
+		UpdatedAt: userEntity.UpdatedAt.Time,
 	}, nil
 }
 
@@ -118,8 +125,8 @@ func (r *UserRepositoryImpl) List(ctx context.Context, page, pageSize int) ([]*m
 			Username:  userEntity.Username,
 			Email:     userEntity.Email,
 			Password:  userEntity.Password,
-			CreatedAt: userEntity.CreatedAt,
-			UpdatedAt: userEntity.UpdatedAt,
+			CreatedAt: userEntity.CreatedAt.Time,
+			UpdatedAt: userEntity.UpdatedAt.Time,
 		}
 	}
 
@@ -127,7 +134,7 @@ func (r *UserRepositoryImpl) List(ctx context.Context, page, pageSize int) ([]*m
 }
 
 // Delete 删除用户
-func (r *UserRepositoryImpl) Delete(ctx context.Context, id uint) error {
+func (r *UserRepositoryImpl) Delete(ctx context.Context, id uuid.UUID) error {
 	result := r.tx.GetTx(ctx).Debug().Delete(&entity.User{}, id)
 	return result.Error
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/dysodeng/app/internal/domain/model"
 	domainService "github.com/dysodeng/app/internal/domain/service"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -20,7 +21,7 @@ func (m *MockUserRepository) Save(ctx context.Context, user *model.User) error {
 	return args.Error(0)
 }
 
-func (m *MockUserRepository) FindByID(ctx context.Context, id uint) (*model.User, error) {
+func (m *MockUserRepository) FindByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -49,7 +50,7 @@ func (m *MockUserRepository) List(ctx context.Context, offset, limit int) ([]*mo
 	return args.Get(0).([]*model.User), 0, args.Error(1)
 }
 
-func (m *MockUserRepository) Delete(ctx context.Context, id uint) error {
+func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	args := m.Called(ctx, id)
 	return args.Error(0)
 }
@@ -82,8 +83,9 @@ func TestUserService_GetUserByID(t *testing.T) {
 	mockRepo := new(MockUserRepository)
 
 	// 创建模拟用户
+	id, _ := uuid.NewV7()
 	mockUser := &model.User{
-		ID:       1,
+		ID:       id,
 		Username: "testuser",
 		Email:    "test@example.com",
 	}
@@ -95,7 +97,7 @@ func TestUserService_GetUserByID(t *testing.T) {
 	userService := domainService.NewUserService(mockRepo)
 
 	// 执行获取用户方法
-	user, err := userService.GetUserByID(context.Background(), 1)
+	user, err := userService.GetUserByID(context.Background(), id)
 
 	// 断言结果
 	assert.NoError(t, err)

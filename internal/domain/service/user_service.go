@@ -4,6 +4,8 @@ import (
 	"context"
 	"errors"
 
+	"github.com/google/uuid"
+
 	"github.com/dysodeng/app/internal/domain/model"
 	"github.com/dysodeng/app/internal/domain/repository"
 )
@@ -45,7 +47,7 @@ func (s *UserService) Register(ctx context.Context, username, email, password st
 }
 
 // GetUserByID 根据ID获取用户
-func (s *UserService) GetUserByID(ctx context.Context, id uint) (*model.User, error) {
+func (s *UserService) GetUserByID(ctx context.Context, id uuid.UUID) (*model.User, error) {
 	return s.userRepo.FindByID(ctx, id)
 }
 
@@ -55,6 +57,6 @@ func (s *UserService) GetUserList(ctx context.Context, page, pageSize int) ([]*m
 }
 
 // DeleteUser 删除用户
-func (s *UserService) DeleteUser(ctx context.Context, id uint) error {
+func (s *UserService) DeleteUser(ctx context.Context, id uuid.UUID) error {
 	return s.userRepo.Delete(ctx, id)
 }
