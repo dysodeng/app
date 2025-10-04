@@ -67,7 +67,7 @@ func newZapLogger(debug bool) {
 }
 
 func logFileWriter() (io.Writer, error) {
-	filename := config.LogPath + "/app"
+	filename := config.LogPath + "/" + config.GlobalConfig.App.Name
 	return rotateLogs.New(
 		filename+".%Y-%m-%d"+logFileExt,
 		rotateLogs.WithLinkName(filename+logFileExt),
