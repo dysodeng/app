@@ -32,7 +32,7 @@ func (s *Server) Server() *grpc.Server {
 }
 
 func (s *Server) IsEnabled() bool {
-	return true
+	return s.config.Server.GRPC.Enabled
 }
 
 func (s *Server) Name() string {
@@ -41,7 +41,7 @@ func (s *Server) Name() string {
 
 // Start 启动gRPC服务
 func (s *Server) Start() error {
-	addr := fmt.Sprintf("%s:%d", s.config.GRPC.Host, s.config.GRPC.Port)
+	addr := fmt.Sprintf("%s:%d", s.config.Server.GRPC.Host, s.config.Server.GRPC.Port)
 	lis, err := net.Listen("tcp", addr)
 	if err != nil {
 		return err
@@ -64,7 +64,7 @@ func (s *Server) Start() error {
 
 // Addr 获取服务地址
 func (s *Server) Addr() string {
-	return fmt.Sprintf("%s:%d", s.config.GRPC.Host, s.config.GRPC.Port)
+	return fmt.Sprintf("%s:%d", s.config.Server.GRPC.Host, s.config.Server.GRPC.Port)
 }
 
 // Stop 停止gRPC服务

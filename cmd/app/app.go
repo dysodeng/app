@@ -66,14 +66,16 @@ func (app *app) initialize() {
 }
 
 func (app *app) migrate() {
-	// 执行数据库迁移
-	if err := migration.Migrate(app.ctx, app.mainApp.TxManager); err != nil {
-		logger.Fatal(app.ctx, "数据库迁移失败", logger.ErrorField(err))
-	}
+	if app.mainApp.Config.Database.Migration.Enabled {
+		// 执行数据库迁移
+		if err := migration.Migrate(app.ctx, app.mainApp.TxManager); err != nil {
+			logger.Fatal(app.ctx, "数据库迁移失败", logger.ErrorField(err))
+		}
 
-	// 填充初始数据
-	if err := migration.Seed(app.ctx, app.mainApp.TxManager); err != nil {
-		logger.Fatal(app.ctx, "初始数据填充失败", logger.ErrorField(err))
+		// 填充初始数据
+		if err := migration.Seed(app.ctx, app.mainApp.TxManager); err != nil {
+			logger.Fatal(app.ctx, "初始数据填充失败", logger.ErrorField(err))
+		}
 	}
 }
 

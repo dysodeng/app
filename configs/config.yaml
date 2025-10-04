@@ -1,23 +1,36 @@
+# 应用配置
 app:
   name: app-service
   environment: development
   debug: true
+  domain: "http://localhost:8080"
 
+# 服务配置
+server:
+  http:
+    enabled: true
+    host: 0.0.0.0
+    port: 8080
+  grpc:
+    enabled: false
+    host: 0.0.0.0
+    port: 9000
+  websocket:
+    enabled: true
+    host: 0.0.0.0
+    port: 4000
+
+# 安全配置
+security:
+  jwt:
+    secret:
+
+# 数据库配置
 database:
+  migration:
+    enabled: true
   driver: sqlite3
   database: ./var/data/app.db
   max_open_conns: 100
   max_idle_conns: 10
   conn_max_lifetime: 3600s
-
-http:
-  host: 0.0.0.0
-  port: 8080
-
-grpc:
-  host: 0.0.0.0
-  port: 9090
-  
-websocket:
-  host: 0.0.0.0
-  port: 9091

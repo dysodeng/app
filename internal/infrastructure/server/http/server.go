@@ -40,7 +40,7 @@ func NewServer(config *config.Config, handlers ...handler.Handler) *Server {
 		config: config,
 		engine: engine,
 		httpServer: &http.Server{
-			Addr:    fmt.Sprintf("%s:%d", config.HTTP.Host, config.HTTP.Port),
+			Addr:    fmt.Sprintf("%s:%d", config.Server.HTTP.Host, config.Server.HTTP.Port),
 			Handler: engine,
 		},
 	}
@@ -52,12 +52,12 @@ func (s *Server) Engine() *gin.Engine {
 }
 
 func (s *Server) IsEnabled() bool {
-	return true
+	return s.config.Server.HTTP.Enabled
 }
 
 // Addr 获取服务地址
 func (s *Server) Addr() string {
-	return fmt.Sprintf("%s:%d", s.config.HTTP.Host, s.config.HTTP.Port)
+	return fmt.Sprintf("%s:%d", s.config.Server.HTTP.Host, s.config.Server.HTTP.Port)
 }
 
 func (s *Server) Name() string {

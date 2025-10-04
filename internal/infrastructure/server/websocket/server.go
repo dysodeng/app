@@ -32,14 +32,14 @@ func NewServer(config *config.Config) *Server {
 		config:   config,
 		upgrader: upgrader,
 		httpServer: &http.Server{
-			Addr: fmt.Sprintf("%s:%d", config.HTTP.Host, config.HTTP.Port+1), // WebSocket使用HTTP端口+1
+			Addr: fmt.Sprintf("%s:%d", config.Server.WebSocket.Host, config.Server.WebSocket.Port),
 		},
 		clients: sync.Map{},
 	}
 }
 
 func (s *Server) IsEnabled() bool {
-	return true
+	return s.config.Server.WebSocket.Enabled
 }
 
 func (s *Server) Name() string {
@@ -69,7 +69,7 @@ func (s *Server) Start() error {
 
 // Addr 获取服务地址
 func (s *Server) Addr() string {
-	return fmt.Sprintf("%s:%d", s.config.WebSocket.Host, s.config.WebSocket.Port)
+	return fmt.Sprintf("%s:%d", s.config.Server.WebSocket.Host, s.config.Server.WebSocket.Port)
 }
 
 // Stop 停止WebSocket服务
