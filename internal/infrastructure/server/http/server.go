@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/dysodeng/app/internal/interfaces/http/middleware"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -27,7 +28,10 @@ func NewServer(config *config.Config, handlers ...handler.Handler) *Server {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
-	engine := gin.Default()
+	engine := gin.New()
+	engine.Use(middleware.Recovery())
+	engine.Use(middleware.Logger())
+	engine.Use(middleware.CORS())
 
 	// 注册处理器
 	ifaceHttp.RegisterHandlers(engine, handlers...)

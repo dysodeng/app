@@ -27,7 +27,6 @@ func Logger() gin.HandlerFunc {
 				" | " + time.Since(start).String() +
 				" | " + strconv.Itoa(statusCode) +
 				" | " + c.Errors.String() +
-				" | " + c.GetString("user_id") +
 				"\n",
 		))
 	}
