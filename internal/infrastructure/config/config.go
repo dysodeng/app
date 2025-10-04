@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/joho/godotenv"
 	"github.com/spf13/viper"
 )
 
@@ -23,32 +24,77 @@ type Config struct {
 	Monitor  Monitor        `mapstructure:"monitor"`
 }
 
-// AppConfig 应用基本配置
-type AppConfig struct {
-	Name        string `mapstructure:"name"`
-	Environment string `mapstructure:"environment"`
-	Debug       bool   `mapstructure:"debug"`
-}
-
-// Security 安全配置
-type Security struct {
-	JWT struct {
-		Secret string `mapstructure:"secret"`
-	} `mapstructure:"jwt"`
-}
-
 // LoadConfig 加载配置
 func LoadConfig(configPath string) (*Config, error) {
-	viper.SetConfigFile(configPath)
-	viper.AutomaticEnv()
+	// 加载.env
+	_ = godotenv.Load()
 
-	if err := viper.ReadInConfig(); err != nil {
+	v := viper.New()
+
+	v.SetConfigFile(configPath)
+	v.AutomaticEnv()
+
+	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
 
-	var config Config
-	if err := viper.Unmarshal(&config); err != nil {
+	var appConfig AppConfig
+	app := v.Sub("app")
+	appBindEnv(app)
+	if err := app.Unmarshal(&appConfig); err != nil {
 		return nil, err
+	}
+
+	var serverConfig Server
+	server := v.Sub("server")
+	serverBindEnv(server)
+	if err := server.Unmarshal(&serverConfig); err != nil {
+		return nil, err
+	}
+
+	var securityConfig Security
+	security := v.Sub("security")
+	securityBindEnv(security)
+	if err := security.Unmarshal(&securityConfig); err != nil {
+		return nil, err
+	}
+
+	var databaseConfig DatabaseConfig
+	database := v.Sub("database")
+	databaseBindEnv(database)
+	if err := database.Unmarshal(&databaseConfig); err != nil {
+		return nil, err
+	}
+
+	var redisConfig Redis
+	redis := v.Sub("redis")
+	redisBindEnv(redis)
+	if err := redis.Unmarshal(&redisConfig); err != nil {
+		return nil, err
+	}
+
+	var storageConfig Storage
+	storage := v.Sub("storage")
+	storageBindEnv(storage)
+	if err := storage.Unmarshal(&storageConfig); err != nil {
+		return nil, err
+	}
+
+	var monitorConfig Monitor
+	monitor := v.Sub("monitor")
+	monitorBindEnv(monitor)
+	if err := monitor.Unmarshal(&monitorConfig); err != nil {
+		return nil, err
+	}
+
+	config := Config{
+		App:      appConfig,
+		Server:   serverConfig,
+		Security: securityConfig,
+		Database: databaseConfig,
+		Redis:    redisConfig,
+		Storage:  storageConfig,
+		Monitor:  monitorConfig,
 	}
 
 	GlobalConfig = &config

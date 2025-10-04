@@ -1,6 +1,6 @@
 # 应用配置
 app:
-  name: app-service
+  name: app
   environment: development
   debug: true
   domain: "http://localhost:8080"
@@ -14,7 +14,7 @@ server:
   grpc:
     enabled: false
     host: 0.0.0.0
-    port: 9000
+    port: 3000
   websocket:
     enabled: true
     host: 0.0.0.0
@@ -29,8 +29,8 @@ security:
 database:
   migration:
     enabled: true
-  driver: sqlite3
-  database: ./var/data/app.db
+  driver: postgres
+  database:
   max_open_conns: 100
   max_idle_conns: 10
   conn_max_lifetime: 3600s
@@ -43,7 +43,7 @@ redis:
     # 单机模式配置
     host: 127.0.0.1
     port: 6379
-    password: 123456
+    password:
     db: 0
     key_prefix:
     # 集群模式配置
@@ -73,7 +73,7 @@ redis:
     mode: standalone
     host: 127.0.0.1
     port: 6379
-    password: 123456
+    password:
     db: 1
     key_prefix:
     cluster:
@@ -94,7 +94,7 @@ redis:
     mode: standalone
     host: 127.0.0.1
     port: 6379
-    password: 123456
+    password:
     db: 2
     key_prefix:
     cluster:
@@ -161,7 +161,7 @@ storage:
 
 # 可观测性配置
 monitor:
-  service_name: "app-service"
+  service_name: "app"
   service_version: "v1.0.0"
   tracer: # 链路追踪
     otlp_enable: false # 是否开启数据上报

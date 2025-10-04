@@ -1,5 +1,7 @@
 package config
 
+import "github.com/spf13/viper"
+
 // Server 服务配置
 type Server struct {
 	HTTP      HTTPConfig      `mapstructure:"http"`
@@ -26,4 +28,10 @@ type WebSocketConfig struct {
 	Enabled bool   `mapstructure:"enabled"`
 	Host    string `mapstructure:"host"`
 	Port    int    `mapstructure:"port"`
+}
+
+func serverBindEnv(v *viper.Viper) {
+	_ = v.BindEnv("http.port", "SERVER_HTTP_PORT")
+	_ = v.BindEnv("grpc.port", "SERVER_GRPC_PORT")
+	_ = v.BindEnv("websocket.port", "SERVER_WEBSOCKET_PORT")
 }
