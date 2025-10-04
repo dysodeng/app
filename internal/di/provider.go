@@ -3,8 +3,6 @@ package di
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
-	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
 	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -17,6 +15,8 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
+	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
+	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
 )
 

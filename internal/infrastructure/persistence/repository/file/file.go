@@ -13,7 +13,6 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/entity/file"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
-	sharedModel "github.com/dysodeng/app/internal/infrastructure/shared/model"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 )
 
@@ -184,22 +183,4 @@ func (repo *fileRepository) fileListFromModel(ctx context.Context, files []file.
 		result[i] = *repo.fileFromModel(ctx, m)
 	}
 	return result
-}
-
-func (repo *fileRepository) toModel(f *model.File) *file.File {
-	nameIndex := f.NameIndex
-	if nameIndex == "" {
-		nameIndex = f.Name.NameIndex()
-	}
-	return &file.File{
-		DistributedPrimaryKeyID: sharedModel.DistributedPrimaryKeyID{ID: f.ID},
-		MediaType:               f.MediaType.ToInt(),
-		Name:                    f.Name.String(),
-		NameIndex:               nameIndex,
-		Path:                    f.Path,
-		Size:                    f.Size,
-		Ext:                     f.Ext,
-		MimeType:                f.MimeType,
-		Status:                  f.Status,
-	}
 }
