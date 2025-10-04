@@ -44,13 +44,16 @@ var AllModulesSet = wire.NewSet(
 	// 在这里添加所有业务模块的Wire Set
 	// 这样在wire.go中只需要引用这一个AllModulesSet
 	modules.UserModuleWireSet,
+	modules.FileModuleWireSet,
 )
 
 // ProvideModuleRegistry 提供模块注册表
 func ProvideModuleRegistry(
 	userModule *modules.UserModule,
+	fileModule *modules.FileModule,
 ) *ModuleRegistrar {
 	registrar := NewModuleRegistrar()
 	registrar.Register(userModule)
+	registrar.Register(fileModule)
 	return registrar
 }

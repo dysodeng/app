@@ -110,3 +110,65 @@ redis:
       min_idle_conns: 10
       max_retries: 3
       pool_size: 100
+
+# 文件存储配置
+storage:
+  driver: local
+  cdn_domain: ""
+  local:
+    root_path: "uploads"
+    multipart_storage: "file"
+    static_enabled: false # 是否开启本地静态资源代理
+  minio:
+    endpoint: ""
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    region: ""
+    use_ssl: true
+    access_mode: "private"
+  ali_oss:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+  hw_obs:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+  tx_cos:
+    access_key_id: ""
+    access_key_secret: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+  s3:
+    access_key_id: ""
+    access_key_secret: ""
+    bucket: ""
+    endpoint: ""
+    endpoint_internal: ""
+    with_internal_endpoint: false
+    access_mode: "private"
+
+# 可观测性配置
+monitor:
+  service_name: "app-service"
+  service_version: "v1.0.0"
+  tracer: # 链路追踪
+    otlp_enable: false # 是否开启数据上报
+    otlp_endpoint: "http://127.0.0.1:4318" # 上报地址
+  metrics: # 监控
+    otlp_enable: false # 是否开启数据上报
+    otlp_endpoint: "http://127.0.0.1:4318" # 上报地址
+  log: # 日志
+    otlp_enable: false # 是否开启数据上报
+    otlp_endpoint: "http://127.0.0.1:4318" # 上报地址

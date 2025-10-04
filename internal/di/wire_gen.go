@@ -9,11 +9,15 @@ package di
 import (
 	"context"
 
+	service4 "github.com/dysodeng/app/internal/application/file/service"
 	service2 "github.com/dysodeng/app/internal/application/service"
 	"github.com/dysodeng/app/internal/di/modules"
+	service3 "github.com/dysodeng/app/internal/domain/file/service"
 	"github.com/dysodeng/app/internal/domain/service"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
+	file2 "github.com/dysodeng/app/internal/interfaces/http/handler/file"
 )
 
 // Injectors from wire.go:
@@ -21,6 +25,10 @@ import (
 // InitApp 初始化应用程序
 func InitApp(ctx context.Context) (*App, error) {
 	config, err := ProvideConfig()
+	if err != nil {
+		return nil, err
+	}
+	monitor, err := ProvideMonitor(config)
 	if err != nil {
 		return nil, err
 	}
@@ -36,16 +44,26 @@ func InitApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	storage, err := ProvideStorage(config)
+	if err != nil {
+		return nil, err
+	}
 	userRepository := repository.NewUserRepository(transactionManager)
 	userService := service.NewUserService(userRepository)
 	userAppService := service2.NewUserAppService(userService)
 	userHandler := handler.NewUserHandler(userAppService)
 	userModule := modules.NewUserModule(userHandler)
-	moduleRegistrar := ProvideModuleRegistry(userModule)
+	fileRepository := file.NewFileRepository(transactionManager)
+	uploaderRepository := file.NewUploaderRepository(transactionManager)
+	uploaderDomainService := service3.NewUploaderDomainService(transactionManager, fileRepository, uploaderRepository)
+	uploaderApplicationService := service4.NewUploaderApplicationService(uploaderDomainService)
+	uploaderHandler := file2.NewUploaderHandler(uploaderApplicationService)
+	fileModule := modules.NewFileModule(uploaderHandler)
+	moduleRegistrar := ProvideModuleRegistry(userModule, fileModule)
 	server := ProvideHTTPServer(config, moduleRegistrar)
 	grpcServer := ProvideGRPCServer(config, moduleRegistrar)
 	websocketServer := ProvideWebSocketServer(config)
 	bus := ProvideEventBus(moduleRegistrar)
-	app := NewApp(config, logger, transactionManager, client, moduleRegistrar, server, grpcServer, websocketServer, bus)
+	app := NewApp(config, monitor, logger, transactionManager, client, storage, moduleRegistrar, server, grpcServer, websocketServer, bus)
 	return app, nil
 }

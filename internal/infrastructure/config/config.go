@@ -19,6 +19,8 @@ type Config struct {
 	Security Security       `mapstructure:"security"`
 	Database DatabaseConfig `mapstructure:"database"`
 	Redis    Redis          `mapstructure:"redis"`
+	Storage  Storage        `mapstructure:"storage"`
+	Monitor  Monitor        `mapstructure:"monitor"`
 }
 
 // AppConfig 应用基本配置

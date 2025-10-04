@@ -3,6 +3,8 @@ package di
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
+	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
 	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -21,6 +23,11 @@ import (
 // ProvideConfig 提供配置
 func ProvideConfig() (*config.Config, error) {
 	return config.LoadConfig("configs/config.yaml")
+}
+
+// ProvideMonitor 提供可观测性配置
+func ProvideMonitor(cfg *config.Config) (*telemetry.Monitor, error) {
+	return telemetry.InitMonitor(cfg)
 }
 
 // ProvideLogger 提供日志
@@ -60,6 +67,11 @@ func ProvideRedis(cfg *config.Config) (redis.Client, error) {
 		return nil, err
 	}
 	return cli, nil
+}
+
+// ProvideStorage 提供文件存储
+func ProvideStorage(cfg *config.Config) (*storage.Storage, error) {
+	return storage.Init(cfg)
 }
 
 // ProvideHTTPServer 提供HTTP服务器
