@@ -32,6 +32,7 @@ func NewServer(config *config.Config, handlers ...handler.Handler) *Server {
 	engine.Use(middleware.Recovery())
 	engine.Use(middleware.Logger())
 	engine.Use(middleware.CORS())
+	engine.Use(middleware.StartTrace())
 
 	// 注册处理器
 	ifaceHttp.RegisterHandlers(engine, handlers...)
