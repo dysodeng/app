@@ -32,7 +32,7 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, user *model.User) error {
 		UpdatedAt: user.UpdatedAt,
 	}
 
-	result := r.tx.GetTx(ctx).Save(userEntity)
+	result := r.tx.GetTx(ctx).Debug().Save(userEntity)
 	if result.Error != nil {
 		return result.Error
 	}
@@ -44,7 +44,7 @@ func (r *UserRepositoryImpl) Save(ctx context.Context, user *model.User) error {
 // FindByID 根据ID查找用户
 func (r *UserRepositoryImpl) FindByID(ctx context.Context, id uint) (*model.User, error) {
 	var userEntity entity.User
-	result := r.tx.GetTx(ctx).First(&userEntity, id)
+	result := r.tx.GetTx(ctx).Debug().First(&userEntity, id)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -62,7 +62,7 @@ func (r *UserRepositoryImpl) FindByID(ctx context.Context, id uint) (*model.User
 // FindByUsername 根据用户名查找用户
 func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, username string) (*model.User, error) {
 	var userEntity entity.User
-	result := r.tx.GetTx(ctx).Where("username = ?", username).First(&userEntity)
+	result := r.tx.GetTx(ctx).Debug().Where("username = ?", username).First(&userEntity)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -80,7 +80,7 @@ func (r *UserRepositoryImpl) FindByUsername(ctx context.Context, username string
 // FindByEmail 根据邮箱查找用户
 func (r *UserRepositoryImpl) FindByEmail(ctx context.Context, email string) (*model.User, error) {
 	var userEntity entity.User
-	result := r.tx.GetTx(ctx).Where("email = ?", email).First(&userEntity)
+	result := r.tx.GetTx(ctx).Debug().Where("email = ?", email).First(&userEntity)
 	if result.Error != nil {
 		return nil, result.Error
 	}
@@ -101,12 +101,12 @@ func (r *UserRepositoryImpl) List(ctx context.Context, page, pageSize int) ([]*m
 	var total int64
 
 	offset := (page - 1) * pageSize
-	result := r.tx.GetTx(ctx).Model(&entity.User{}).Count(&total)
+	result := r.tx.GetTx(ctx).Debug().Model(&entity.User{}).Count(&total)
 	if result.Error != nil {
 		return nil, 0, result.Error
 	}
 
-	result = r.tx.GetTx(ctx).Offset(offset).Limit(pageSize).Find(&userEntities)
+	result = r.tx.GetTx(ctx).Debug().Offset(offset).Limit(pageSize).Find(&userEntities)
 	if result.Error != nil {
 		return nil, 0, result.Error
 	}
@@ -128,6 +128,6 @@ func (r *UserRepositoryImpl) List(ctx context.Context, page, pageSize int) ([]*m
 
 // Delete 删除用户
 func (r *UserRepositoryImpl) Delete(ctx context.Context, id uint) error {
-	result := r.tx.GetTx(ctx).Delete(&entity.User{}, id)
+	result := r.tx.GetTx(ctx).Debug().Delete(&entity.User{}, id)
 	return result.Error
 }

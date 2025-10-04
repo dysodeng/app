@@ -6,12 +6,13 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/pkg/errors"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	gormLogger "gorm.io/gorm/logger"
+
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 )
 
 const defaultSlowThresholdTime = 300 * time.Millisecond

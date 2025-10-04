@@ -12,6 +12,7 @@ import (
 	"github.com/dysodeng/app/internal/di"
 	"github.com/dysodeng/app/internal/infrastructure/migration"
 	"github.com/dysodeng/app/internal/infrastructure/server"
+	"github.com/dysodeng/app/internal/infrastructure/shared/db"
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 )
 
@@ -122,6 +123,9 @@ func (app *app) waitForInterruptSignal() {
 	}
 
 	logger.Info(ctx, "服务已关闭")
+
+	// 关闭数据库连接
+	db.Close()
 }
 
 func Execute() {
