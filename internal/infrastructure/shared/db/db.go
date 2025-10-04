@@ -20,11 +20,12 @@ func Driver() string {
 	return dbDriver
 }
 
-func Close() {
+func Close() error {
 	sqlDB, _ := db.DB()
 	if err := sqlDB.Close(); err != nil {
 		log.Printf("failed to close database connection: %+v", err)
-		return
+		return err
 	}
 	log.Println("database connection closed")
+	return nil
 }

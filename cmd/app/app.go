@@ -10,7 +10,6 @@ import (
 
 	"github.com/dysodeng/app/internal/di"
 	"github.com/dysodeng/app/internal/infrastructure/server"
-	"github.com/dysodeng/app/internal/infrastructure/shared/db"
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 )
 
@@ -89,11 +88,11 @@ func (app *app) waitForInterruptSignal() {
 		}
 		logger.Info(ctx, fmt.Sprintf("%s服务已关闭", serverIns.Name()))
 	}
-
 	logger.Info(ctx, "服务已关闭")
 
-	// 关闭数据库连接
-	db.Close()
+	if err := app.mainApp.Stop(ctx); err != nil {
+		logger.Error(ctx, "应用停止失败", logger.ErrorField(err))
+	}
 }
 
 func Execute() {

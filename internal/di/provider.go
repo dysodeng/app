@@ -3,6 +3,8 @@ package di
 import (
 	"context"
 
+	"go.uber.org/zap"
+
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
 	"github.com/dysodeng/app/internal/infrastructure/migration"
@@ -14,46 +16,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
-	"go.uber.org/zap"
 )
-
-// App 应用程序
-type App struct {
-	Config         *config.Config
-	Logger         *zap.Logger
-	TxManager      transactions.TransactionManager
-	RedisClient    redis.Client
-	ModuleRegistry *ModuleRegistrar
-	HTTPServer     *http.Server
-	GRPCServer     *grpc.Server
-	WSServer       *websocket.Server
-	EventBus       *event.Bus
-}
-
-// NewApp 创建应用程序
-func NewApp(
-	config *config.Config,
-	logger *zap.Logger,
-	txManager transactions.TransactionManager,
-	redisClient redis.Client,
-	moduleRegistry *ModuleRegistrar,
-	httpServer *http.Server,
-	grpcServer *grpc.Server,
-	wsServer *websocket.Server,
-	eventBus *event.Bus,
-) *App {
-	return &App{
-		Config:         config,
-		Logger:         logger,
-		TxManager:      txManager,
-		RedisClient:    redisClient,
-		ModuleRegistry: moduleRegistry,
-		HTTPServer:     httpServer,
-		GRPCServer:     grpcServer,
-		WSServer:       wsServer,
-		EventBus:       eventBus,
-	}
-}
 
 // ProvideConfig 提供配置
 func ProvideConfig() (*config.Config, error) {
