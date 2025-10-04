@@ -14,11 +14,13 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
+	"go.uber.org/zap"
 )
 
 // App 应用程序
 type App struct {
 	Config         *config.Config
+	Logger         *zap.Logger
 	TxManager      transactions.TransactionManager
 	RedisClient    redis.Client
 	ModuleRegistry *ModuleRegistrar
@@ -31,6 +33,7 @@ type App struct {
 // NewApp 创建应用程序
 func NewApp(
 	config *config.Config,
+	logger *zap.Logger,
 	txManager transactions.TransactionManager,
 	redisClient redis.Client,
 	moduleRegistry *ModuleRegistrar,
@@ -41,6 +44,7 @@ func NewApp(
 ) *App {
 	return &App{
 		Config:         config,
+		Logger:         logger,
 		TxManager:      txManager,
 		RedisClient:    redisClient,
 		ModuleRegistry: moduleRegistry,
@@ -54,6 +58,13 @@ func NewApp(
 // ProvideConfig 提供配置
 func ProvideConfig() (*config.Config, error) {
 	return config.LoadConfig("configs/config.yaml")
+}
+
+// ProvideLogger 提供日志
+func ProvideLogger(ctx context.Context, cfg *config.Config) (*zap.Logger, error) {
+	logger.InitLogger(cfg.App.Debug)
+	logger.Info(ctx, "应用初始化中...")
+	return logger.ZapLogger(), nil
 }
 
 // ProvideDB 提供数据库

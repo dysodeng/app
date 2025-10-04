@@ -38,15 +38,10 @@ func (app *app) run() {
 }
 
 func (app *app) initialize() {
-	// 初始化日志
-	logger.InitLogger(true)
-	logger.Info(app.ctx, "应用启动中...")
-
 	mainApp, err := di.InitApp(app.ctx)
 	if err != nil {
 		logger.Fatal(app.ctx, "初始化应用失败", logger.ErrorField(err))
 	}
-
 	app.mainApp = mainApp
 }
 

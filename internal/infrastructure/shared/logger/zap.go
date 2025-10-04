@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"time"
 
+	"github.com/dysodeng/app/internal/infrastructure/config"
 	rotateLogs "github.com/lestrrat-go/file-rotatelogs"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -66,7 +67,7 @@ func newZapLogger(debug bool) {
 }
 
 func logFileWriter() (io.Writer, error) {
-	filename := "var/logs/app.log"
+	filename := config.LogPath + "/app"
 	return rotateLogs.New(
 		filename+".%Y-%m-%d"+logFileExt,
 		rotateLogs.WithLinkName(filename+logFileExt),

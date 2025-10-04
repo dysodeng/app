@@ -4,6 +4,12 @@ import (
 	"github.com/spf13/viper"
 )
 
+const (
+	VarPath  string = "var"
+	LogPath         = VarPath + "/logs"
+	TempPath        = VarPath + "/tmp"
+)
+
 var GlobalConfig *Config
 
 // Config 应用配置

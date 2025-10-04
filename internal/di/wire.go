@@ -12,10 +12,8 @@ import (
 // InitApp 初始化应用程序
 func InitApp(ctx context.Context) (*App, error) {
 	panic(wire.Build(
-		ProvideConfig,
-		ProvideDB,
-		ProvideRedis,
-		AllModulesSet, // 业务模块
+		InfrastructureSet, // 基础设施
+		AllModulesSet,     // 业务模块
 		ProvideModuleRegistry,
 		ProvideHTTPServer,
 		ProvideGRPCServer,

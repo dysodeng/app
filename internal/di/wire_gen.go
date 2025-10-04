@@ -24,6 +24,10 @@ func InitApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	logger, err := ProvideLogger(ctx, config)
+	if err != nil {
+		return nil, err
+	}
 	transactionManager, err := ProvideDB(ctx, config)
 	if err != nil {
 		return nil, err
@@ -42,6 +46,6 @@ func InitApp(ctx context.Context) (*App, error) {
 	grpcServer := ProvideGRPCServer(config, moduleRegistrar)
 	websocketServer := ProvideWebSocketServer(config)
 	bus := ProvideEventBus(moduleRegistrar)
-	app := NewApp(config, transactionManager, client, moduleRegistrar, server, grpcServer, websocketServer, bus)
+	app := NewApp(config, logger, transactionManager, client, moduleRegistrar, server, grpcServer, websocketServer, bus)
 	return app, nil
 }
