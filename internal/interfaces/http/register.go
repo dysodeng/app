@@ -1,13 +1,22 @@
 package http
 
 import (
-	"github.com/gin-gonic/gin"
-
 	"github.com/dysodeng/app/internal/interfaces/http/handler"
+	"github.com/dysodeng/app/internal/interfaces/http/handler/file"
 )
 
-// RegisterHandlers 注册所有HTTP处理器
-func RegisterHandlers(engine *gin.Engine, handlers ...handler.Handler) {
-	// 注册所有处理器
-	handler.RegisterHandlers(engine, handlers...)
+// HandlerRegistry 控制器注册表
+type HandlerRegistry struct {
+	UploaderHandler *file.UploaderHandler
+	UserHandler     *handler.UserHandler
+}
+
+func NewHandlerRegistry(
+	uploaderHandler *file.UploaderHandler,
+	userHandler *handler.UserHandler,
+) *HandlerRegistry {
+	return &HandlerRegistry{
+		UploaderHandler: uploaderHandler,
+		UserHandler:     userHandler,
+	}
 }

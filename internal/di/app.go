@@ -16,21 +16,22 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
+	HTTP "github.com/dysodeng/app/internal/interfaces/http"
 )
 
 // App 应用程序
 type App struct {
-	Config         *config.Config
-	Monitor        *telemetry.Monitor
-	Logger         *zap.Logger
-	TxManager      transactions.TransactionManager
-	RedisClient    redis.Client
-	Storage        *storage.Storage
-	ModuleRegistry *ModuleRegistrar
-	HTTPServer     *http.Server
-	GRPCServer     *grpc.Server
-	WSServer       *websocket.Server
-	EventBus       *event.Bus
+	Config          *config.Config
+	Monitor         *telemetry.Monitor
+	Logger          *zap.Logger
+	TxManager       transactions.TransactionManager
+	RedisClient     redis.Client
+	Storage         *storage.Storage
+	HandlerRegistry *HTTP.HandlerRegistry
+	HTTPServer      *http.Server
+	GRPCServer      *grpc.Server
+	WSServer        *websocket.Server
+	EventBus        *event.Bus
 }
 
 // NewApp 创建应用程序
@@ -41,24 +42,24 @@ func NewApp(
 	txManager transactions.TransactionManager,
 	redisClient redis.Client,
 	storage *storage.Storage,
-	moduleRegistry *ModuleRegistrar,
+	handlerRegistry *HTTP.HandlerRegistry,
 	httpServer *http.Server,
 	grpcServer *grpc.Server,
 	wsServer *websocket.Server,
 	eventBus *event.Bus,
 ) *App {
 	return &App{
-		Config:         config,
-		Monitor:        monitor,
-		Logger:         logger,
-		TxManager:      txManager,
-		RedisClient:    redisClient,
-		Storage:        storage,
-		ModuleRegistry: moduleRegistry,
-		HTTPServer:     httpServer,
-		GRPCServer:     grpcServer,
-		WSServer:       wsServer,
-		EventBus:       eventBus,
+		Config:          config,
+		Monitor:         monitor,
+		Logger:          logger,
+		TxManager:       txManager,
+		RedisClient:     redisClient,
+		Storage:         storage,
+		HandlerRegistry: handlerRegistry,
+		HTTPServer:      httpServer,
+		GRPCServer:      grpcServer,
+		WSServer:        wsServer,
+		EventBus:        eventBus,
 	}
 }
 

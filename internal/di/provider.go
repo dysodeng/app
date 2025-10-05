@@ -17,7 +17,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
-	"github.com/dysodeng/app/internal/interfaces/http/handler"
+	HTTP "github.com/dysodeng/app/internal/interfaces/http"
 )
 
 // ProvideConfig 提供配置
@@ -75,16 +75,12 @@ func ProvideStorage(cfg *config.Config) (*storage.Storage, error) {
 }
 
 // ProvideHTTPServer 提供HTTP服务器
-func ProvideHTTPServer(config *config.Config, moduleRegistry *ModuleRegistrar) *http.Server {
-	var handlers []handler.Handler
-	for _, module := range moduleRegistry.GetAllModules() {
-		handlers = append(handlers, module.Handlers()...)
-	}
-	return http.NewServer(config, handlers...)
+func ProvideHTTPServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *http.Server {
+	return http.NewServer(config, handlerRegistry)
 }
 
 // ProvideGRPCServer 提供gRPC服务器
-func ProvideGRPCServer(config *config.Config, moduleRegistry *ModuleRegistrar) *grpc.Server {
+func ProvideGRPCServer(config *config.Config) *grpc.Server {
 	server := grpc.NewServer(config)
 	// 注册gRPC服务在这里实现
 	return server
@@ -96,12 +92,8 @@ func ProvideWebSocketServer(config *config.Config) *websocket.Server {
 }
 
 // ProvideEventBus 提供事件总线
-func ProvideEventBus(moduleRegistry *ModuleRegistrar) *event.Bus {
+func ProvideEventBus() *event.Bus {
 	eventBus := event.NewEventBus()
-	for _, module := range moduleRegistry.GetAllModules() {
-		for _, eventHandler := range module.EventHandlers() {
-			eventBus.RegisterHandler(eventHandler)
-		}
-	}
+	// 注册事件在这里实现
 	return eventBus
 }

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/dysodeng/app/internal/interfaces/http/middleware"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
-	ifaceHttp "github.com/dysodeng/app/internal/interfaces/http"
-	"github.com/dysodeng/app/internal/interfaces/http/handler"
+	HTTP "github.com/dysodeng/app/internal/interfaces/http"
+	"github.com/dysodeng/app/internal/interfaces/http/middleware"
+	"github.com/dysodeng/app/internal/interfaces/http/router"
 )
 
 // Server HTTP服务
@@ -22,7 +22,7 @@ type Server struct {
 }
 
 // NewServer 创建HTTP服务
-func NewServer(config *config.Config, handlers ...handler.Handler) *Server {
+func NewServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *Server {
 	// 设置gin模式
 	if !config.App.Debug {
 		gin.SetMode(gin.ReleaseMode)
@@ -34,8 +34,8 @@ func NewServer(config *config.Config, handlers ...handler.Handler) *Server {
 	engine.Use(middleware.CORS())
 	engine.Use(middleware.StartTrace())
 
-	// 注册处理器
-	ifaceHttp.RegisterHandlers(engine, handlers...)
+	// 注册路由
+	router.SetupRouter(engine, handlerRegistry)
 
 	return &Server{
 		config: config,

@@ -1,0 +1,137 @@
+# 配置文件版本
+version: 2
+
+run:
+  # 超时设置
+  timeout: 5m
+  # 设置最大并行数
+  concurrency: 4
+  # 允许的 Go 版本
+  go: '1.24'
+  # 分析模式
+  allow-parallel-runners: true
+  # 忽略 Go 版本检查
+  allow-newer-go-version: true
+  # 跳过目录
+  skip-dirs:
+    - vendor
+    - third_party
+    - testdata
+    - examples
+    - Godeps
+    - builtin
+    - scripts
+    - uploads
+    - var
+  # 跳过文件
+  skip-files:
+    - ".*\\.pb\\.go$"
+    - ".*\\.gen\\.go$"
+
+# 输出配置
+output:
+  # 输出格式
+  format: colored-line-number
+  # 打印行号
+  print-issued-lines: true
+  # 打印linter名称
+  print-linter-name: true
+
+# linter 设置
+linters:
+  disable-all: true
+  enable:
+    - errcheck
+    - govet
+    - ineffassign
+    - staticcheck
+    - unused
+    - misspell
+    - revive
+    - gosec
+    - unparam
+    - unconvert
+    - gocritic
+    - bodyclose
+    - gocyclo
+    - dogsled
+    - dupl
+    - funlen
+    - whitespace
+
+# formatters 设置
+formatters:
+  enable:
+    - gofmt
+    - goimports
+
+# linter 配置
+linters-settings:
+  gocyclo:
+    # 循环复杂度阈值
+    min-complexity: 15
+  dupl:
+    # 重复代码阈值
+    threshold: 100
+  govet:
+    # 检查影子变量
+    check-shadowing: true
+  funlen:
+    # 函数长度限制
+    lines: 100
+    statements: 50
+  goimports:
+    # 本地包前缀
+    local-prefixes: github.com/dysodeng/app
+  revive:
+    # 规则配置
+    rules:
+      - name: exported
+        severity: warning
+        disabled: false
+  gocritic:
+    # 启用的检查器
+    enabled-checks:
+      - appendAssign
+      - appendCombine
+      - assignOp
+      - captLocal
+      - caseOrder
+      - defaultCaseOrder
+      - dupBranchBody
+      - dupSubExpr
+      - elseif
+      - emptyFallthrough
+      - emptyStringTest
+      - hexLiteral
+      - ifElseChain
+      - rangeExprCopy
+      - regexpMust
+      - sloppyLen
+      - switchTrue
+      - typeSwitchVar
+      - underef
+      - unlambda
+      - unslice
+
+# 问题配置
+issues:
+  # 排除的问题
+  exclude-rules:
+    - path: _test\.go
+      linters:
+        - gocyclo
+        - errcheck
+        - dupl
+        - gosec
+        - funlen
+    - path: mock\.go
+      linters:
+        - revive
+        - unused
+  # 最大问题数
+  max-issues-per-linter: 0
+  # 最大同类问题数
+  max-same-issues: 0
+  # 修复建议
+  fix: false

@@ -23,17 +23,6 @@ func NewUserHandler(userAppService *service.UserAppService) *UserHandler {
 	}
 }
 
-// RegisterRoutes 注册路由
-func (h *UserHandler) RegisterRoutes(r *gin.RouterGroup) {
-	users := r.Group("/users")
-	{
-		users.POST("", h.Register)
-		users.GET("/:id", h.GetUser)
-		users.GET("", h.ListUsers)
-		users.DELETE("/:id", h.DeleteUser)
-	}
-}
-
 // Register 用户注册
 func (h *UserHandler) Register(c *gin.Context) {
 	var req struct {

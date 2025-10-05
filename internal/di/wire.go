@@ -7,6 +7,8 @@ import (
 	"context"
 
 	"github.com/google/wire"
+
+	"github.com/dysodeng/app/internal/interfaces/http"
 )
 
 // InitApp 初始化应用程序
@@ -14,7 +16,7 @@ func InitApp(ctx context.Context) (*App, error) {
 	panic(wire.Build(
 		InfrastructureSet, // 基础设施
 		AllModulesSet,     // 业务模块
-		ProvideModuleRegistry,
+		http.NewHandlerRegistry,
 		ProvideHTTPServer,
 		ProvideGRPCServer,
 		ProvideWebSocketServer,

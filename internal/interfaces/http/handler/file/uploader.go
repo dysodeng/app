@@ -27,17 +27,6 @@ func NewUploaderHandler(uploaderService service.UploaderApplicationService) *Upl
 	}
 }
 
-func (c *UploaderHandler) RegisterRoutes(r *gin.RouterGroup) {
-	file := r.Group("/file")
-	{
-		file.POST("/upload", c.UploadFile)
-		file.POST("/upload/multipart/init", c.InitMultipartUpload)
-		file.POST("/upload/multipart/part", c.UploadPart)
-		file.POST("/upload/multipart/complete", c.CompleteMultipartUpload)
-		file.POST("/upload/multipart/status", c.MultipartUploadStatus)
-	}
-}
-
 // UploadFile 上传文件
 func (c *UploaderHandler) UploadFile(ctx *gin.Context) {
 	spanCtx, span := trace.Tracer().Start(trace.Gin(ctx), c.baseTraceSpanName+".UploadFile")
