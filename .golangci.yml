@@ -89,6 +89,12 @@ linters-settings:
       - name: exported
         severity: warning
         disabled: false
+      - name: package-comments
+        severity: warning
+        disabled: true
+      - name: var-naming
+        severity: warning
+        disabled: true
   gocritic:
     # 启用的检查器
     enabled-checks:

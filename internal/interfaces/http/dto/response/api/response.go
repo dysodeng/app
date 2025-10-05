@@ -14,8 +14,8 @@ type Response[T any] struct {
 	Data T `json:"data"`
 	// Message 错误信息
 	Message string `json:"message"`
-	// TraceId 追踪id
-	TraceId string `json:"trace_id"`
+	// TraceID 追踪id
+	TraceID string `json:"trace_id"`
 }
 
 // Record 分页列表记录结构
@@ -30,16 +30,16 @@ func Success[T any](ctx context.Context, result T) Response[T] {
 		Code:    CodeOk,
 		Data:    result,
 		Message: "success",
-		TraceId: trace.ParseContextTraceId(ctx),
+		TraceID: trace.ParseContextTraceId(ctx),
 	}
 }
 
 // Fail 失败响应
-func Fail(ctx context.Context, error string, code Code) Response[any] {
+func Fail(ctx context.Context, message string, code Code) Response[any] {
 	return Response[any]{
 		Code:    code,
 		Data:    nil,
-		Message: error,
-		TraceId: trace.ParseContextTraceId(ctx),
+		Message: message,
+		TraceID: trace.ParseContextTraceId(ctx),
 	}
 }

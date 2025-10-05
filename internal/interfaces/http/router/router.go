@@ -6,7 +6,8 @@ import (
 	"github.com/dysodeng/app/internal/interfaces/http"
 )
 
-func SetupRouter(router *gin.Engine, registry *http.HandlerRegistry) {
+// RegisterRouter 注册路由
+func RegisterRouter(router *gin.Engine, registry *http.HandlerRegistry) {
 	api := router.Group("v1")
 	{
 		users := api.Group("/users")

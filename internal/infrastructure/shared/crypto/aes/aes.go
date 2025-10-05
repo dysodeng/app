@@ -22,7 +22,7 @@ func Encrypt(plantText, key, iv []byte) ([]byte, error) {
 }
 
 func Decrypt(ciphertext, key, iv []byte) ([]byte, error) {
-	keyBytes := []byte(key)
+	keyBytes := key
 	block, err := aes.NewCipher(keyBytes)
 	if err != nil {
 		return nil, err

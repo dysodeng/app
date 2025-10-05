@@ -20,6 +20,7 @@ type UploaderHandler struct {
 	uploaderService   service.UploaderApplicationService
 }
 
+// NewUploaderHandler 创建文件上传控制器
 func NewUploaderHandler(uploaderService service.UploaderApplicationService) *UploaderHandler {
 	return &UploaderHandler{
 		baseTraceSpanName: "api.http.controller.file.UploaderHandler",

@@ -51,12 +51,12 @@ func (h *UserHandler) Register(c *gin.Context) {
 // GetUser 获取用户信息
 func (h *UserHandler) GetUser(c *gin.Context) {
 	idStr := c.Param("id")
-	userId, err := uuid.Parse(idStr)
+	userID, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusOK, api.Fail(c, "无效的用户ID", api.CodeFail))
 		return
 	}
-	user, err := h.userAppService.GetUser(c.Request.Context(), userId)
+	user, err := h.userAppService.GetUser(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "用户不存在"})
 		return
@@ -110,13 +110,13 @@ func (h *UserHandler) ListUsers(c *gin.Context) {
 // DeleteUser 删除用户
 func (h *UserHandler) DeleteUser(c *gin.Context) {
 	idStr := c.Param("id")
-	userId, err := uuid.Parse(idStr)
+	userID, err := uuid.Parse(idStr)
 	if err != nil {
 		c.JSON(http.StatusOK, api.Fail(c, "无效的用户ID", api.CodeFail))
 		return
 	}
 
-	err = h.userAppService.DeleteUser(c.Request.Context(), userId)
+	err = h.userAppService.DeleteUser(c.Request.Context(), userID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

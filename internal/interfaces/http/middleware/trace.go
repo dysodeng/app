@@ -23,21 +23,21 @@ func StartTrace() gin.HandlerFunc {
 			ctx.Request = ctx.Request.WithContext(savedCtx)
 		}()
 
-		traceIdByHex := ctx.Request.Header.Get("X-Trace-Id")
-		spanIdByHex := ctx.Request.Header.Get("X-Span-Id")
+		traceIDByHex := ctx.Request.Header.Get("X-Trace-Id")
+		spanIDByHex := ctx.Request.Header.Get("X-Span-Id")
 
 		var newCtx context.Context
-		if traceIdByHex != "" {
-			traceId, _ := oteltrace.TraceIDFromHex(traceIdByHex)
-			spanId, _ := oteltrace.SpanIDFromHex(spanIdByHex)
+		if traceIDByHex != "" {
+			traceID, _ := oteltrace.TraceIDFromHex(traceIDByHex)
+			spanID, _ := oteltrace.SpanIDFromHex(spanIDByHex)
 			spanCtx := oteltrace.NewSpanContext(oteltrace.SpanContextConfig{
-				TraceID:    traceId,
-				SpanID:     spanId,
+				TraceID:    traceID,
+				SpanID:     spanID,
 				TraceFlags: oteltrace.FlagsSampled,
 				Remote:     true,
 			})
 			carrier := propagation.HeaderCarrier{}
-			carrier.Set("X-Trace-Id", traceIdByHex)
+			carrier.Set("X-Trace-Id", traceIDByHex)
 			newCtx = oteltrace.ContextWithRemoteSpanContext(otel.GetTextMapPropagator().Extract(savedCtx, carrier), spanCtx)
 		} else {
 			newCtx = otel.GetTextMapPropagator().Extract(savedCtx, propagation.HeaderCarrier(ctx.Request.Header))

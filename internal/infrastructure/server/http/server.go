@@ -35,7 +35,7 @@ func NewServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *Se
 	engine.Use(middleware.StartTrace())
 
 	// 注册路由
-	router.SetupRouter(engine, handlerRegistry)
+	router.RegisterRouter(engine, handlerRegistry)
 
 	return &Server{
 		config: config,

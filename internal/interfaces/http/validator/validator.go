@@ -43,6 +43,7 @@ func TransError(err error) string {
 	return err.Error()
 }
 
+// Translator 获取验证器
 func Translator() ut.Translator {
 	return trans
 }
