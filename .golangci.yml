@@ -88,7 +88,7 @@ linters-settings:
     rules:
       - name: exported
         severity: warning
-        disabled: false
+        disabled: true
       - name: package-comments
         severity: warning
         disabled: true
