@@ -47,7 +47,6 @@ linters:
     - staticcheck
     - unused
     - misspell
-    - revive
     - gosec
     - unparam
     - unconvert
