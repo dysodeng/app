@@ -4,8 +4,8 @@ package model
 type BinaryStatus uint8
 
 const (
-	BinaryStatusYes BinaryStatus = 1
-	BinaryStatusNo  BinaryStatus = 0
+	BinaryStatusTrue  BinaryStatus = 1
+	BinaryStatusFalse BinaryStatus = 0
 )
 
 func (s BinaryStatus) Bool() bool {
@@ -18,14 +18,14 @@ func (s BinaryStatus) Uint() uint8 {
 
 func BinaryStatusByBool(status bool) BinaryStatus {
 	if status {
-		return BinaryStatusYes
+		return BinaryStatusTrue
 	}
-	return BinaryStatusNo
+	return BinaryStatusFalse
 }
 
 func BinaryStatusByUint(status uint8) BinaryStatus {
 	if status > 0 {
-		return BinaryStatusYes
+		return BinaryStatusTrue
 	}
-	return BinaryStatusNo
+	return BinaryStatusFalse
 }

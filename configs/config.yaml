@@ -172,3 +172,21 @@ monitor:
   log: # 日志
     otlp_enable: false # 是否开启数据上报
     otlp_endpoint: "http://127.0.0.1:4318" # 上报地址
+
+# 第三方服务配置
+third_party:
+  wx: # 微信平台
+    mini_program:
+      app_id:
+      secret:
+  tts: # 语音服务
+    tts_provider: "" # 文字转语音供应商
+    tts_voice: "zhistella" # 文字转语音音色
+    tts_voice_format: "wav" # 文字转语音音频格式
+    speech_provider: "" # 语音转文字供应商
+    speech_voice_format: "PCM" # 语音转文字音频格式
+    provider:
+      aliyun:
+        access_key_id: ""
+        access_key_secret: ""
+        app_key: ""

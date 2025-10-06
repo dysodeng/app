@@ -15,13 +15,14 @@ var GlobalConfig *Config
 
 // Config 应用配置
 type Config struct {
-	App      AppConfig      `mapstructure:"app"`
-	Server   Server         `mapstructure:"server"`
-	Security Security       `mapstructure:"security"`
-	Database DatabaseConfig `mapstructure:"database"`
-	Redis    Redis          `mapstructure:"redis"`
-	Storage  Storage        `mapstructure:"storage"`
-	Monitor  Monitor        `mapstructure:"monitor"`
+	App        AppConfig      `mapstructure:"app"`
+	Server     Server         `mapstructure:"server"`
+	Security   Security       `mapstructure:"security"`
+	Database   DatabaseConfig `mapstructure:"database"`
+	Redis      Redis          `mapstructure:"redis"`
+	Storage    Storage        `mapstructure:"storage"`
+	Monitor    Monitor        `mapstructure:"monitor"`
+	ThirdParty ThirdParty     `mapstructure:"third_party"`
 }
 
 // LoadConfig 加载配置
@@ -87,14 +88,22 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	var thirdPartyConfig ThirdParty
+	thirdParty := v.Sub("third_party")
+	thirdPartyBindEnv(thirdParty)
+	if err := thirdParty.Unmarshal(&thirdPartyConfig); err != nil {
+		return nil, err
+	}
+
 	config := Config{
-		App:      appConfig,
-		Server:   serverConfig,
-		Security: securityConfig,
-		Database: databaseConfig,
-		Redis:    redisConfig,
-		Storage:  storageConfig,
-		Monitor:  monitorConfig,
+		App:        appConfig,
+		Server:     serverConfig,
+		Security:   securityConfig,
+		Database:   databaseConfig,
+		Redis:      redisConfig,
+		Storage:    storageConfig,
+		Monitor:    monitorConfig,
+		ThirdParty: thirdPartyConfig,
 	}
 
 	GlobalConfig = &config

@@ -9,15 +9,15 @@ package di
 import (
 	"context"
 
-	service2 "github.com/dysodeng/app/internal/application/file/service"
-	service4 "github.com/dysodeng/app/internal/application/service"
-	"github.com/dysodeng/app/internal/domain/file/service"
-	service3 "github.com/dysodeng/app/internal/domain/service"
-	"github.com/dysodeng/app/internal/infrastructure/persistence/repository"
+	service4 "github.com/dysodeng/app/internal/application/file/service"
+	service2 "github.com/dysodeng/app/internal/application/passport/service"
+	service3 "github.com/dysodeng/app/internal/domain/file/service"
+	"github.com/dysodeng/app/internal/domain/user/service"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/interfaces/http"
-	"github.com/dysodeng/app/internal/interfaces/http/handler"
 	file2 "github.com/dysodeng/app/internal/interfaces/http/handler/file"
+	"github.com/dysodeng/app/internal/interfaces/http/handler/passport"
 )
 
 // Injectors from wire.go:
@@ -48,16 +48,16 @@ func InitApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	userRepository := user.NewUserRepository(transactionManager)
+	userDomainService := service.NewUserDomainService(userRepository)
+	passportApplicationService := service2.NewPassportApplicationService(userDomainService)
+	handler := passport.NewPassportHandler(passportApplicationService)
 	fileRepository := file.NewFileRepository(transactionManager)
 	uploaderRepository := file.NewUploaderRepository(transactionManager)
-	uploaderDomainService := service.NewUploaderDomainService(transactionManager, fileRepository, uploaderRepository)
-	uploaderApplicationService := service2.NewUploaderApplicationService(uploaderDomainService)
+	uploaderDomainService := service3.NewUploaderDomainService(transactionManager, fileRepository, uploaderRepository)
+	uploaderApplicationService := service4.NewUploaderApplicationService(uploaderDomainService)
 	uploaderHandler := file2.NewUploaderHandler(uploaderApplicationService)
-	userRepository := repository.NewUserRepository(transactionManager)
-	userService := service3.NewUserService(userRepository)
-	userAppService := service4.NewUserAppService(userService)
-	userHandler := handler.NewUserHandler(userAppService)
-	handlerRegistry := http.NewHandlerRegistry(uploaderHandler, userHandler)
+	handlerRegistry := http.NewHandlerRegistry(handler, uploaderHandler)
 	server := ProvideHTTPServer(config, handlerRegistry)
 	grpcServer := ProvideGRPCServer(config)
 	websocketServer := ProvideWebSocketServer(config)

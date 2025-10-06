@@ -34,6 +34,11 @@ func NewServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *Se
 	engine.Use(middleware.CORS())
 	engine.Use(middleware.StartTrace())
 
+	// 静态资源管理
+	if config.Storage.Driver == "local" && config.Storage.Local.StaticEnabled {
+		engine.Static("/uploads", "./uploads")
+	}
+
 	// 注册路由
 	router.RegisterRouter(engine, handlerRegistry)
 
