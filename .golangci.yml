@@ -27,6 +27,7 @@ run:
   skip-files:
     - ".*\\.pb\\.go$"
     - ".*\\.gen\\.go$"
+    - "wire_gen\\.go$"
 
 # 输出配置
 output:

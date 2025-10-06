@@ -7,7 +7,6 @@ import (
 
 	"gorm.io/driver/mysql"
 	"gorm.io/driver/postgres"
-	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/schema"
 
@@ -46,8 +45,6 @@ func initMainDB(cfg *config.Config) *gorm.DB {
 			cfg.Database.Port,
 		)
 		dbConnector = postgres.Open(dsn)
-	case "sqlite3":
-		dbConnector = sqlite.Open(cfg.Database.Database)
 	}
 
 	dbDriver = driver
