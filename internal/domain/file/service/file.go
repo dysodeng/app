@@ -5,6 +5,7 @@ import (
 
 	"github.com/google/uuid"
 
+	"github.com/dysodeng/app/internal/domain/file/errors"
 	"github.com/dysodeng/app/internal/domain/file/model"
 	"github.com/dysodeng/app/internal/domain/file/repository"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
@@ -34,16 +35,16 @@ func NewFileDomainService(fileRepository repository.FileRepository) FileDomainSe
 func (svc *fileDomainService) CheckFileNameAvailable(ctx context.Context, name string, excludeId uuid.UUID) error {
 	// 检查文件名是否为空
 	if name == "" {
-		return model.ErrFileNameEmpty
+		return errors.ErrFileNameEmpty
 	}
 
 	// 检查同名文件
 	exists, err := svc.fileRepository.CheckFileNameExists(ctx, name, excludeId)
 	if err != nil {
-		return model.ErrFileQueryFailed.Wrap(err)
+		return errors.ErrFileQueryFailed.Wrap(err)
 	}
 	if exists {
-		return model.ErrFileNameExists
+		return errors.ErrFileNameExists
 	}
 
 	return nil
@@ -54,11 +55,11 @@ func (svc *fileDomainService) Info(ctx context.Context, id uuid.UUID) (*model.Fi
 	defer span.End()
 
 	if id == uuid.Nil {
-		return nil, model.ErrFileIDEmpty
+		return nil, errors.ErrFileIDEmpty
 	}
 	file, err := svc.fileRepository.FindByID(spanCtx, id)
 	if err != nil {
-		return nil, model.ErrFileQueryFailed.Wrap(err)
+		return nil, errors.ErrFileQueryFailed.Wrap(err)
 	}
 	return file, nil
 }
@@ -80,7 +81,7 @@ func (svc *fileDomainService) List(ctx context.Context, mediaType model.MediaTyp
 	// 调用仓储接口查询
 	list, total, err := svc.fileRepository.FindList(spanCtx, query)
 	if err != nil {
-		return nil, 0, model.ErrFileQueryFailed.Wrap(err)
+		return nil, 0, errors.ErrFileQueryFailed.Wrap(err)
 	}
 
 	return list, total, nil
@@ -93,19 +94,19 @@ func (svc *fileDomainService) Delete(ctx context.Context, id uuid.UUID, ids []uu
 	if id != uuid.Nil {
 		file, err := svc.fileRepository.FindByID(spanCtx, id)
 		if err != nil {
-			return model.ErrFileQueryFailed.Wrap(err)
+			return errors.ErrFileQueryFailed.Wrap(err)
 		}
 		if file.ID == uuid.Nil {
-			return model.ErrFileNotFound
+			return errors.ErrFileNotFound
 		}
 		if err = svc.fileRepository.Delete(spanCtx, id); err != nil {
-			return model.ErrFileDeleteFailed.Wrap(err)
+			return errors.ErrFileDeleteFailed.Wrap(err)
 		}
 	}
 
 	if len(ids) > 0 {
 		if err := svc.fileRepository.BatchDelete(spanCtx, ids); err != nil {
-			return model.ErrFileDeleteFailed.Wrap(err)
+			return errors.ErrFileDeleteFailed.Wrap(err)
 		}
 	}
 

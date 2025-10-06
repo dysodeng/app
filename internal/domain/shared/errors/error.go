@@ -7,11 +7,24 @@ import (
 	"strings"
 )
 
+// 标准错误包的常用函数别名，方便使用
+var (
+	As     = errors.As
+	Is     = errors.Is
+	New    = errors.New
+	Unwrap = errors.Unwrap
+)
+
 // DomainError 领域错误基础类型
 type DomainError struct {
-	Code    string
+	// 错误码，用于唯一标识错误类型
+	Code string
+	// 错误消息，用于向用户展示
 	Message string
-	Err     error
+	// 原始错误，用于错误链和调试
+	Err error
+	// 领域名称，标识错误所属的领域
+	Domain string
 }
 
 func (e *DomainError) Error() string {
@@ -42,6 +55,7 @@ func (e *DomainError) WrapNew(err error) *DomainError {
 	return &DomainError{
 		Code:    e.Code,
 		Message: e.Message,
+		Domain:  e.Domain,
 		Err:     err,
 	}
 }
@@ -79,7 +93,7 @@ func (e *DomainError) Format(s fmt.State, verb rune) {
 // formatVerbose 生成详细的错误信息，包括完整错误链（不含堆栈）
 func (e *DomainError) formatVerbose() string {
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("DomainError{Code: %q, Message: %q", e.Code, e.Message))
+	builder.WriteString(fmt.Sprintf("DomainError{Domain: %q, Code: %q, Message: %q", e.Domain, e.Code, e.Message))
 	// 如果有包装的错误，递归显示错误链
 	if e.Err != nil {
 		builder.WriteString(", Err: ")
@@ -140,7 +154,11 @@ func FormatErrorChain(err error) string {
 		// 检查是否是 DomainError
 		var domainErr *DomainError
 		if errors.As(current, &domainErr) {
-			result.WriteString(fmt.Sprintf("[%s] %s", domainErr.Code, domainErr.Message))
+			if domainErr.Domain != "" {
+				result.WriteString(fmt.Sprintf("[%s:%s] %s", domainErr.Domain, domainErr.Code, domainErr.Message))
+			} else {
+				result.WriteString(fmt.Sprintf("[%s] %s", domainErr.Code, domainErr.Message))
+			}
 		} else {
 			result.WriteString(current.Error())
 		}
@@ -153,8 +171,9 @@ func FormatErrorChain(err error) string {
 }
 
 // NewDomainError 创建带上下文的错误
-func NewDomainError(code, message string, err error) *DomainError {
+func NewDomainError(domain, code, message string, err error) *DomainError {
 	return &DomainError{
+		Domain:  domain,
 		Code:    code,
 		Message: message,
 		Err:     err,

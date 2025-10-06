@@ -4,8 +4,7 @@ import (
 	"context"
 	"strings"
 
-	"github.com/pkg/errors"
-
+	"github.com/dysodeng/app/internal/domain/user/errors"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 )
 
@@ -60,7 +59,7 @@ func (o WxMiniProgramOpenID) Value() string {
 
 func (o WxMiniProgramOpenID) Validate() error {
 	if o.value == "" {
-		return errors.New("OpenID为空")
+		return errors.ErrUserWxOpenIDEmpty
 	}
 	return nil
 }
@@ -89,7 +88,7 @@ func (o WxOfficialOpenID) Value() string {
 
 func (o WxOfficialOpenID) Validate() error {
 	if o.value == "" {
-		return errors.New("OpenID为空")
+		return errors.ErrUserWxOpenIDEmpty
 	}
 	return nil
 }
@@ -129,7 +128,7 @@ func (a Avatar) RelativePath() string {
 
 func (a Avatar) Validate() error {
 	if a.value == "" {
-		return errors.New("头像地址为空")
+		return errors.ErrUserAvatarEmpty
 	}
 	return nil
 }

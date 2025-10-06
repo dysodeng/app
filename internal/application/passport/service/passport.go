@@ -6,17 +6,20 @@ import (
 
 	"github.com/dysodeng/wx/mini_program/auth"
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	"github.com/dysodeng/app/internal/application/passport/dto/command"
 	"github.com/dysodeng/app/internal/application/passport/dto/response"
+	passportErrors "github.com/dysodeng/app/internal/domain/passport/errors"
 	"github.com/dysodeng/app/internal/domain/passport/model"
 	"github.com/dysodeng/app/internal/domain/passport/valueobject"
+	sharedErrors "github.com/dysodeng/app/internal/domain/shared/errors"
+	userErrors "github.com/dysodeng/app/internal/domain/user/errors"
 	userModel "github.com/dysodeng/app/internal/domain/user/model"
 	"github.com/dysodeng/app/internal/domain/user/repository"
 	"github.com/dysodeng/app/internal/domain/user/service"
-	valueobject2 "github.com/dysodeng/app/internal/domain/user/valueobject"
+	userVO "github.com/dysodeng/app/internal/domain/user/valueobject"
 	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
 	"github.com/dysodeng/app/internal/infrastructure/shared/token"
@@ -57,7 +60,7 @@ func (svc *passportApplicationService) Login(ctx context.Context, cmd *command.L
 			return nil, err
 		}
 		if info == nil {
-			return nil, errors.New("登录失败")
+			return nil, passportErrors.ErrLoginFailed
 		}
 		if !info.Registered {
 			return &response.LoginResponse{Registered: false}, nil
@@ -74,7 +77,7 @@ func (svc *passportApplicationService) Login(ctx context.Context, cmd *command.L
 
 	case "ams":
 	default:
-		return nil, errors.New("用户类型错误")
+		return nil, passportErrors.ErrLoginUserTypeInvalid
 	}
 
 	tokenClaims, err := token.GenerateToken(cmd.UserType, data, attach)
@@ -99,11 +102,11 @@ func (svc *passportApplicationService) RefreshToken(ctx context.Context, refresh
 	claims, err := token.VerifyToken(refreshToken)
 	if err != nil {
 		trace.Error(err, span)
-		return nil, errors.New("token无效")
+		return nil, passportErrors.ErrTokenInvalid.Wrap(err)
 	}
 
 	if claims["is_refresh_token"] == false {
-		return nil, errors.New("业务token不能用于刷新token")
+		return nil, passportErrors.ErrBizTokenCannotUsedForRefreshToken
 	}
 
 	var data map[string]interface{}
@@ -115,11 +118,12 @@ func (svc *passportApplicationService) RefreshToken(ctx context.Context, refresh
 		platformType := claims["platform_type"].(string)
 		userId := helper.IfaceConvertString(claims["user_id"])
 		if userId == "" {
-			return nil, errors.New("用户信息错误")
+			return nil, userErrors.ErrUserInvalidInfo
 		}
 		uid, err := uuid.Parse(userId)
 		if err != nil {
-			return nil, errors.New("用户信息错误")
+			logger.Error(spanCtx, userErrors.ErrUserInvalidInfo.Message, logger.ErrorField(err))
+			return nil, userErrors.ErrUserInvalidInfo.Wrap(err)
 		}
 
 		user, err := svc.userDomainService.UserInfo(spanCtx, uid)
@@ -127,7 +131,7 @@ func (svc *passportApplicationService) RefreshToken(ctx context.Context, refresh
 			return nil, err
 		}
 		if !user.Status.Bool() {
-			return nil, errors.New("用户已被禁止登录")
+			return nil, userErrors.ErrUserDisabled
 		}
 
 		data = map[string]interface{}{
@@ -138,11 +142,12 @@ func (svc *passportApplicationService) RefreshToken(ctx context.Context, refresh
 	case "ams": // 管理员
 
 	default:
-		return nil, errors.New("用户类型错误")
+		return nil, passportErrors.ErrLoginUserTypeInvalid
 	}
 
 	tokenClaims, err := token.GenerateToken(userType, data, attach)
 	if err != nil {
+		logger.Error(spanCtx, "token生成失败", logger.ErrorField(err))
 		return nil, err
 	}
 
@@ -163,18 +168,18 @@ func (svc *passportApplicationService) VerifyToken(ctx context.Context, cmd *com
 	claims, err := token.VerifyToken(cmd.Token)
 	if err != nil {
 		trace.Error(err, span)
-		return nil, errors.New("token无效")
+		return nil, passportErrors.ErrTokenInvalid.Wrap(err)
 	}
 
 	if claims["is_refresh_token"] == true {
-		return nil, errors.New("刷新token不能用于业务请求")
+		return nil, passportErrors.ErrRefreshTokenCannotUsedForBizToken
 	}
 
 	var data map[string]interface{}
 
 	userType := claims["user_type"].(string)
 	if userType != cmd.UserType {
-		return nil, errors.New("Unauthorized Access")
+		return nil, sharedErrors.ErrCommonUnauthorized
 	}
 
 	switch userType {
@@ -182,11 +187,11 @@ func (svc *passportApplicationService) VerifyToken(ctx context.Context, cmd *com
 		platformType := claims["platform_type"].(string)
 		userId := helper.IfaceConvertString(claims["user_id"])
 		if userId == "" {
-			return nil, errors.New("用户信息错误")
+			return nil, userErrors.ErrUserInvalidInfo
 		}
 		uid, err := uuid.Parse(userId)
 		if err != nil {
-			return nil, errors.New("用户信息错误")
+			return nil, userErrors.ErrUserInvalidInfo
 		}
 
 		user, err := svc.userDomainService.UserInfo(spanCtx, uid)
@@ -194,7 +199,7 @@ func (svc *passportApplicationService) VerifyToken(ctx context.Context, cmd *com
 			return nil, err
 		}
 		if !user.Status.Bool() {
-			return nil, errors.New("用户已被禁止登录")
+			return nil, userErrors.ErrUserDisabled
 		}
 
 		data = map[string]interface{}{
@@ -205,7 +210,7 @@ func (svc *passportApplicationService) VerifyToken(ctx context.Context, cmd *com
 	case "ams":
 
 	default:
-		return nil, errors.New("Unauthorized Access")
+		return nil, sharedErrors.ErrCommonUnauthorized
 	}
 
 	return data, nil
@@ -222,26 +227,30 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 			return nil, err
 		}
 		if openId == "" {
-			return nil, errors.New("微信用户信息获取失败")
+			return nil, passportErrors.ErrPassportGetWxUserFailed
 		}
 
 		var userInfo *userModel.User
 		if unionId != "" {
 			userInfo, err = svc.userDomainService.FindByWxUnionId(ctx, unionId)
 			if err != nil {
-				return nil, errors.New("微信用户信息获取失败")
+				return nil, passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
 			}
 		}
 		if userInfo == nil {
 			userInfo, err = svc.userDomainService.FindByOpenId(ctx, valueobject.PlatformWxMinioProgram.String(), openId)
 			if err != nil {
-				return nil, errors.New("微信用户信息获取失败")
+				return nil, passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
 			}
 		}
 
 		if userInfo == nil || userInfo.ID == uuid.Nil {
 			return &model.UserLoginInfo{Registered: false}, nil
 		}
+		if !userInfo.Status.Bool() {
+			return nil, userErrors.ErrUserDisabled
+		}
+
 		user = userInfo
 		platformType = valueobject.PlatformWxMinioProgram
 
@@ -251,20 +260,20 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 			return nil, err
 		}
 		if openId == "" {
-			return nil, errors.New("微信用户信息获取失败")
+			return nil, passportErrors.ErrPassportGetWxUserFailed
 		}
 
 		phone, err := wx.MiniProgram().User().GetPhoneNumber(cmd.Code, openId)
 		if err != nil {
-			return nil, errors.New("微信用户信息获取失败")
+			return nil, passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
 		}
 		if phone == nil || phone.PurePhoneNumber == "" {
-			return nil, errors.New("手机号解析失败")
+			return nil, userErrors.ErrUserWxTelephoneParsingFailed
 		}
 
 		userInfo, err := svc.userDomainService.FindByTelephone(ctx, phone.PurePhoneNumber)
 		if err != nil {
-			return nil, errors.New("微信用户信息获取失败")
+			return nil, passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
 		}
 		if userInfo == nil || userInfo.ID == uuid.Nil {
 			// 注册
@@ -275,15 +284,15 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 
 			err = svc.userRepository.Save(ctx, userInfo)
 			if err != nil {
-				return nil, errors.New("用户注册失败")
+				return nil, userErrors.ErrUserRegisterFailed.Wrap(err)
 			}
 		} else {
 			if userInfo.WxMiniProgramOpenID.Value() != openId {
-				return nil, errors.New("当前手机号已绑定其它微信用户")
+				return nil, userErrors.ErrUserTelephoneBound
 			}
 			// 更新微信绑定
-			openIdVo, _ := valueobject2.NewWxMiniProgramOpenID(openId)
-			unionidVo, _ := valueobject2.NewWxUnionID(unionId)
+			openIdVo, _ := userVO.NewWxMiniProgramOpenID(openId)
+			unionidVo, _ := userVO.NewWxUnionID(unionId)
 			userInfo.WxMiniProgramOpenID = openIdVo
 			userInfo.WxUnionID = unionidVo
 			_ = svc.userRepository.Save(ctx, userInfo)
@@ -298,14 +307,14 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 			return nil, err
 		}
 		if userInfo == nil || userInfo.ID == uuid.Nil {
-			return nil, errors.New("用户不存在")
+			return nil, userErrors.ErrUserNotFound
 		}
 
 		user = userInfo
 		platformType = valueobject.PlatformWxMinioProgram
 
 	default:
-		return nil, errors.New("登录类型错误")
+		return nil, passportErrors.ErrPassportUserGrantTypeInvalid
 	}
 
 	return &model.UserLoginInfo{
@@ -339,7 +348,8 @@ func (svc *passportApplicationService) getSessionKeyByCode(ctx context.Context, 
 		var session auth.Session
 		session, err = wx.MiniProgram().Auth().Session(code)
 		if err != nil {
-			return "", "", "", errors.New("微信用户信息获取失败")
+			logger.Error(ctx, passportErrors.ErrPassportGetWxUserFailed.Message, logger.ErrorField(err))
+			return "", "", "", passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
 		}
 
 		openId = session.Openid

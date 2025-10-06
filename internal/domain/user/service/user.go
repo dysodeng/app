@@ -4,9 +4,9 @@ import (
 	"context"
 
 	"github.com/google/uuid"
-	"github.com/pkg/errors"
 
 	sharedVO "github.com/dysodeng/app/internal/domain/shared/valueobject"
+	"github.com/dysodeng/app/internal/domain/user/errors"
 	"github.com/dysodeng/app/internal/domain/user/model"
 	"github.com/dysodeng/app/internal/domain/user/repository"
 	"github.com/dysodeng/app/internal/domain/user/valueobject"
@@ -40,11 +40,11 @@ func (svc *userDomainService) UserInfo(ctx context.Context, id uuid.UUID) (*mode
 
 	user, err := svc.userRepository.FindById(spanCtx, id)
 	if err != nil {
-		logger.Error(spanCtx, "用户查询失败", logger.ErrorField(err))
-		return nil, errors.New("用户查询失败")
+		logger.Error(spanCtx, errors.ErrUserQueryFailed.Message, logger.ErrorField(err))
+		return nil, errors.ErrUserQueryFailed
 	}
 	if user == nil || user.ID == uuid.Nil {
-		return nil, errors.New("用户不存在")
+		return nil, errors.ErrUserNotFound
 	}
 
 	return user, nil
@@ -56,8 +56,8 @@ func (svc *userDomainService) FindByTelephone(ctx context.Context, telephone str
 
 	user, err := svc.userRepository.FindByTelephone(spanCtx, telephone)
 	if err != nil {
-		logger.Error(spanCtx, "用户查询失败", logger.ErrorField(err))
-		return nil, errors.New("用户查询失败")
+		logger.Error(spanCtx, errors.ErrUserQueryFailed.Message, logger.ErrorField(err))
+		return nil, errors.ErrUserQueryFailed
 	}
 	if user == nil || user.ID == uuid.Nil {
 		return &model.User{}, nil
@@ -71,8 +71,8 @@ func (svc *userDomainService) FindByWxUnionId(ctx context.Context, wxUnionId str
 
 	user, err := svc.userRepository.FindByUnionId(spanCtx, wxUnionId)
 	if err != nil {
-		logger.Error(spanCtx, "用户查询失败", logger.ErrorField(err))
-		return nil, errors.New("用户查询失败")
+		logger.Error(spanCtx, errors.ErrUserQueryFailed.Message, logger.ErrorField(err))
+		return nil, errors.ErrUserQueryFailed
 	}
 	if user == nil || user.ID == uuid.Nil {
 		return &model.User{}, nil
@@ -87,8 +87,8 @@ func (svc *userDomainService) FindByOpenId(ctx context.Context, platform, openid
 
 	user, err := svc.userRepository.FindByOpenId(spanCtx, platform, openid)
 	if err != nil {
-		logger.Error(spanCtx, "用户查询失败", logger.ErrorField(err))
-		return nil, errors.New("用户查询失败")
+		logger.Error(spanCtx, errors.ErrUserQueryFailed.Message, logger.ErrorField(err))
+		return nil, errors.ErrUserQueryFailed
 	}
 	if user == nil || user.ID == uuid.Nil {
 		return &model.User{}, nil

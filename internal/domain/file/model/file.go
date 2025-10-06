@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/mozillazg/go-pinyin"
 
+	"github.com/dysodeng/app/internal/domain/file/errors"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 )
 
@@ -55,7 +56,7 @@ func (f FileName) String() string {
 
 func (f FileName) Validate() error {
 	if f == "" {
-		return ErrFileNameEmpty
+		return errors.ErrFileNameEmpty
 	}
 	return nil
 }
@@ -110,10 +111,10 @@ func NewFile(ctx context.Context, name, ext, path, mimeType string, size uint64)
 
 func (f *File) Validate() error {
 	if f == nil {
-		return ErrFileNotFound
+		return errors.ErrFileNotFound
 	}
 	if f.Path == "" {
-		return ErrFilePathEmpty
+		return errors.ErrFilePathEmpty
 	}
 	if err := f.Name.Validate(); err != nil {
 		return err
