@@ -3,6 +3,8 @@ package di
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/infrastructure/shared/mq"
+	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -67,6 +69,11 @@ func ProvideRedis(cfg *config.Config) (redis.Client, error) {
 		return nil, err
 	}
 	return cli, nil
+}
+
+// ProvideMessageQueue 提供消息队列
+func ProvideMessageQueue(cfg *config.Config) (contract.MQ, error) {
+	return mq.Init(cfg)
 }
 
 // ProvideStorage 提供文件存储

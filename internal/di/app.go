@@ -3,6 +3,7 @@ package di
 import (
 	"context"
 
+	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -26,6 +27,7 @@ type App struct {
 	Logger          *zap.Logger
 	TxManager       transactions.TransactionManager
 	RedisClient     redis.Client
+	MessageQueue    contract.MQ
 	Storage         *storage.Storage
 	HandlerRegistry *HTTP.HandlerRegistry
 	HTTPServer      *http.Server
@@ -41,6 +43,7 @@ func NewApp(
 	logger *zap.Logger,
 	txManager transactions.TransactionManager,
 	redisClient redis.Client,
+	messageQueue contract.MQ,
 	storage *storage.Storage,
 	handlerRegistry *HTTP.HandlerRegistry,
 	httpServer *http.Server,
@@ -54,6 +57,7 @@ func NewApp(
 		Logger:          logger,
 		TxManager:       txManager,
 		RedisClient:     redisClient,
+		MessageQueue:    messageQueue,
 		Storage:         storage,
 		HandlerRegistry: handlerRegistry,
 		HTTPServer:      httpServer,
@@ -65,8 +69,9 @@ func NewApp(
 
 // Stop 停止应用相关服务
 func (app *App) Stop(ctx context.Context) error {
-	pipeline := errors.NewPipelineWithContext(ctx)
-	return pipeline.Then(db.Close).Then(func() error {
+	return errors.NewPipelineWithContext(ctx).Then(db.Close).Then(func() error {
 		return app.RedisClient.Close()
+	}).Then(func() error {
+		return app.MessageQueue.Close()
 	}).ExecuteParallel()
 }

@@ -111,6 +111,17 @@ redis:
       max_retries: 3
       pool_size: 100
 
+# 消息队列配置
+message_queue:
+  enabled: true
+  driver: amqp
+  amqp:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    vhost: /
+
 # 文件存储配置
 storage:
   driver: local

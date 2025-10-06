@@ -9,5 +9,6 @@ var InfrastructureSet = wire.NewSet(
 	ProvideLogger,
 	ProvideDB,
 	ProvideRedis,
+	ProvideMessageQueue,
 	ProvideStorage,
 )

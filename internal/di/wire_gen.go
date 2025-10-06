@@ -44,6 +44,10 @@ func InitApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
+	mq, err := ProvideMessageQueue(config)
+	if err != nil {
+		return nil, err
+	}
 	storage, err := ProvideStorage(config)
 	if err != nil {
 		return nil, err
@@ -62,6 +66,6 @@ func InitApp(ctx context.Context) (*App, error) {
 	grpcServer := ProvideGRPCServer(config)
 	websocketServer := ProvideWebSocketServer(config)
 	bus := ProvideEventBus()
-	app := NewApp(config, monitor, logger, transactionManager, client, storage, handlerRegistry, server, grpcServer, websocketServer, bus)
+	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, server, grpcServer, websocketServer, bus)
 	return app, nil
 }
