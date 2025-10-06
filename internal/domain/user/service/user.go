@@ -119,6 +119,9 @@ func (svc *userDomainService) Create(ctx context.Context, telephone, unionId, wx
 		return nil, err
 	}
 	avatarVo, err := valueobject.NewAvatar("")
+	if err != nil {
+		return nil, err
+	}
 
 	user, err := model.NewUser(telephoneVo, unionIdVo, wxMiniProgramOpenIdVo, avatarVo, nickname)
 	if err != nil {

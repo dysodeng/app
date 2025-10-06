@@ -66,9 +66,7 @@ func NewApp(
 // Stop 停止应用相关服务
 func (app *App) Stop(ctx context.Context) error {
 	pipeline := errors.NewPipelineWithContext(ctx)
-	return pipeline.Then(func() error {
-		return db.Close()
-	}).Then(func() error {
+	return pipeline.Then(db.Close).Then(func() error {
 		return app.RedisClient.Close()
 	}).ExecuteParallel()
 }

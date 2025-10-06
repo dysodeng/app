@@ -162,7 +162,7 @@ func CompanyNameHide(companyName, symbol string) string {
 
 func findFirstRange(str []string, target string) int {
 	var pos = -1
-	if len(str) <= 0 {
+	if len(str) == 0 {
 		return pos
 	}
 

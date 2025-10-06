@@ -59,7 +59,8 @@ func RandomString(length int, mode RandomStringMode) string {
 	case ModeComplex:
 		fallthrough
 	default:
-		charset := append(lo.AlphanumericCharset, []rune("!@#$%^&*()_+-=[],./;<>?")...)
+		charset := lo.AlphanumericCharset
+		charset = append(charset, []rune("!@#$%^&*()_+-=[],./;<>?")...)
 		return lo.RandomString(length, charset)
 	}
 }
@@ -121,13 +122,15 @@ func ReplaceString(str string, findSlice, replaceSlice []string) string {
 
 // HideCellphone 隐藏手机号码中间四位
 func HideCellphone(cellphone string) string {
-	if len(cellphone) > 7 {
+	switch {
+	case len(cellphone) > 7:
 		return cellphone[:3] + "****" + cellphone[7:]
-	} else if len(cellphone) > 3 {
+	case len(cellphone) > 3:
 		return cellphone[:3] + "****"
-	} else if len(cellphone) > 0 {
+	case len(cellphone) > 0:
 		return "****"
 	}
+
 	return cellphone
 }
 

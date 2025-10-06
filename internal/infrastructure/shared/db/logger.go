@@ -121,19 +121,17 @@ func (l *GormLogger) Trace(ctx context.Context, begin time.Time, fc func() (stri
 				fmt.Sprintf("SQL SLOW: %s", sql),
 				fields...,
 			)
-		} else {
-			if l.LogLevel == gormLogger.Info {
-				fields := []zap.Field{
-					zap.Any("stack_file", fmt.Sprintf("%s:%d", file, line)),
-					zap.Any("rows", rows),
-					zap.Any("duration", fmt.Sprintf("%dms", duration)),
-				}
-				fields = append(fields, traceFields...)
-				l._zapLogger.Debug(
-					fmt.Sprintf("SQL DEBUG: %s", sql),
-					fields...,
-				)
+		} else if l.LogLevel == gormLogger.Info {
+			fields := []zap.Field{
+				zap.Any("stack_file", fmt.Sprintf("%s:%d", file, line)),
+				zap.Any("rows", rows),
+				zap.Any("duration", fmt.Sprintf("%dms", duration)),
 			}
+			fields = append(fields, traceFields...)
+			l._zapLogger.Debug(
+				fmt.Sprintf("SQL DEBUG: %s", sql),
+				fields...,
+			)
 		}
 	}
 }

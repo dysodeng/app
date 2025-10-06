@@ -217,7 +217,7 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 
 	switch cmd.GrantType {
 	case "wx_code": // 微信小程序code静默登录
-		_, _, openId, unionId, err := svc.getSessionKeyByCode(ctx, cmd.WxCode)
+		_, openId, unionId, err := svc.getSessionKeyByCode(ctx, cmd.WxCode)
 		if err != nil {
 			return nil, err
 		}
@@ -246,7 +246,7 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 		platformType = valueobject.PlatformWxMinioProgram
 
 	case "wx_telephone": // 小程序授权手机号
-		_, _, openId, unionId, err := svc.getSessionKeyByCode(ctx, cmd.WxCode)
+		_, openId, unionId, err := svc.getSessionKeyByCode(ctx, cmd.WxCode)
 		if err != nil {
 			return nil, err
 		}
@@ -269,6 +269,10 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 		if userInfo == nil || userInfo.ID == uuid.Nil {
 			// 注册
 			userInfo, err = svc.userDomainService.Create(ctx, phone.PurePhoneNumber, unionId, openId, "")
+			if err != nil {
+				return nil, err
+			}
+
 			err = svc.userRepository.Save(ctx, userInfo)
 			if err != nil {
 				return nil, errors.New("用户注册失败")
@@ -314,12 +318,12 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 }
 
 // getSessionKeyByCode 根据wx.login的code获取session_key
-func (svc *passportApplicationService) getSessionKeyByCode(ctx context.Context, code string) (cacheSessionKey, sessionKey, openId, unionId string, err error) {
+func (svc *passportApplicationService) getSessionKeyByCode(ctx context.Context, code string) (sessionKey, openId, unionId string, err error) {
 	cacheKey := redis.CacheKey("user:wx:login:code:" + code)
 	cacheClient := redis.CacheClient()
 
 	if cacheClient.Exists(ctx, cacheKey).Val() > 0 {
-		cacheSessionKey = cacheClient.Get(ctx, cacheKey).Val()
+		cacheSessionKey := cacheClient.Get(ctx, cacheKey).Val()
 		sessionCacheKey := "wx:mini_program_session_key:" + cacheSessionKey
 		session := cacheClient.HGetAll(ctx, sessionCacheKey).Val()
 		if o, ok := session["openid"]; ok {
@@ -335,14 +339,14 @@ func (svc *passportApplicationService) getSessionKeyByCode(ctx context.Context, 
 		var session auth.Session
 		session, err = wx.MiniProgram().Auth().Session(code)
 		if err != nil {
-			return "", "", "", "", errors.New("微信用户信息获取失败")
+			return "", "", "", errors.New("微信用户信息获取失败")
 		}
 
 		openId = session.Openid
 		unionId = session.UnionId
 		sessionKey = session.SessionKey
 
-		cacheSessionKey = uuid.NewString()
+		cacheSessionKey := uuid.NewString()
 		sessionCacheKey := "wx:mini_program_session_key:" + cacheSessionKey
 
 		cacheClient.HMSet(ctx, sessionCacheKey, map[string]string{

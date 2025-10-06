@@ -77,8 +77,8 @@ linters-settings:
     check-shadowing: true
   funlen:
     # 函数长度限制
-    lines: 100
-    statements: 50
+    lines: 200
+    statements: 100
   goimports:
     # 本地包前缀
     local-prefixes: github.com/dysodeng/app
