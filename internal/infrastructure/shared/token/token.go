@@ -6,13 +6,14 @@ import (
 	"log"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/config"
-	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/pkg/errors"
+
+	"github.com/dysodeng/app/internal/infrastructure/config"
+	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
 )
 
-const JwtAuthIdentifier = "hxsyai.com/ai/patient-assistant/auth"
+const JwtAuthIdentifier = "dysodeng.com/dysodeng/app/auth"
 
 // Token token 数据结构
 type Token struct {
