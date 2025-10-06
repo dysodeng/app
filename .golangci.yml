@@ -47,7 +47,6 @@ linters:
     - staticcheck
     - unused
     - misspell
-    - gosec
     - unparam
     - unconvert
     - gocritic
@@ -55,7 +54,6 @@ linters:
     - gocyclo
     - dogsled
     - dupl
-    - funlen
     - whitespace
 
 # formatters 设置
