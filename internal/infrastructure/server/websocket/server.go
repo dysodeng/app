@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"sync"
+	"time"
 
 	"github.com/gorilla/websocket"
 
@@ -32,7 +33,8 @@ func NewServer(config *config.Config) *Server {
 		config:   config,
 		upgrader: upgrader,
 		httpServer: &http.Server{
-			Addr: fmt.Sprintf("%s:%d", config.Server.WebSocket.Host, config.Server.WebSocket.Port),
+			Addr:              fmt.Sprintf("%s:%d", config.Server.WebSocket.Host, config.Server.WebSocket.Port),
+			ReadHeaderTimeout: 10 * time.Second,
 		},
 		clients: sync.Map{},
 	}

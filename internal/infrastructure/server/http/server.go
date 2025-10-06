@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 
@@ -46,8 +47,9 @@ func NewServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *Se
 		config: config,
 		engine: engine,
 		httpServer: &http.Server{
-			Addr:    fmt.Sprintf("%s:%d", config.Server.HTTP.Host, config.Server.HTTP.Port),
-			Handler: engine,
+			Addr:              fmt.Sprintf("%s:%d", config.Server.HTTP.Host, config.Server.HTTP.Port),
+			Handler:           engine,
+			ReadHeaderTimeout: 10 * time.Second,
 		},
 	}
 }
