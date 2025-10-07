@@ -11,17 +11,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dysodeng/fs"
-	"github.com/google/uuid"
-
 	"github.com/dysodeng/app/internal/domain/file/errors"
+	fileEvent "github.com/dysodeng/app/internal/domain/file/event"
 	"github.com/dysodeng/app/internal/domain/file/model"
 	"github.com/dysodeng/app/internal/domain/file/repository"
 	"github.com/dysodeng/app/internal/infrastructure/config"
+	"github.com/dysodeng/app/internal/infrastructure/event"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
 	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	fsStorage "github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
+	"github.com/dysodeng/fs"
+	"github.com/google/uuid"
 )
 
 // UploaderDomainService 文件上传领域服务
@@ -41,6 +43,7 @@ type UploaderDomainService interface {
 type uploaderDomainService struct {
 	baseTraceSpanName  string
 	txManager          transactions.TransactionManager
+	eventBus           event.Bus
 	fileRepository     repository.FileRepository
 	uploaderRepository repository.UploaderRepository
 	storage            *fsStorage.Storage
@@ -48,12 +51,14 @@ type uploaderDomainService struct {
 
 func NewUploaderDomainService(
 	txManager transactions.TransactionManager,
+	eventBus event.Bus,
 	fileRepository repository.FileRepository,
 	uploaderRepository repository.UploaderRepository,
 ) UploaderDomainService {
 	return &uploaderDomainService{
 		baseTraceSpanName:  "domain.file.service.UploaderDomainService",
 		txManager:          txManager,
+		eventBus:           eventBus,
 		fileRepository:     fileRepository,
 		uploaderRepository: uploaderRepository,
 		storage:            fsStorage.Instance(),
@@ -176,7 +181,10 @@ func (svc *uploaderDomainService) UploadFile(ctx context.Context, file *multipar
 	f.Path = svc.storage.FullUrl(spanCtx, f.Path)
 
 	// 发布领域事件
-	// _ = svc.eventPublisher.Publish(spanCtx, event.NewFileUploadedEvent(f.ID, f.Name.String(), f.Path, f.Size))
+	err = svc.eventBus.PublishEvent(spanCtx, fileEvent.NewFileUploadedEvent(f.ID, f.Name.String(), f.Path, f.Size))
+	if err != nil {
+		logger.Error(spanCtx, "eventBus.PublishEvent failed", logger.ErrorField(err))
+	}
 
 	return f, nil
 }
@@ -297,7 +305,10 @@ func (svc *uploaderDomainService) CompleteMultipartUpload(ctx context.Context, u
 	f.Path = svc.storage.FullUrl(spanCtx, filePath)
 
 	// 发布领域事件
-	// _ = svc.eventPublisher.Publish(spanCtx, event.NewFileUploadedEvent(f.ID, f.Name.String(), f.Path, f.Size))
+	err = svc.eventBus.PublishEvent(spanCtx, fileEvent.NewFileUploadedEvent(f.ID, f.Name.String(), f.Path, f.Size))
+	if err != nil {
+		logger.Error(spanCtx, "eventBus.PublishEvent failed", logger.ErrorField(err))
+	}
 
 	return f, nil
 }

@@ -11,4 +11,6 @@ var InfrastructureSet = wire.NewSet(
 	ProvideRedis,
 	ProvideMessageQueue,
 	ProvideStorage,
+	ProvideTypedEventBus,
+	ProvideEventConsumerService,
 )

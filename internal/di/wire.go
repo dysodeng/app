@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/wire"
 
+	"github.com/dysodeng/app/internal/di/event"
 	"github.com/dysodeng/app/internal/interfaces/http"
 )
 
@@ -17,10 +18,11 @@ func InitApp(ctx context.Context) (*App, error) {
 		InfrastructureSet, // 基础设施
 		AllModulesSet,     // 业务模块
 		http.NewHandlerRegistry,
+		event.NewHandlerRegistry,
 		ProvideHTTPServer,
 		ProvideGRPCServer,
 		ProvideWebSocketServer,
-		ProvideEventBus,
+		ProvideEventServer,
 		NewApp,
 	))
 	return nil, nil

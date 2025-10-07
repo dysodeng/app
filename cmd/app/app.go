@@ -57,6 +57,7 @@ func (app *app) serve() {
 
 	// 注册服务
 	app.registerServer(
+		app.mainApp.EventServer,
 		app.mainApp.GRPCServer,
 		app.mainApp.HTTPServer,
 		app.mainApp.WSServer,

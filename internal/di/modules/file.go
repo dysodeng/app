@@ -3,6 +3,7 @@ package modules
 import (
 	"github.com/google/wire"
 
+	"github.com/dysodeng/app/internal/application/file/event/handler"
 	fileApplicationService "github.com/dysodeng/app/internal/application/file/service"
 	"github.com/dysodeng/app/internal/domain/file/service"
 	fileRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
@@ -21,6 +22,9 @@ var FileModuleSet = wire.NewSet(
 
 	// 应用层
 	fileApplicationService.NewUploaderApplicationService,
+
+	// 事件处理层
+	handler.NewFileUploadedHandler,
 
 	// http接口层
 	file.NewUploaderHandler,

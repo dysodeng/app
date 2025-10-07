@@ -7,6 +7,7 @@ type Server struct {
 	HTTP      HTTPConfig      `mapstructure:"http"`
 	GRPC      GRPCConfig      `mapstructure:"grpc"`
 	WebSocket WebSocketConfig `mapstructure:"websocket"`
+	Event     EventConfig     `mapstructure:"event"`
 }
 
 // HTTPConfig HTTP服务配置
@@ -28,6 +29,12 @@ type WebSocketConfig struct {
 	Enabled bool   `mapstructure:"enabled"`
 	Host    string `mapstructure:"host"`
 	Port    int    `mapstructure:"port"`
+}
+
+// EventConfig 事件消费者服务配置
+type EventConfig struct {
+	Enabled bool   `mapstructure:"enabled"`
+	Driver  string `mapstructure:"driver"`
 }
 
 func serverBindEnv(v *viper.Viper) {

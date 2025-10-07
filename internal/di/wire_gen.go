@@ -9,8 +9,10 @@ package di
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/application/file/event/handler"
 	service4 "github.com/dysodeng/app/internal/application/file/service"
 	service2 "github.com/dysodeng/app/internal/application/passport/service"
+	"github.com/dysodeng/app/internal/di/event"
 	service3 "github.com/dysodeng/app/internal/domain/file/service"
 	"github.com/dysodeng/app/internal/domain/user/service"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
@@ -55,17 +57,21 @@ func InitApp(ctx context.Context) (*App, error) {
 	userRepository := user.NewUserRepository(transactionManager)
 	userDomainService := service.NewUserDomainService(userRepository)
 	passportApplicationService := service2.NewPassportApplicationService(userDomainService)
-	handler := passport.NewPassportHandler(passportApplicationService)
+	passportHandler := passport.NewPassportHandler(passportApplicationService)
+	bus := ProvideTypedEventBus(mq)
 	fileRepository := file.NewFileRepository(transactionManager)
 	uploaderRepository := file.NewUploaderRepository(transactionManager)
-	uploaderDomainService := service3.NewUploaderDomainService(transactionManager, fileRepository, uploaderRepository)
+	uploaderDomainService := service3.NewUploaderDomainService(transactionManager, bus, fileRepository, uploaderRepository)
 	uploaderApplicationService := service4.NewUploaderApplicationService(uploaderDomainService)
 	uploaderHandler := file2.NewUploaderHandler(uploaderApplicationService)
-	handlerRegistry := http.NewHandlerRegistry(handler, uploaderHandler)
+	handlerRegistry := http.NewHandlerRegistry(passportHandler, uploaderHandler)
+	fileUploadedHandler := handler.NewFileUploadedHandler()
+	eventHandlerRegistry := event.NewHandlerRegistry(fileUploadedHandler)
 	server := ProvideHTTPServer(config, handlerRegistry)
 	grpcServer := ProvideGRPCServer(config)
 	websocketServer := ProvideWebSocketServer(config)
-	bus := ProvideEventBus()
-	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, server, grpcServer, websocketServer, bus)
+	consumerService := ProvideEventConsumerService(mq, logger)
+	eventServer := ProvideEventServer(config, consumerService, eventHandlerRegistry)
+	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, eventHandlerRegistry, server, grpcServer, websocketServer, bus, consumerService, eventServer)
 	return app, nil
 }

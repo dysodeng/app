@@ -6,9 +6,11 @@ import (
 	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
+	diEvent "github.com/dysodeng/app/internal/di/event"
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
+	eventServer "github.com/dysodeng/app/internal/infrastructure/server/event"
 	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
 	"github.com/dysodeng/app/internal/infrastructure/server/http"
 	"github.com/dysodeng/app/internal/infrastructure/server/websocket"
@@ -22,18 +24,21 @@ import (
 
 // App 应用程序
 type App struct {
-	Config          *config.Config
-	Monitor         *telemetry.Monitor
-	Logger          *zap.Logger
-	TxManager       transactions.TransactionManager
-	RedisClient     redis.Client
-	MessageQueue    contract.MQ
-	Storage         *storage.Storage
-	HandlerRegistry *HTTP.HandlerRegistry
-	HTTPServer      *http.Server
-	GRPCServer      *grpc.Server
-	WSServer        *websocket.Server
-	EventBus        *event.Bus
+	Config               *config.Config
+	Monitor              *telemetry.Monitor
+	Logger               *zap.Logger
+	TxManager            transactions.TransactionManager
+	RedisClient          redis.Client
+	MessageQueue         contract.MQ
+	Storage              *storage.Storage
+	HandlerRegistry      *HTTP.HandlerRegistry
+	EventHandlerRegistry *diEvent.HandlerRegistry
+	HTTPServer           *http.Server
+	GRPCServer           *grpc.Server
+	WSServer             *websocket.Server
+	EventBus             event.Bus
+	EventConsumer        *event.ConsumerService
+	EventServer          *eventServer.Server
 }
 
 // NewApp 创建应用程序
@@ -46,24 +51,30 @@ func NewApp(
 	messageQueue contract.MQ,
 	storage *storage.Storage,
 	handlerRegistry *HTTP.HandlerRegistry,
+	eventHandlerRegistry *diEvent.HandlerRegistry,
 	httpServer *http.Server,
 	grpcServer *grpc.Server,
 	wsServer *websocket.Server,
-	eventBus *event.Bus,
+	eventBus event.Bus,
+	eventConsumer *event.ConsumerService,
+	eventServer *eventServer.Server,
 ) *App {
 	return &App{
-		Config:          config,
-		Monitor:         monitor,
-		Logger:          logger,
-		TxManager:       txManager,
-		RedisClient:     redisClient,
-		MessageQueue:    messageQueue,
-		Storage:         storage,
-		HandlerRegistry: handlerRegistry,
-		HTTPServer:      httpServer,
-		GRPCServer:      grpcServer,
-		WSServer:        wsServer,
-		EventBus:        eventBus,
+		Config:               config,
+		Monitor:              monitor,
+		Logger:               logger,
+		TxManager:            txManager,
+		RedisClient:          redisClient,
+		MessageQueue:         messageQueue,
+		Storage:              storage,
+		HandlerRegistry:      handlerRegistry,
+		EventHandlerRegistry: eventHandlerRegistry,
+		HTTPServer:           httpServer,
+		GRPCServer:           grpcServer,
+		WSServer:             wsServer,
+		EventBus:             eventBus,
+		EventConsumer:        eventConsumer,
+		EventServer:          eventServer,
 	}
 }
 

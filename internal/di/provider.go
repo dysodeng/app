@@ -3,19 +3,21 @@ package di
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/mq"
 	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
+	diEvent "github.com/dysodeng/app/internal/di/event"
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
 	"github.com/dysodeng/app/internal/infrastructure/migration"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
+	eventServer "github.com/dysodeng/app/internal/infrastructure/server/event"
 	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
 	"github.com/dysodeng/app/internal/infrastructure/server/http"
 	"github.com/dysodeng/app/internal/infrastructure/server/websocket"
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
+	"github.com/dysodeng/app/internal/infrastructure/shared/mq"
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
@@ -98,9 +100,21 @@ func ProvideWebSocketServer(config *config.Config) *websocket.Server {
 	return websocket.NewServer(config)
 }
 
-// ProvideEventBus 提供事件总线
-func ProvideEventBus() *event.Bus {
-	eventBus := event.NewEventBus()
-	// 注册事件在这里实现
-	return eventBus
+// ProvideTypedEventBus 提供类型化事件总线
+func ProvideTypedEventBus(mq contract.MQ) event.Bus {
+	return event.NewMQEventBus(mq.Producer())
+}
+
+// ProvideEventConsumerService 提供事件消费者服务
+func ProvideEventConsumerService(mq contract.MQ, logger *zap.Logger) *event.ConsumerService {
+	return event.NewEventConsumerService(mq.Consumer(), logger)
+}
+
+// ProvideEventServer 提供Event服务器
+func ProvideEventServer(
+	config *config.Config,
+	eventConsumer *event.ConsumerService,
+	registry *diEvent.HandlerRegistry,
+) *eventServer.Server {
+	return eventServer.NewEventServer(config, eventConsumer, registry)
 }
