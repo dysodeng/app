@@ -1,0 +1,36 @@
+version: v1
+name: buf.build/dysodeng/app
+deps:
+  - buf.build/googleapis/googleapis
+
+breaking:
+  use:
+    - FILE
+  except:
+    - RPC_REQUEST_RESPONSE_UNIQUE
+  ignore:
+    - api/proto/common/v1alpha
+
+lint:
+  use:
+    - STANDARD
+  except:
+    - UNARY_RPC
+    - RPC_REQUEST_RESPONSE_UNIQUE
+    - PACKAGE_DIRECTORY_MATCH
+    - PACKAGE_SAME_GO_PACKAGE
+    - PACKAGE_VERSION_SUFFIX
+    - PACKAGE_SAME_DIRECTORY
+    - ENUM_VALUE_PREFIX
+    - ENUM_VALUE_UPPER_SNAKE_CASE
+    - ENUM_ZERO_VALUE_SUFFIX
+  enum_zero_value_suffix: _UNSPECIFIED
+  rpc_allow_same_request_response: false
+  rpc_allow_google_protobuf_empty_requests: true
+  rpc_allow_google_protobuf_empty_responses: true
+  service_suffix: Service
+
+build:
+  excludes:
+    - vendor
+    - third_party

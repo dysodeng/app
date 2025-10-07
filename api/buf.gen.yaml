@@ -1,0 +1,18 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/dysodeng/app/api/generated/go
+
+plugins:
+  # Go protobuf生成
+  - plugin: buf.build/protocolbuffers/go
+    out: generated/go
+    opt:
+      - paths=source_relative
+      
+  # Go gRPC生成
+  - plugin: buf.build/grpc/go
+    out: generated/go
+    opt:
+      - paths=source_relative

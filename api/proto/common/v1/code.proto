@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package v1;
+
+option go_package = "github.com/dysodeng/app/api/proto/common/v1";
+
+enum Code {
+  // 成功
+  SUCCESS = 0;
+  // 常规业务错误
+  ERROR = 1;
+  // 系统错误
+  SYSTEM_ERROR = 100000;
+  // 参数错误
+  INVALID_PARAM = 100001;
+}

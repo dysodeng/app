@@ -6,3 +6,6 @@
 /client
 .DS_Store
 */.DS_Store
+
+# IDE protobuf support files
+/proto

@@ -1,0 +1,77 @@
+syntax = "proto3";
+
+package v1;
+
+import "proto/common/v1/code.proto";
+import "proto/common/v1/metadata.proto";
+
+option go_package = "github.com/dysodeng/app/api/proto/file/v1";
+
+message FileInfoRequest {
+  string id = 1;
+}
+
+message FileInfoResponse {
+  v1.Code code = 1;
+  string message = 2;
+  File file = 3;
+}
+
+message FileReferenceRequest {
+  string id = 1;
+  string module = 2; // 引用模块
+  string module_relation_id = 3; // 引用模块关联的数据ID
+  string module_relation_name = 4; // 引用 模块关联的数据名称
+}
+
+message FileReferenceResponse {
+  v1.Code code = 1;
+  string message = 2;
+  File file = 3;
+}
+
+message RevokeFileReferenceRequest {
+  string id = 1;
+  string module = 2; // 引用模块
+  string module_relation_id = 3; // 引用模块关联的数据ID
+}
+
+message RevokeFileReferenceResponse {
+  v1.Code code = 1;
+  string message = 2;
+}
+
+enum MediaType {
+  _ = 0;
+  Image = 1;
+  Video = 2;
+  Audio = 3;
+  Document = 4;
+}
+
+message File {
+  string id = 1;
+  MediaType media_type = 2;
+  string name = 3;
+  string name_index = 4;
+  string path = 5;
+  string ext = 6;
+  string mime_type = 7;
+  uint32 status = 8;
+  string created_at = 9;
+}
+
+// FileService 文件服务
+service FileService {
+  // Metadata 获取服务元数据信息
+  rpc Metadata(v1.MetadataRequest) returns (v1.MetadataResponse);
+
+  // FileInfo 获取文件信息
+  rpc FileInfo(FileInfoRequest) returns (FileInfoResponse);
+
+  // FileReference 文件引用
+  rpc FileReference(FileReferenceRequest) returns (FileReferenceResponse);
+
+  // RevokeFileReference 撤销文件引用
+  rpc RevokeFileReference(RevokeFileReferenceRequest) returns (RevokeFileReferenceResponse);
+}
