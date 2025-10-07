@@ -19,14 +19,12 @@ var _ Authenticator = &JWTAuthenticator{}
 
 type JWTAuthenticator struct{}
 
-func (J *JWTAuthenticator) Authenticate(r *http.Request) (map[string]interface{}, error) {
+func (jwt *JWTAuthenticator) Authenticate(r *http.Request) (map[string]interface{}, error) {
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		authHeader = r.URL.Query().Get("token")
-	} else {
-		if !strings.HasPrefix(authHeader, "Bearer ") || len(authHeader) < 8 {
-			return nil, fmt.Errorf("invalid authorization format")
-		}
+	} else if !strings.HasPrefix(authHeader, "Bearer ") || len(authHeader) < 8 {
+		return nil, fmt.Errorf("invalid authorization format")
 	}
 
 	if strings.Contains(authHeader, "DebugToken") { // DebugToken

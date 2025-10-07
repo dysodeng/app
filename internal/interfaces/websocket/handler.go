@@ -34,10 +34,11 @@ func (handler *textMessageHandler) Handler(ctx context.Context, clientId, userId
 		return err
 	}
 
-	switch messageBody.Type {
-	case "speech": // 实时语音转文字
+	if messageBody.Type == "speech" {
+		// 实时语音转文字
 		return speech.HandleSpeechMessage(spanCtx, clientId, userId, messageBody.Body)
 	}
+
 	return nil
 }
 

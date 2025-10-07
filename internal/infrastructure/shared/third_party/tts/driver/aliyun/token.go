@@ -28,7 +28,6 @@ const IsiTokenCacheKey = "aliyun_isi_token"
 
 // GetToken 获取语音服务token
 func GetToken() (*TokenResult, error) {
-
 	c, err := cache.NewCache()
 	if err != nil {
 		return nil, err

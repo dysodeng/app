@@ -25,7 +25,6 @@ var upgrader = websocket.Upgrader{
 
 // Serve 处理 WebSocket 连接请求
 func Serve(writer http.ResponseWriter, request *http.Request) {
-
 	// 升级为 WebSocket 连接
 	conn, err := upgrader.Upgrade(writer, request, nil)
 	if err != nil {
