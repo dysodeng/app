@@ -12,10 +12,13 @@ import (
 type FileResponse struct {
 	ID        uuid.UUID `json:"id"`
 	Name      string    `json:"name"`
+	NameIndex string    `json:"name_index"`
 	Path      string    `json:"path"`
 	Size      uint64    `json:"size"`
 	Ext       string    `json:"ext"`
+	MediaType uint8     `json:"media_type"`
 	MimeType  string    `json:"mime_type"`
+	Status    uint8     `json:"status"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -26,6 +29,7 @@ func (f *FileResponse) FromDomainModel(file *model.File) {
 	f.Path = file.Path
 	f.Size = file.Size
 	f.Ext = file.Ext
+	f.MediaType = file.MediaType.ToInt()
 	f.MimeType = file.MimeType
 	f.CreatedAt = file.CreatedAt
 }

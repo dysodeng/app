@@ -3,13 +3,12 @@ package grpc
 import (
 	"context"
 	"fmt"
-	"log"
 	"strings"
 	"time"
 
 	"github.com/dysodeng/rpc"
 	rpcConfig "github.com/dysodeng/rpc/config"
-	"github.com/dysodeng/rpc/logger"
+	rpcLogger "github.com/dysodeng/rpc/logger"
 	"github.com/dysodeng/rpc/metrics"
 	"github.com/dysodeng/rpc/naming/etcd"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
@@ -17,20 +16,26 @@ import (
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	telemetryMetrics "github.com/dysodeng/app/internal/infrastructure/shared/telemetry/metrics"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
+	GRPC "github.com/dysodeng/app/internal/interfaces/grpc"
 )
 
 // Server gRPC服务
 type Server struct {
+	ctx       context.Context
 	config    *config.Config
+	registry  *GRPC.ServiceRegistry
 	rpcServer rpc.Server
 }
 
 // NewServer 创建gRPC服务
-func NewServer(config *config.Config) *Server {
+func NewServer(ctx context.Context, config *config.Config, serviceRegistry *GRPC.ServiceRegistry) *Server {
 	return &Server{
-		config: config,
+		ctx:      ctx,
+		config:   config,
+		registry: serviceRegistry,
 	}
 }
 
@@ -46,8 +51,6 @@ func (s *Server) IsEnabled() bool {
 func (s *Server) Name() string {
 	return "gRPC"
 }
-
-func (s *Server) register() {}
 
 // Start 启动gRPC服务
 func (s *Server) Start() error {
@@ -71,17 +74,17 @@ func (s *Server) Start() error {
 		conf.OtelCollectorEndpoint = s.config.Monitor.Metrics.OtlpEndpoint
 	}
 
-	logger.Init(s.config.App.Environment == config.Prod)
+	rpcLogger.Init(s.config.App.Environment == config.Prod)
 
 	// 设置 meter 到 RPC 框架
 	err := metrics.SetMeter(telemetryMetrics.Meter(), s.config.App.Name)
 	if err != nil {
-		log.Fatalf("grpc metrics set fiald: %+v\n", err)
+		logger.Fatal(s.ctx, "grpc metrics set failed", logger.ErrorField(err))
 	}
 
 	registry, err := etcd.NewEtcdRegistry(conf, opts...)
 	if err != nil {
-		log.Fatalf("grpc etcd connent fiald: %+v\n", err)
+		logger.Fatal(s.ctx, "grpc etcd connect failed", logger.ErrorField(err))
 	}
 
 	s.rpcServer = rpc.NewServer(
@@ -93,7 +96,10 @@ func (s *Server) Start() error {
 	)
 
 	// 注册服务
-	s.register()
+	err = s.registry.RegisterGRPCService(s.rpcServer)
+	if err != nil {
+		logger.Fatal(s.ctx, "grpc service register failed", logger.ErrorField(err))
+	}
 
 	var errChan = make(chan error, 1)
 	go func() {

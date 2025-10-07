@@ -17,6 +17,8 @@ import (
 	"github.com/dysodeng/app/internal/domain/user/service"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
+	"github.com/dysodeng/app/internal/interfaces/grpc"
+	service5 "github.com/dysodeng/app/internal/interfaces/grpc/service"
 	"github.com/dysodeng/app/internal/interfaces/http"
 	file2 "github.com/dysodeng/app/internal/interfaces/http/handler/file"
 	"github.com/dysodeng/app/internal/interfaces/http/handler/passport"
@@ -71,11 +73,15 @@ func InitApp(ctx context.Context) (*App, error) {
 	webSocket := websocket.NewWebSocket(textMessageHandler, binaryMessageHandler)
 	fileUploadedHandler := handler.NewFileUploadedHandler()
 	eventHandlerRegistry := event.NewHandlerRegistry(fileUploadedHandler)
+	fileDomainService := service3.NewFileDomainService(fileRepository)
+	fileApplicationService := service4.NewFileApplicationService(fileDomainService)
+	fileService := service5.NewFileService(fileApplicationService)
+	serviceRegistry := grpc.NewServiceRegistry(fileService)
 	server := ProvideHTTPServer(config, handlerRegistry)
-	grpcServer := ProvideGRPCServer(config)
+	grpcServer := ProvideGRPCServer(ctx, config, serviceRegistry)
 	websocketServer := ProvideWebSocketServer(config, webSocket)
 	consumerService := ProvideEventConsumerService(mq, logger)
 	eventServer := ProvideEventServer(config, consumerService, eventHandlerRegistry)
-	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, server, grpcServer, websocketServer, bus, consumerService, eventServer)
+	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, bus, consumerService, eventServer)
 	return app, nil
 }

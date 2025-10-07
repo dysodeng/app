@@ -19,6 +19,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
+	GRPC "github.com/dysodeng/app/internal/interfaces/grpc"
 	HTTP "github.com/dysodeng/app/internal/interfaces/http"
 	webSocket "github.com/dysodeng/app/internal/interfaces/websocket"
 )
@@ -35,6 +36,7 @@ type App struct {
 	HandlerRegistry      *HTTP.HandlerRegistry
 	WebSocketRegistry    *webSocket.WebSocket
 	EventHandlerRegistry *diEvent.HandlerRegistry
+	GRPCServiceRegistry  *GRPC.ServiceRegistry
 	HTTPServer           *http.Server
 	GRPCServer           *grpc.Server
 	WSServer             *websocket.Server
@@ -55,6 +57,7 @@ func NewApp(
 	handlerRegistry *HTTP.HandlerRegistry,
 	webSocketRegistry *webSocket.WebSocket,
 	eventHandlerRegistry *diEvent.HandlerRegistry,
+	gRPCServiceRegistry *GRPC.ServiceRegistry,
 	httpServer *http.Server,
 	grpcServer *grpc.Server,
 	wsServer *websocket.Server,
@@ -73,6 +76,7 @@ func NewApp(
 		HandlerRegistry:      handlerRegistry,
 		WebSocketRegistry:    webSocketRegistry,
 		EventHandlerRegistry: eventHandlerRegistry,
+		GRPCServiceRegistry:  gRPCServiceRegistry,
 		HTTPServer:           httpServer,
 		GRPCServer:           grpcServer,
 		WSServer:             wsServer,

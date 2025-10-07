@@ -21,6 +21,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/redis"
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
+	GRPC "github.com/dysodeng/app/internal/interfaces/grpc"
 	HTTP "github.com/dysodeng/app/internal/interfaces/http"
 	webSocket "github.com/dysodeng/app/internal/interfaces/websocket"
 )
@@ -85,20 +86,18 @@ func ProvideStorage(cfg *config.Config) (*storage.Storage, error) {
 }
 
 // ProvideHTTPServer 提供HTTP服务器
-func ProvideHTTPServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *http.Server {
-	return http.NewServer(config, handlerRegistry)
+func ProvideHTTPServer(cfg *config.Config, handlerRegistry *HTTP.HandlerRegistry) *http.Server {
+	return http.NewServer(cfg, handlerRegistry)
 }
 
 // ProvideGRPCServer 提供gRPC服务器
-func ProvideGRPCServer(config *config.Config) *grpc.Server {
-	server := grpc.NewServer(config)
-	// 注册gRPC服务在这里实现
-	return server
+func ProvideGRPCServer(ctx context.Context, cfg *config.Config, serviceRegistry *GRPC.ServiceRegistry) *grpc.Server {
+	return grpc.NewServer(ctx, cfg, serviceRegistry)
 }
 
 // ProvideWebSocketServer 提供WebSocket服务器
-func ProvideWebSocketServer(config *config.Config, ws *webSocket.WebSocket) *websocket.Server {
-	return websocket.NewServer(config, ws)
+func ProvideWebSocketServer(cfg *config.Config, ws *webSocket.WebSocket) *websocket.Server {
+	return websocket.NewServer(cfg, ws)
 }
 
 // ProvideTypedEventBus 提供类型化事件总线
@@ -113,9 +112,9 @@ func ProvideEventConsumerService(mq contract.MQ, logger *zap.Logger) *event.Cons
 
 // ProvideEventServer 提供Event服务器
 func ProvideEventServer(
-	config *config.Config,
+	cfg *config.Config,
 	eventConsumer *event.ConsumerService,
 	registry *diEvent.HandlerRegistry,
 ) *eventServer.Server {
-	return eventServer.NewEventServer(config, eventConsumer, registry)
+	return eventServer.NewEventServer(cfg, eventConsumer, registry)
 }

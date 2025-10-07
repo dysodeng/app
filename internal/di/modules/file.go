@@ -7,6 +7,7 @@ import (
 	fileApplicationService "github.com/dysodeng/app/internal/application/file/service"
 	"github.com/dysodeng/app/internal/domain/file/service"
 	fileRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
+	fileGRPCService "github.com/dysodeng/app/internal/interfaces/grpc/service"
 	"github.com/dysodeng/app/internal/interfaces/http/handler/file"
 )
 
@@ -21,10 +22,14 @@ var FileModuleSet = wire.NewSet(
 	service.NewUploaderDomainService,
 
 	// 应用层
+	fileApplicationService.NewFileApplicationService,
 	fileApplicationService.NewUploaderApplicationService,
 
 	// 事件处理层
 	handler.NewFileUploadedHandler,
+
+	// grpc接口层
+	fileGRPCService.NewFileService,
 
 	// http接口层
 	file.NewUploaderHandler,

@@ -9,6 +9,7 @@ import (
 	"github.com/google/wire"
 
 	"github.com/dysodeng/app/internal/di/event"
+	"github.com/dysodeng/app/internal/interfaces/grpc"
 	"github.com/dysodeng/app/internal/interfaces/http"
 )
 
@@ -20,6 +21,7 @@ func InitApp(ctx context.Context) (*App, error) {
 		WebSocketSet,      // WebSocket处理模块
 		http.NewHandlerRegistry,
 		event.NewHandlerRegistry,
+		grpc.NewServiceRegistry,
 		ProvideHTTPServer,
 		ProvideGRPCServer,
 		ProvideWebSocketServer,
