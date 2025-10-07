@@ -221,7 +221,6 @@ func streamRequest(requestUrl, method string, body io.Reader, fn func([]byte) er
 		err = context.DeadlineExceeded
 		return 0, err
 	default:
-
 	}
 
 	return response.StatusCode, nil
