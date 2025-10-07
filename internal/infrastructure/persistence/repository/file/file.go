@@ -10,6 +10,7 @@ import (
 
 	"github.com/dysodeng/app/internal/domain/file/model"
 	fileDomainRepository "github.com/dysodeng/app/internal/domain/file/repository"
+	"github.com/dysodeng/app/internal/domain/file/valueobject"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/entity/file"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
@@ -165,8 +166,8 @@ func (repo *fileRepository) CheckFileNameExists(ctx context.Context, name string
 func (repo *fileRepository) fileFromModel(ctx context.Context, m file.File) *model.File {
 	return &model.File{
 		ID:        m.ID,
-		MediaType: model.MediaType(m.MediaType),
-		Name:      model.FileName(m.Name),
+		MediaType: valueobject.MediaType(m.MediaType),
+		Name:      valueobject.FileName(m.Name),
 		NameIndex: m.NameIndex,
 		Path:      storage.Instance().FullUrl(ctx, m.Path),
 		Size:      m.Size,

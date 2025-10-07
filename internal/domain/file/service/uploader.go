@@ -15,6 +15,7 @@ import (
 	fileEvent "github.com/dysodeng/app/internal/domain/file/event"
 	"github.com/dysodeng/app/internal/domain/file/model"
 	"github.com/dysodeng/app/internal/domain/file/repository"
+	"github.com/dysodeng/app/internal/domain/file/valueobject"
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
@@ -105,15 +106,15 @@ func (svc *uploaderDomainService) checkFileAllow(ext, mimeType string, size int6
 
 	var allow config.FileAllow
 	switch mediaType {
-	case model.MediaTypeImage:
+	case valueobject.MediaTypeImage:
 		allow = config.AmsFileAllow.Image
-	case model.MediaTypeAudio:
+	case valueobject.MediaTypeAudio:
 		allow = config.AmsFileAllow.Audio
-	case model.MediaTypeVideo:
+	case valueobject.MediaTypeVideo:
 		allow = config.AmsFileAllow.Video
-	case model.MediaTypeDocument:
+	case valueobject.MediaTypeDocument:
 		allow = config.AmsFileAllow.Document
-	case model.MediaTypeCompressed:
+	case valueobject.MediaTypeCompressed:
 		allow = config.AmsFileAllow.Compressed
 	default:
 		return errors.ErrFileInvalidType

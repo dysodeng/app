@@ -277,7 +277,7 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 		}
 		if userInfo == nil || userInfo.ID == uuid.Nil {
 			// 注册
-			userInfo, err = svc.userDomainService.Create(ctx, phone.PurePhoneNumber, unionId, openId, "")
+			userInfo, err = svc.userDomainService.Create(ctx, phone.PurePhoneNumber, unionId, openId, "", "")
 			if err != nil {
 				return nil, err
 			}

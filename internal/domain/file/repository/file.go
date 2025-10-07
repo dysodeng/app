@@ -7,18 +7,19 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/dysodeng/app/internal/domain/file/model"
+	"github.com/dysodeng/app/internal/domain/file/valueobject"
 )
 
 // FileQuery 文件查询参数
 type FileQuery struct {
-	MediaType model.MediaType // 媒体类型列表，可选
-	Keyword   string          // 关键词搜索，可选
-	StartTime *time.Time      // 开始时间，可选
-	EndTime   *time.Time      // 结束时间，可选
-	OrderBy   string          // 排序字段
-	OrderType string          // 排序方式：asc/desc
-	Page      int             // 页码
-	PageSize  int             // 每页数量
+	MediaType valueobject.MediaType // 媒体类型列表，可选
+	Keyword   string                // 关键词搜索，可选
+	StartTime *time.Time            // 开始时间，可选
+	EndTime   *time.Time            // 结束时间，可选
+	OrderBy   string                // 排序字段
+	OrderType string                // 排序方式：asc/desc
+	Page      int                   // 页码
+	PageSize  int                   // 每页数量
 	FileIDs   []uint64
 }
 

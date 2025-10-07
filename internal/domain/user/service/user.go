@@ -19,7 +19,7 @@ type UserDomainService interface {
 	FindByTelephone(ctx context.Context, telephone string) (*model.User, error)
 	FindByWxUnionId(ctx context.Context, wxUnionId string) (*model.User, error)
 	FindByOpenId(ctx context.Context, platform, openid string) (*model.User, error)
-	Create(ctx context.Context, telephone, unionId, wxMiniProgramOpenId, nickname string) (*model.User, error)
+	Create(ctx context.Context, telephone, unionId, wxMiniProgramOpenId, nickname, avatar string) (*model.User, error)
 }
 
 type userDomainService struct {
@@ -97,7 +97,7 @@ func (svc *userDomainService) FindByOpenId(ctx context.Context, platform, openid
 }
 
 // Create 创建用户
-func (svc *userDomainService) Create(ctx context.Context, telephone, unionId, wxMiniProgramOpenId, nickname string) (*model.User, error) {
+func (svc *userDomainService) Create(ctx context.Context, telephone, unionId, wxMiniProgramOpenId, nickname, avatar string) (*model.User, error) {
 	_, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".Create")
 	defer span.End()
 
@@ -118,7 +118,7 @@ func (svc *userDomainService) Create(ctx context.Context, telephone, unionId, wx
 	if err != nil {
 		return nil, err
 	}
-	avatarVo, err := valueobject.NewAvatar("")
+	avatarVo, err := valueobject.NewAvatar(avatar)
 	if err != nil {
 		return nil, err
 	}

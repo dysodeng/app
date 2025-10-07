@@ -8,6 +8,7 @@ import (
 	"github.com/dysodeng/app/internal/domain/file/errors"
 	"github.com/dysodeng/app/internal/domain/file/model"
 	"github.com/dysodeng/app/internal/domain/file/repository"
+	"github.com/dysodeng/app/internal/domain/file/valueobject"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
 )
 
@@ -16,7 +17,7 @@ type FileDomainService interface {
 	// CheckFileNameAvailable 检查文件名是否可用(查重名)
 	CheckFileNameAvailable(ctx context.Context, name string, excludeId uuid.UUID) error
 	Info(ctx context.Context, id uuid.UUID) (*model.File, error)
-	List(ctx context.Context, mediaType model.MediaType, keyword, orderBy, orderType string, page, pageSize int) ([]model.File, int64, error)
+	List(ctx context.Context, mediaType valueobject.MediaType, keyword, orderBy, orderType string, page, pageSize int) ([]model.File, int64, error)
 	Delete(ctx context.Context, id uuid.UUID, ids []uuid.UUID) error
 }
 
@@ -64,7 +65,7 @@ func (svc *fileDomainService) Info(ctx context.Context, id uuid.UUID) (*model.Fi
 	return file, nil
 }
 
-func (svc *fileDomainService) List(ctx context.Context, mediaType model.MediaType, keyword, orderBy, orderType string, page, pageSize int) ([]model.File, int64, error) {
+func (svc *fileDomainService) List(ctx context.Context, mediaType valueobject.MediaType, keyword, orderBy, orderType string, page, pageSize int) ([]model.File, int64, error) {
 	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".List")
 	defer span.End()
 
