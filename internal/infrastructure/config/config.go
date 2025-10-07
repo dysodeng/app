@@ -22,6 +22,7 @@ type Config struct {
 	Redis        Redis          `mapstructure:"redis"`
 	Cache        Cache          `mapstructure:"cache"`
 	MessageQueue MessageQueue   `mapstructure:"message_queue"`
+	Etcd         Etcd           `mapstructure:"etcd"`
 	Storage      Storage        `mapstructure:"storage"`
 	Monitor      Monitor        `mapstructure:"monitor"`
 	ThirdParty   ThirdParty     `mapstructure:"third_party"`
@@ -90,6 +91,13 @@ func LoadConfig(configPath string) (*Config, error) {
 		return nil, err
 	}
 
+	var etcdConfig Etcd
+	etcd := v.Sub("etcd")
+	etcdBindEnv(etcd)
+	if err := etcd.Unmarshal(&etcdConfig); err != nil {
+		return nil, err
+	}
+
 	var storageConfig Storage
 	storage := v.Sub("storage")
 	storageBindEnv(storage)
@@ -118,6 +126,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		Database:     databaseConfig,
 		Redis:        redisConfig,
 		MessageQueue: messageQueueConfig,
+		Etcd:         etcdConfig,
 		Storage:      storageConfig,
 		Monitor:      monitorConfig,
 		ThirdParty:   thirdPartyConfig,

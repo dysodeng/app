@@ -12,9 +12,10 @@ server:
     host: 0.0.0.0
     port: 8080
   grpc:
-    enabled: false
+    enabled: true
     host: 0.0.0.0
     port: 3000
+    namespace: "app"
   websocket:
     enabled: true
     host: 0.0.0.0
@@ -129,6 +130,11 @@ message_queue:
     username: guest
     password: guest
     vhost: /
+
+# ETCD配置
+etcd:
+  grpc:
+    addr: 127.0.0.1:2379
 
 # 文件存储配置
 storage:
