@@ -20,6 +20,7 @@ import (
 	"github.com/dysodeng/app/internal/interfaces/http"
 	file2 "github.com/dysodeng/app/internal/interfaces/http/handler/file"
 	"github.com/dysodeng/app/internal/interfaces/http/handler/passport"
+	"github.com/dysodeng/app/internal/interfaces/websocket"
 )
 
 // Injectors from wire.go:
@@ -65,13 +66,16 @@ func InitApp(ctx context.Context) (*App, error) {
 	uploaderApplicationService := service4.NewUploaderApplicationService(uploaderDomainService)
 	uploaderHandler := file2.NewUploaderHandler(uploaderApplicationService)
 	handlerRegistry := http.NewHandlerRegistry(passportHandler, uploaderHandler)
+	textMessageHandler := websocket.NewTextMessageHandler()
+	binaryMessageHandler := websocket.NewBinaryMessageHandler()
+	webSocket := websocket.NewWebSocket(textMessageHandler, binaryMessageHandler)
 	fileUploadedHandler := handler.NewFileUploadedHandler()
 	eventHandlerRegistry := event.NewHandlerRegistry(fileUploadedHandler)
 	server := ProvideHTTPServer(config, handlerRegistry)
 	grpcServer := ProvideGRPCServer(config)
-	websocketServer := ProvideWebSocketServer(config)
+	websocketServer := ProvideWebSocketServer(config, webSocket)
 	consumerService := ProvideEventConsumerService(mq, logger)
 	eventServer := ProvideEventServer(config, consumerService, eventHandlerRegistry)
-	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, eventHandlerRegistry, server, grpcServer, websocketServer, bus, consumerService, eventServer)
+	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, server, grpcServer, websocketServer, bus, consumerService, eventServer)
 	return app, nil
 }

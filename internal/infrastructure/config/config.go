@@ -20,6 +20,7 @@ type Config struct {
 	Security     Security       `mapstructure:"security"`
 	Database     DatabaseConfig `mapstructure:"database"`
 	Redis        Redis          `mapstructure:"redis"`
+	Cache        Cache          `mapstructure:"cache"`
 	MessageQueue MessageQueue   `mapstructure:"message_queue"`
 	Storage      Storage        `mapstructure:"storage"`
 	Monitor      Monitor        `mapstructure:"monitor"`
@@ -72,6 +73,13 @@ func LoadConfig(configPath string) (*Config, error) {
 	redis := v.Sub("redis")
 	redisBindEnv(redis)
 	if err := redis.Unmarshal(&redisConfig); err != nil {
+		return nil, err
+	}
+
+	var cacheConfig Cache
+	cache := v.Sub("cache")
+	cacheBindEnv(cache)
+	if err := cache.Unmarshal(&cacheConfig); err != nil {
 		return nil, err
 	}
 

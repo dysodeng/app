@@ -17,6 +17,7 @@ func InitApp(ctx context.Context) (*App, error) {
 	panic(wire.Build(
 		InfrastructureSet, // 基础设施
 		AllModulesSet,     // 业务模块
+		WebSocketSet,      // WebSocket处理模块
 		http.NewHandlerRegistry,
 		event.NewHandlerRegistry,
 		ProvideHTTPServer,

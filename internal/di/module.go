@@ -4,6 +4,14 @@ import (
 	"github.com/google/wire"
 
 	"github.com/dysodeng/app/internal/di/modules"
+	"github.com/dysodeng/app/internal/interfaces/websocket"
+)
+
+// WebSocketSet WebSocket聚合依赖
+var WebSocketSet = wire.NewSet(
+	websocket.NewTextMessageHandler,
+	websocket.NewBinaryMessageHandler,
+	websocket.NewWebSocket,
 )
 
 // AllModulesSet 所有业务模块的聚合Wire Set

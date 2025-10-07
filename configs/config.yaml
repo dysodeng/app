@@ -114,6 +114,11 @@ redis:
       max_retries: 3
       pool_size: 100
 
+# 缓存配置
+cache:
+  driver: redis
+  serializer: json
+
 # 消息队列配置
 message_queue:
   enabled: true

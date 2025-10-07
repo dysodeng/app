@@ -22,6 +22,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
 	HTTP "github.com/dysodeng/app/internal/interfaces/http"
+	webSocket "github.com/dysodeng/app/internal/interfaces/websocket"
 )
 
 // ProvideConfig 提供配置
@@ -96,8 +97,8 @@ func ProvideGRPCServer(config *config.Config) *grpc.Server {
 }
 
 // ProvideWebSocketServer 提供WebSocket服务器
-func ProvideWebSocketServer(config *config.Config) *websocket.Server {
-	return websocket.NewServer(config)
+func ProvideWebSocketServer(config *config.Config, ws *webSocket.WebSocket) *websocket.Server {
+	return websocket.NewServer(config, ws)
 }
 
 // ProvideTypedEventBus 提供类型化事件总线
