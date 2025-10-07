@@ -3,7 +3,6 @@ package di
 import (
 	"context"
 
-	ifaceWebsocket "github.com/dysodeng/app/internal/interfaces/websocket"
 	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
@@ -21,6 +20,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry"
 	HTTP "github.com/dysodeng/app/internal/interfaces/http"
+	webSocket "github.com/dysodeng/app/internal/interfaces/websocket"
 )
 
 // App 应用程序
@@ -33,7 +33,7 @@ type App struct {
 	MessageQueue         contract.MQ
 	Storage              *storage.Storage
 	HandlerRegistry      *HTTP.HandlerRegistry
-	WebSocketRegistry    *ifaceWebsocket.WebSocket
+	WebSocketRegistry    *webSocket.WebSocket
 	EventHandlerRegistry *diEvent.HandlerRegistry
 	HTTPServer           *http.Server
 	GRPCServer           *grpc.Server
@@ -53,7 +53,7 @@ func NewApp(
 	messageQueue contract.MQ,
 	storage *storage.Storage,
 	handlerRegistry *HTTP.HandlerRegistry,
-	webSocketRegistry *ifaceWebsocket.WebSocket,
+	webSocketRegistry *webSocket.WebSocket,
 	eventHandlerRegistry *diEvent.HandlerRegistry,
 	httpServer *http.Server,
 	grpcServer *grpc.Server,
