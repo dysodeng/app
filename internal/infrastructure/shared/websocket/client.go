@@ -93,7 +93,7 @@ func (c *Client) readMessage() {
 		} else {
 			// 文本消息
 			if HubBus.textMessageHandler != nil {
-				err = HubBus.textMessageHandler.Handler(spanCtx, c.clientId, c.userId, messageType, body)
+				err = HubBus.textMessageHandler.Handler(spanCtx, c.clientId, c.userId, body)
 				if err != nil {
 					span.SetStatus(codes.Error, err.Error())
 					span.RecordError(err)

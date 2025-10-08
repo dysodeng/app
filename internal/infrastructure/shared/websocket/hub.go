@@ -19,13 +19,31 @@ type Handler func(msg message.WsMessage, err error)
 
 // TextMessageHandler 文本消息处理器
 type TextMessageHandler interface {
-	Handler(ctx context.Context, clientId, userId string, messageType int, message []byte) error
+	Handler(ctx context.Context, clientId, userId string, data []byte) error
+	mustTextMessageHandler()
 }
 
 // BinaryMessageHandler 二进制消息处理器
 type BinaryMessageHandler interface {
 	Handler(ctx context.Context, clientId, userId string, data []byte) error
+	mustBinaryMessageHandler()
 }
+
+type UnimplementedTextMessageHandler struct{}
+
+func (h *UnimplementedTextMessageHandler) Handler(ctx context.Context, clientId, userId string, data []byte) error {
+	panic("method Handler not implemented")
+}
+
+func (h *UnimplementedTextMessageHandler) mustTextMessageHandler() {}
+
+type UnimplementedBinaryMessageHandler struct{}
+
+func (h *UnimplementedBinaryMessageHandler) Handler(ctx context.Context, clientId, userId string, data []byte) error {
+	panic("method Handler not implemented")
+}
+
+func (h *UnimplementedBinaryMessageHandler) mustBinaryMessageHandler() {}
 
 var HubBus *Hub
 

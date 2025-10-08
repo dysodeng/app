@@ -17,20 +17,22 @@ type MessageBody struct {
 }
 
 // textMessageHandler websocket文本消息接收处理器
-type textMessageHandler struct{}
+type textMessageHandler struct {
+	websocket.UnimplementedTextMessageHandler
+}
 
 func NewTextMessageHandler() websocket.TextMessageHandler {
 	return &textMessageHandler{}
 }
 
-func (handler *textMessageHandler) Handler(ctx context.Context, clientId, userId string, messageType int, message []byte) error {
+func (handler *textMessageHandler) Handler(ctx context.Context, clientId, userId string, data []byte) error {
 	spanCtx, span := trace.Tracer().Start(ctx, "websocket.message.Handler")
 	defer span.End()
 
 	var messageBody MessageBody
-	err := json.Unmarshal(message, &messageBody)
+	err := json.Unmarshal(data, &messageBody)
 	if err != nil {
-		logger.Error(spanCtx, "消息解析失败", logger.AddField("原消息", string(message)), logger.ErrorField(err))
+		logger.Error(spanCtx, "消息解析失败", logger.AddField("原消息", string(data)), logger.ErrorField(err))
 		return err
 	}
 
@@ -43,7 +45,9 @@ func (handler *textMessageHandler) Handler(ctx context.Context, clientId, userId
 }
 
 // binaryMessageHandler websocket二进制消息接收处理器
-type binaryMessageHandler struct{}
+type binaryMessageHandler struct {
+	websocket.UnimplementedBinaryMessageHandler
+}
 
 func NewBinaryMessageHandler() websocket.BinaryMessageHandler {
 	return &binaryMessageHandler{}
