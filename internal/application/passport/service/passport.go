@@ -400,7 +400,7 @@ func (svc *passportApplicationService) amsLogin(ctx context.Context, cmd *comman
 	if err != nil {
 		return nil, err
 	}
-	if len(cmd.Password) <= 0 {
+	if len(cmd.Password) == 0 {
 		return nil, sharedErrors.ErrSharedPasswordEmpty
 	}
 
