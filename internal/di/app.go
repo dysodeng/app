@@ -12,6 +12,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
 	eventServer "github.com/dysodeng/app/internal/infrastructure/server/event"
 	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
+	"github.com/dysodeng/app/internal/infrastructure/server/health"
 	"github.com/dysodeng/app/internal/infrastructure/server/http"
 	"github.com/dysodeng/app/internal/infrastructure/server/websocket"
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
@@ -40,6 +41,7 @@ type App struct {
 	HTTPServer           *http.Server
 	GRPCServer           *grpc.Server
 	WSServer             *websocket.Server
+	HealthServer         *health.Server
 	EventBus             event.Bus
 	EventConsumer        *event.ConsumerService
 	EventServer          *eventServer.Server
@@ -61,6 +63,7 @@ func NewApp(
 	httpServer *http.Server,
 	grpcServer *grpc.Server,
 	wsServer *websocket.Server,
+	healthServer *health.Server,
 	eventBus event.Bus,
 	eventConsumer *event.ConsumerService,
 	eventServer *eventServer.Server,
@@ -80,6 +83,7 @@ func NewApp(
 		HTTPServer:           httpServer,
 		GRPCServer:           grpcServer,
 		WSServer:             wsServer,
+		HealthServer:         healthServer,
 		EventBus:             eventBus,
 		EventConsumer:        eventConsumer,
 		EventServer:          eventServer,

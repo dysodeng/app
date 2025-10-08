@@ -80,8 +80,9 @@ func InitApp(ctx context.Context) (*App, error) {
 	server := ProvideHTTPServer(config, handlerRegistry)
 	grpcServer := ProvideGRPCServer(ctx, config, serviceRegistry)
 	websocketServer := ProvideWebSocketServer(config, webSocket)
+	healthServer := ProvideHealthServer(config)
 	consumerService := ProvideEventConsumerService(mq, logger)
 	eventServer := ProvideEventServer(config, consumerService, eventHandlerRegistry)
-	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, bus, consumerService, eventServer)
+	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, healthServer, bus, consumerService, eventServer)
 	return app, nil
 }

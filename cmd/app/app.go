@@ -61,12 +61,13 @@ func (app *app) serve() {
 		app.mainApp.GRPCServer,
 		app.mainApp.HTTPServer,
 		app.mainApp.WSServer,
+		app.mainApp.HealthServer,
 	)
 
 	// 启动服务
 	for _, serverIns := range app.servers {
 		if err := serverIns.Start(); err != nil {
-			logger.Error(app.ctx, fmt.Sprintf("%s服务启动失败", serverIns.Name()), logger.ErrorField(err))
+			logger.Fatal(app.ctx, fmt.Sprintf("%s服务启动失败", serverIns.Name()), logger.ErrorField(err))
 		}
 		logger.Info(app.ctx, fmt.Sprintf("%s服务已启动", serverIns.Name()), logger.AddField("addr", serverIns.Addr()))
 	}

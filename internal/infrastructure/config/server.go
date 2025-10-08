@@ -8,6 +8,7 @@ type Server struct {
 	GRPC      GRPCConfig      `mapstructure:"grpc"`
 	WebSocket WebSocketConfig `mapstructure:"websocket"`
 	Event     EventConfig     `mapstructure:"event"`
+	Health    HealthConfig    `mapstructure:"health"`
 }
 
 // HTTPConfig HTTP服务配置
@@ -38,8 +39,14 @@ type EventConfig struct {
 	Driver  string `mapstructure:"driver"`
 }
 
+type HealthConfig struct {
+	Enabled bool `mapstructure:"enabled"`
+	Port    int  `mapstructure:"port"`
+}
+
 func serverBindEnv(v *viper.Viper) {
 	_ = v.BindEnv("http.port", "SERVER_HTTP_PORT")
 	_ = v.BindEnv("grpc.port", "SERVER_GRPC_PORT")
 	_ = v.BindEnv("websocket.port", "SERVER_WEBSOCKET_PORT")
+	_ = v.BindEnv("health.port", "SERVER_HEALTH_PORT")
 }

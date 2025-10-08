@@ -122,6 +122,6 @@ func (s *Server) Addr() string {
 }
 
 // Stop 停止gRPC服务
-func (s *Server) Stop(ctx context.Context) error {
+func (s *Server) Stop(_ context.Context) error {
 	return s.rpcServer.Stop()
 }

@@ -25,6 +25,7 @@ func InitApp(ctx context.Context) (*App, error) {
 		ProvideHTTPServer,
 		ProvideGRPCServer,
 		ProvideWebSocketServer,
+		ProvideHealthServer,
 		ProvideEventServer,
 		NewApp,
 	))

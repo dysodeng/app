@@ -23,6 +23,9 @@ server:
   event:
     enabled: true
     driver: "mq"
+  health:
+    enabled: true
+    port: 5000
 
 # 安全配置
 security:

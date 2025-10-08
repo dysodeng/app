@@ -13,6 +13,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
 	eventServer "github.com/dysodeng/app/internal/infrastructure/server/event"
 	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
+	"github.com/dysodeng/app/internal/infrastructure/server/health"
 	"github.com/dysodeng/app/internal/infrastructure/server/http"
 	"github.com/dysodeng/app/internal/infrastructure/server/websocket"
 	"github.com/dysodeng/app/internal/infrastructure/shared/db"
@@ -98,6 +99,11 @@ func ProvideGRPCServer(ctx context.Context, cfg *config.Config, serviceRegistry 
 // ProvideWebSocketServer 提供WebSocket服务器
 func ProvideWebSocketServer(cfg *config.Config, ws *webSocket.WebSocket) *websocket.Server {
 	return websocket.NewServer(cfg, ws)
+}
+
+// ProvideHealthServer 提供容器环境健康检查服务
+func ProvideHealthServer(cfg *config.Config) *health.Server {
+	return health.NewServer(cfg)
 }
 
 // ProvideTypedEventBus 提供类型化事件总线
