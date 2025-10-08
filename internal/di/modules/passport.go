@@ -1,17 +1,20 @@
 package modules
 
 import (
+	"github.com/google/wire"
+
 	"github.com/dysodeng/app/internal/application/passport/service"
 	userDomainService "github.com/dysodeng/app/internal/domain/user/service"
+	permissionRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/permission"
 	userRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/interfaces/http/handler/passport"
-	"github.com/google/wire"
 )
 
 // PassportModuleSet 认证模块依赖注入聚合
 var PassportModuleSet = wire.NewSet(
 	// 仓储层
 	userRepository.NewUserRepository,
+	permissionRepository.NewAdminRepository,
 
 	// 领域层
 	userDomainService.NewUserDomainService,

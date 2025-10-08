@@ -22,6 +22,10 @@ func NewTelephone(telephone string) (Telephone, error) {
 	return t, nil
 }
 
+func NewEmptyTelephone() Telephone {
+	return Telephone{}
+}
+
 func (t Telephone) String() string {
 	return t.Value()
 }

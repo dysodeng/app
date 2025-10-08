@@ -4,12 +4,6 @@ import (
 	domainErrors "github.com/dysodeng/app/internal/domain/shared/errors"
 )
 
-// 用户领域错误码前缀
-const (
-	// PrefixUser 用户领域错误码前缀
-	PrefixUser = "USER"
-)
-
 // 用户领域错误码
 const (
 	CodeUserNotFound               = "USER_NOT_FOUND"

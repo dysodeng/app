@@ -29,7 +29,7 @@ type userDomainService struct {
 
 func NewUserDomainService(userRepository repository.UserRepository) UserDomainService {
 	return &userDomainService{
-		baseTraceSpanName: "domain.user.service.PassportApplicationService",
+		baseTraceSpanName: "domain.user.service.UserDomainService",
 		userRepository:    userRepository,
 	}
 }

@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-gormigrate/gormigrate/v2"
 
+	"github.com/dysodeng/app/internal/infrastructure/persistence/entity/permission"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 )
@@ -13,6 +14,7 @@ import (
 var migrations []*gormigrate.Migration
 
 func margeMigrations() {
+	migrations = append(migrations, permissionMigrations...)
 	migrations = append(migrations, userMigrations...)
 	migrations = append(migrations, fileMigrations...)
 }
@@ -66,24 +68,26 @@ func Seed(ctx context.Context, tx transactions.TransactionManager) error {
 	logger.Info(ctx, "开始填充初始数据")
 
 	// 检查是否已有管理员用户
-	// var count int64
-	// tx.GetTx(ctx).Model(&entity.User{}).Count(&count)
+	var count int64
+	tx.GetTx(ctx).Model(&permission.Admin{}).Count(&count)
 
-	// 如果没有用户，创建一个管理员用户
-	// if count == 0 {
-	// adminUser := &entity.User{
-	// 	Username: "admin",
-	// 	Email:    "admin@example.com",
-	// 	Password: "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy", // 密码: password
-	// }
-	//
-	// if err := tx.GetTx(ctx).Create(adminUser).Error; err != nil {
-	// 	logger.Error(ctx, "创建管理员用户失败", logger.ErrorField(err))
-	// 	return err
-	// }
+	// 如果没有管理员用户，就创建一个
+	if count == 0 {
+		adminUser := &permission.Admin{
+			Username:     "admin",
+			SafePassword: "$2a$04$Vq4xCFDY9Iorlv89QcYrDubHZ4LRcRs6e4l4SVDKzkhd4BGWGbc7u", // 密码: 12345678
+			RealName:     "超级管理员",
+			IsSuper:      1,
+			Status:       1,
+		}
 
-	// logger.Info(ctx, "创建管理员用户成功")
-	// }
+		if err := tx.GetTx(ctx).Create(adminUser).Error; err != nil {
+			logger.Error(ctx, "创建管理员用户失败", logger.ErrorField(err))
+			return err
+		}
+
+		logger.Info(ctx, "创建管理员用户成功")
+	}
 
 	logger.Info(ctx, "初始数据填充完成")
 	return nil

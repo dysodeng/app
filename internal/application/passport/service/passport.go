@@ -12,10 +12,12 @@ import (
 	passportErrors "github.com/dysodeng/app/internal/domain/passport/errors"
 	"github.com/dysodeng/app/internal/domain/passport/model"
 	"github.com/dysodeng/app/internal/domain/passport/valueobject"
+	permissionRepository "github.com/dysodeng/app/internal/domain/permission/repository"
 	sharedErrors "github.com/dysodeng/app/internal/domain/shared/errors"
+	sharedVO "github.com/dysodeng/app/internal/domain/shared/valueobject"
 	userErrors "github.com/dysodeng/app/internal/domain/user/errors"
 	userModel "github.com/dysodeng/app/internal/domain/user/model"
-	"github.com/dysodeng/app/internal/domain/user/repository"
+	userRepository "github.com/dysodeng/app/internal/domain/user/repository"
 	"github.com/dysodeng/app/internal/domain/user/service"
 	userVO "github.com/dysodeng/app/internal/domain/user/valueobject"
 	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
@@ -35,14 +37,19 @@ type PassportApplicationService interface {
 
 type passportApplicationService struct {
 	baseTraceSpanName string
-	userRepository    repository.UserRepository
+	userRepository    userRepository.UserRepository
 	userDomainService service.UserDomainService
+	adminRepository   permissionRepository.AdminRepository
 }
 
-func NewPassportApplicationService(userDomainService service.UserDomainService) PassportApplicationService {
+func NewPassportApplicationService(
+	userDomainService service.UserDomainService,
+	adminRepository permissionRepository.AdminRepository,
+) PassportApplicationService {
 	return &passportApplicationService{
 		baseTraceSpanName: "application.passport.service.PassportApplicationService",
 		userDomainService: userDomainService,
+		adminRepository:   adminRepository,
 	}
 }
 
@@ -54,7 +61,7 @@ func (svc *passportApplicationService) Login(ctx context.Context, cmd *command.L
 	var attach map[string]interface{}
 
 	switch cmd.UserType {
-	case "user":
+	case "user": // 用户登录
 		info, err := svc.userLogin(spanCtx, cmd)
 		if err != nil {
 			return nil, err
@@ -75,7 +82,24 @@ func (svc *passportApplicationService) Login(ctx context.Context, cmd *command.L
 			"avatar":   info.Avatar,
 		}
 
-	case "ams":
+	case "ams": // 管理员登录
+		info, err := svc.amsLogin(spanCtx, cmd)
+		if err != nil {
+			return nil, err
+		}
+		if info == nil {
+			return nil, passportErrors.ErrLoginFailed
+		}
+
+		data = map[string]interface{}{
+			"admin_id": info.AdminID,
+		}
+		attach = map[string]interface{}{
+			"username":    info.Username,
+			"is_super":    info.IsSuper,
+			"permissions": info.Permissions,
+		}
+
 	default:
 		return nil, passportErrors.ErrLoginUserTypeInvalid
 	}
@@ -369,4 +393,34 @@ func (svc *passportApplicationService) getSessionKeyByCode(ctx context.Context, 
 	}
 
 	return
+}
+
+func (svc *passportApplicationService) amsLogin(ctx context.Context, cmd *command.LoginCommand) (*model.AdminLoginInfo, error) {
+	username, err := sharedVO.NewUsername(cmd.Username)
+	if err != nil {
+		return nil, err
+	}
+	if len(cmd.Password) <= 0 {
+		return nil, sharedErrors.ErrSharedPasswordEmpty
+	}
+
+	admin, err := svc.adminRepository.FindByUsername(ctx, username)
+	if err != nil {
+		logger.Error(ctx, passportErrors.ErrAdminUsernameQueryFailed.Message, logger.ErrorField(err))
+		return nil, passportErrors.ErrAdminUsernameQueryFailed.Wrap(err)
+	}
+	if admin == nil || admin.ID <= 0 {
+		return nil, passportErrors.ErrAdminUsernameNotFound
+	}
+
+	if !admin.SafePassword.Verify(cmd.Password) {
+		return nil, passportErrors.ErrAdminPasswordInvalid
+	}
+
+	return &model.AdminLoginInfo{
+		AdminID:     admin.ID,
+		Username:    admin.Username.Value(),
+		IsSuper:     admin.IsSuper.Bool(),
+		Permissions: []string{},
+	}, nil
 }
