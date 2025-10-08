@@ -37,10 +37,11 @@ init: install-hooks
 		ln -sf api/proto proto; \
 		echo "Created proto symlink for IDE support"; \
 	fi
-	@if [ ! -f .idea/protobuf.xml ]; then \
-		mkdir -p .idea; \
-		cp ./scripts/setting/protobuf.xml ./.idea/protobuf.xml; \
-		echo "Created .idea/protobuf.xml for GoLand support"; \
+	@if [ ! -f .idea ]; then \
+		@if [ ! -f .idea/protobuf.xml ]; then \
+			cp ./scripts/setting/protobuf.xml ./.idea/protobuf.xml; \
+			echo "Created .idea/protobuf.xml for GoLand support"; \
+		fi
 	fi
 	@go mod tidy
 	@go mod download
