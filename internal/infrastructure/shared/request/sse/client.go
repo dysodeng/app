@@ -73,7 +73,7 @@ func (c *Client) Connect(ctx context.Context, url string, opts ...ConnectOption)
 	}
 	req = req.WithContext(ctx)
 
-	// 必要头
+	// 必要请求头
 	req.Header.Set("Accept", "text/event-stream")
 	req.Header.Set("Cache-Control", "no-cache")
 	for k, v := range opt.Headers {
