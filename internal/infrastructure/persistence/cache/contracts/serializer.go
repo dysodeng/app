@@ -1,4 +1,4 @@
-package contract
+package contracts
 
 // Serializer 序列化器接口
 type Serializer[T any] interface {

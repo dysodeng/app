@@ -7,29 +7,34 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
+	"github.com/dysodeng/app/internal/infrastructure/config"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contracts"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/serializer"
 )
 
 // TypedCache 基于泛型的强类型缓存，支持标签失效与单航班
 type TypedCache[T any] struct {
 	ns         string
-	cache      contract.Cache
-	serializer contract.Serializer[T]
+	cache      contracts.Cache
+	serializer contracts.Serializer[T]
 	sf         SFGroup[T]
 	defaultTTL time.Duration
 }
 
 // NewTypedCache 创建类型缓存
-func NewTypedCache[T any](namespace string, cache contract.Cache) *TypedCache[T] {
+func NewTypedCache[T any](namespace string, cache contracts.Cache) *TypedCache[T] {
+	s := serializer.NewJSONSerializer[T]()
+	if config.GlobalConfig.Cache.Serializer == "msgpack" {
+		s = serializer.NewMsgpackSerializer[T]()
+	}
 	return &TypedCache[T]{
 		ns:         strings.TrimSpace(namespace),
 		cache:      cache,
-		serializer: serializer.NewJSONSerializer[T](),
+		serializer: s,
 	}
 }
 
-func (c *TypedCache[T]) WithSerializer(serializer contract.Serializer[T]) *TypedCache[T] {
+func (c *TypedCache[T]) WithSerializer(serializer contracts.Serializer[T]) *TypedCache[T] {
 	c.serializer = serializer
 	return c
 }

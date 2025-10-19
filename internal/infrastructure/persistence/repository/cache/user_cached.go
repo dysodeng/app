@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/google/uuid"
 
 	sharedVO "github.com/dysodeng/app/internal/domain/shared/valueobject"
@@ -15,6 +14,7 @@ import (
 	persistCache "github.com/dysodeng/app/internal/infrastructure/persistence/cache"
 	userRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	sharedModel "github.com/dysodeng/app/internal/infrastructure/shared/model"
 )
 
@@ -40,7 +40,7 @@ type cachedUserRepository struct {
 func NewCachedUserRepository(txManager transactions.TransactionManager) userDomainRepo.UserRepository {
 	driver := config.GlobalConfig.Cache.Driver
 	cacheTTL := 10 * time.Minute
-	tc := persistCache.NewTypedCacheWith[userCacheDTO](driver, "user", cacheTTL, true)
+	tc := persistCache.NewTypedCacheWith[userCacheDTO](driver, "user", cacheTTL)
 	return &cachedUserRepository{
 		next:     userRepository.NewUserRepository(txManager),
 		cache:    tc,

@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/redis/go-redis/v9"
 
+	"github.com/dysodeng/app/internal/infrastructure/config"
 	infraRedis "github.com/dysodeng/app/internal/infrastructure/shared/redis"
 )
 

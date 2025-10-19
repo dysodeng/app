@@ -3,12 +3,12 @@ package serializer
 import (
 	"github.com/vmihailenco/msgpack/v5"
 
-	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contracts"
 )
 
 type msgpackSerializer[T any] struct{}
 
-func NewMsgpackSerializer[T any]() contract.Serializer[T] {
+func NewMsgpackSerializer[T any]() contracts.Serializer[T] {
 	return &msgpackSerializer[T]{}
 }
 

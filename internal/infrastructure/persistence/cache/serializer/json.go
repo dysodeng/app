@@ -3,12 +3,12 @@ package serializer
 import (
 	"encoding/json"
 
-	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contract"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contracts"
 )
 
 type jsonSerializer[T any] struct{}
 
-func NewJSONSerializer[T any]() contract.Serializer[T] {
+func NewJSONSerializer[T any]() contracts.Serializer[T] {
 	return &jsonSerializer[T]{}
 }
 
