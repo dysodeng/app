@@ -125,6 +125,7 @@ func LoadConfig(configPath string) (*Config, error) {
 		Security:     securityConfig,
 		Database:     databaseConfig,
 		Redis:        redisConfig,
+		Cache:        cacheConfig,
 		MessageQueue: messageQueueConfig,
 		Etcd:         etcdConfig,
 		Storage:      storageConfig,

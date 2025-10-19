@@ -43,11 +43,13 @@ type passportApplicationService struct {
 }
 
 func NewPassportApplicationService(
+	userRepository userRepository.UserRepository,
 	userDomainService service.UserDomainService,
 	adminRepository permissionRepository.AdminRepository,
 ) PassportApplicationService {
 	return &passportApplicationService{
 		baseTraceSpanName: "application.passport.service.PassportApplicationService",
+		userRepository:    userRepository,
 		userDomainService: userDomainService,
 		adminRepository:   adminRepository,
 	}

@@ -84,9 +84,9 @@ func (repo *userRepository) FindByOpenId(ctx context.Context, platform, openId s
 	tx := repo.txManager.GetTx(spanCtx).Debug()
 
 	if platform == "WxMinioProgram" {
-		tx.Where("wx_mini_program_openid = ?", openId)
+		tx = tx.Where("wx_mini_program_openid = ?", openId)
 	} else {
-		tx.Where("wx_official_openid = ?", openId)
+		tx = tx.Where("wx_official_openid = ?", openId)
 	}
 
 	var info user.User
@@ -168,5 +168,6 @@ func (repo *userRepository) toModel(u *model.User) *user.User {
 		WxOfficialOpenID:        u.WxOfficialOpenID.String(),
 		Nickname:                u.Nickname,
 		Avatar:                  u.Avatar.RelativePath(),
+		Status:                  u.Status.Uint(),
 	}
 }

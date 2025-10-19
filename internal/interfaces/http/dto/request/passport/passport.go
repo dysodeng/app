@@ -7,7 +7,7 @@ type LoginRequest struct {
 	GrantType string `json:"grant_type"`
 	WxCode    string `json:"wx_code"`
 	Code      string `json:"code"`
-	OpenId    string `json:"open_id"`
+	OpenId    string `json:"openid"`
 
 	// 管理员登录
 	Username string `json:"username"`

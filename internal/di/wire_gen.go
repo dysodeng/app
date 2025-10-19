@@ -15,9 +15,9 @@ import (
 	"github.com/dysodeng/app/internal/di/event"
 	service3 "github.com/dysodeng/app/internal/domain/file/service"
 	"github.com/dysodeng/app/internal/domain/user/service"
+	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/cache"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/permission"
-	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/user"
 	"github.com/dysodeng/app/internal/interfaces/grpc"
 	service5 "github.com/dysodeng/app/internal/interfaces/grpc/service"
 	"github.com/dysodeng/app/internal/interfaces/http"
@@ -58,10 +58,10 @@ func InitApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	userRepository := user.NewUserRepository(transactionManager)
+	userRepository := cache.NewCachedUserRepository(transactionManager)
 	userDomainService := service.NewUserDomainService(userRepository)
 	adminRepository := permission.NewAdminRepository(transactionManager)
-	passportApplicationService := service2.NewPassportApplicationService(userDomainService, adminRepository)
+	passportApplicationService := service2.NewPassportApplicationService(userRepository, userDomainService, adminRepository)
 	passportHandler := passport.NewPassportHandler(passportApplicationService)
 	bus := ProvideTypedEventBus(mq)
 	fileRepository := file.NewFileRepository(transactionManager)
