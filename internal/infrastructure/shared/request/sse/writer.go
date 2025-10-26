@@ -74,10 +74,10 @@ func NewSSEWriter(w http.ResponseWriter) (*Writer, error) {
 	}, nil
 }
 
-// Write 向底层 http.ResponseWriter 写入原始字节数据，返回实际写入的字节数及可能发生的错误。
+// write 向底层 http.ResponseWriter 写入原始字节数据，返回实际写入的字节数及可能发生的错误。
 // 本方法直接透传至 http.ResponseWriter.Write，可用于发送任意自定义格式的 SSE 帧。
 // 注意：写入后数据仍可能驻留缓冲区，如需立即推送到客户端，应手动调用 Flush()。
-func (w *Writer) Write(data []byte) (int, error) {
+func (w *Writer) write(data []byte) (int, error) {
 	return w.writer.Write(data)
 }
 
@@ -107,7 +107,7 @@ func (w *Writer) WriteEvent(event string, payload any, id string) error {
 	}
 	builder.WriteString("\n")
 
-	_, err = w.Write(helper.StringToBytes(builder.String()))
+	_, err = w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
@@ -123,7 +123,7 @@ func (w *Writer) WriteData(payload any) error {
 	builder.Write(data)
 	builder.WriteString("\n\n")
 
-	_, err = w.Write(helper.StringToBytes(builder.String()))
+	_, err = w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
@@ -144,7 +144,7 @@ func (w *Writer) WriteDataWithID(payload any, id string) error {
 	}
 	builder.WriteString("\n")
 
-	_, err = w.Write(helper.StringToBytes(builder.String()))
+	_, err = w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
@@ -154,7 +154,7 @@ func (w *Writer) WriteComment(comment string) error {
 	builder.WriteString(": ")
 	builder.WriteString(escapeSSEFieldValue(comment))
 	builder.WriteString("\n\n")
-	_, err := w.Write(helper.StringToBytes(builder.String()))
+	_, err := w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
@@ -162,7 +162,7 @@ func (w *Writer) WriteComment(comment string) error {
 func (w *Writer) WriteRetry(ms int) error {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("retry: %d\n\n", ms))
-	_, err := w.Write(helper.StringToBytes(builder.String()))
+	_, err := w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
@@ -170,7 +170,7 @@ func (w *Writer) WriteRetry(ms int) error {
 func (w *Writer) WriteID(id string) error {
 	var builder strings.Builder
 	builder.WriteString(fmt.Sprintf("id: %s\n\n", escapeSSEFieldValue(id)))
-	_, err := w.Write(helper.StringToBytes(builder.String()))
+	_, err := w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
@@ -187,7 +187,7 @@ func (w *Writer) WriteDataLines(payload any) error {
 		builder.WriteString("\n")
 	}
 	builder.WriteString("\n")
-	_, err = w.Write(helper.StringToBytes(builder.String()))
+	_, err = w.write(helper.StringToBytes(builder.String()))
 	return err
 }
 
