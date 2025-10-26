@@ -3,6 +3,7 @@ package sse
 import (
 	"encoding/json"
 	"fmt"
+	"html"
 	"net/http"
 	"strings"
 
@@ -90,10 +91,10 @@ func (w *Writer) Flush() {
 func (w *Writer) WriteEvent(event string, payload any, id string) error {
 	var builder strings.Builder
 	if id != "" {
-		builder.WriteString(fmt.Sprintf("id: %s\n", id))
+		builder.WriteString(fmt.Sprintf("id: %s\n", escapeSSEFieldValue(id)))
 	}
 
-	builder.WriteString(fmt.Sprintf("event: %s\n", event))
+	builder.WriteString(fmt.Sprintf("event: %s\n", escapeSSEFieldValue(event)))
 
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -130,7 +131,7 @@ func (w *Writer) WriteData(payload any) error {
 func (w *Writer) WriteDataWithID(payload any, id string) error {
 	var builder strings.Builder
 	if id != "" {
-		builder.WriteString(fmt.Sprintf("id: %s\n", id))
+		builder.WriteString(fmt.Sprintf("id: %s\n", escapeSSEFieldValue(id)))
 	}
 	data, err := json.Marshal(payload)
 	if err != nil {
@@ -151,7 +152,7 @@ func (w *Writer) WriteDataWithID(payload any, id string) error {
 func (w *Writer) WriteComment(comment string) error {
 	var builder strings.Builder
 	builder.WriteString(": ")
-	builder.WriteString(comment)
+	builder.WriteString(escapeSSEFieldValue(comment))
 	builder.WriteString("\n\n")
 	_, err := w.Write(helper.StringToBytes(builder.String()))
 	return err
@@ -168,7 +169,7 @@ func (w *Writer) WriteRetry(ms int) error {
 // WriteID 仅写入id一条消息（用于同步Last-Event-ID游标）
 func (w *Writer) WriteID(id string) error {
 	var builder strings.Builder
-	builder.WriteString(fmt.Sprintf("id: %s\n\n", id))
+	builder.WriteString(fmt.Sprintf("id: %s\n\n", escapeSSEFieldValue(id)))
 	_, err := w.Write(helper.StringToBytes(builder.String()))
 	return err
 }
@@ -255,4 +256,18 @@ func (w *Writer) WriteDataLinesAndFlush(payload any) error {
 
 func splitLines(s string) []string {
 	return strings.Split(s, "\n")
+}
+
+// escapeSSEFieldValue 转义 SSE 字段值中的特殊字符，防止破坏 SSE 格式和 XSS 攻击
+// 注意：这里只转义字段值，不影响 SSE 协议本身的换行符
+func escapeSSEFieldValue(value string) string {
+	// 将字段值中的换行符替换为空格，防止破坏 SSE 的行结构
+	// SSE 格式要求每个字段占一行，字段值中不能包含换行符
+	value = strings.ReplaceAll(value, "\n", " ")
+	value = strings.ReplaceAll(value, "\r", " ")
+
+	// HTML 转义，防止 XSS 攻击
+	value = html.EscapeString(value)
+
+	return value
 }

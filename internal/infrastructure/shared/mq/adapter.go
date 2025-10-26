@@ -70,13 +70,13 @@ func createRedisConfig(cfg *config.Config) mqConfig.RedisConfig {
 }
 
 func createRabbitMQConfig(cfg *config.Config) mqConfig.RabbitMQConfig {
-	port, _ := strconv.ParseInt(cfg.MessageQueue.Amqp.Port, 10, 64)
+	port, _ := strconv.Atoi(cfg.MessageQueue.Amqp.Port)
 	if port <= 0 {
 		port = 5672
 	}
 	return mqConfig.RabbitMQConfig{
 		Host:              cfg.MessageQueue.Amqp.Host,
-		Port:              int(port),
+		Port:              port,
 		Username:          cfg.MessageQueue.Amqp.Username,
 		Password:          cfg.MessageQueue.Amqp.Password,
 		VHost:             cfg.MessageQueue.Amqp.Vhost,
