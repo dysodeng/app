@@ -10,47 +10,24 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
-	HTTP "github.com/dysodeng/app/internal/interfaces/http"
+	httpInterfaces "github.com/dysodeng/app/internal/interfaces/http"
 	"github.com/dysodeng/app/internal/interfaces/http/middleware"
 	"github.com/dysodeng/app/internal/interfaces/http/router"
 )
 
 // Server HTTP服务
 type Server struct {
-	config     *config.Config
-	engine     *gin.Engine
-	httpServer *http.Server
+	config          *config.Config
+	engine          *gin.Engine
+	handlerRegistry *httpInterfaces.HandlerRegistry
+	httpServer      *http.Server
 }
 
 // NewServer 创建HTTP服务
-func NewServer(config *config.Config, handlerRegistry *HTTP.HandlerRegistry) *Server {
-	// 设置gin模式
-	if !config.App.Debug {
-		gin.SetMode(gin.ReleaseMode)
-	}
-
-	engine := gin.New()
-	engine.Use(middleware.Recovery())
-	engine.Use(middleware.Logger())
-	engine.Use(middleware.CORS())
-	engine.Use(middleware.StartTrace())
-
-	// 静态资源管理
-	if config.Storage.Driver == "local" && config.Storage.Local.StaticEnabled {
-		engine.Static("/uploads", "./uploads")
-	}
-
-	// 注册路由
-	router.RegisterRouter(engine, handlerRegistry)
-
+func NewServer(config *config.Config, handlerRegistry *httpInterfaces.HandlerRegistry) *Server {
 	return &Server{
-		config: config,
-		engine: engine,
-		httpServer: &http.Server{
-			Addr:              fmt.Sprintf("%s:%d", config.Server.HTTP.Host, config.Server.HTTP.Port),
-			Handler:           engine,
-			ReadHeaderTimeout: 10 * time.Second,
-		},
+		config:          config,
+		handlerRegistry: handlerRegistry,
 	}
 }
 
@@ -74,6 +51,33 @@ func (s *Server) Name() string {
 
 // Start 启动HTTP服务
 func (s *Server) Start() error {
+	// 设置gin模式
+	if !s.config.App.Debug {
+		gin.SetMode(gin.ReleaseMode)
+	}
+
+	engine := gin.New()
+	engine.Use(middleware.Recovery())
+	engine.Use(middleware.Logger())
+	engine.Use(middleware.CORS())
+	engine.Use(middleware.StartTrace())
+
+	// 静态资源管理
+	if s.config.Storage.Driver == "local" && s.config.Storage.Local.StaticEnabled {
+		engine.Static("/uploads", "./uploads")
+	}
+
+	// 注册路由
+	router.RegisterRouter(engine, s.handlerRegistry)
+
+	// 创建http服务器
+	s.engine = engine
+	s.httpServer = &http.Server{
+		Addr:              fmt.Sprintf("%s:%d", s.config.Server.HTTP.Host, s.config.Server.HTTP.Port),
+		Handler:           engine,
+		ReadHeaderTimeout: 10 * time.Second,
+	}
+
 	var errChan = make(chan error, 1)
 	go func() {
 		// ListenAndServe 只有在服务器关闭或发生错误时才会返回
