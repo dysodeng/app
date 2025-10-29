@@ -12,7 +12,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/serializer"
 )
 
-// TypedCache 基于泛型的强类型缓存，支持标签失效与单航班
+// TypedCache 基于泛型的强类型缓存，支持标签失效与单航班防击穿
 type TypedCache[T any] struct {
 	ns         string
 	cache      contracts.Cache

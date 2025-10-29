@@ -60,7 +60,7 @@ func (w *handlerWrapper) handle(ctx context.Context, eventType string, eventData
 	}
 
 	// 处理事件
-	if err := w.handler.HandleTypedEvent(ctx, event); err != nil {
+	if err := w.handler.Handle(ctx, event); err != nil {
 		w.logger.Error("Handler failed to process event",
 			zap.String("eventType", eventType),
 			zap.String("handlerType", fmt.Sprintf("%T", w.handler)),

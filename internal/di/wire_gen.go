@@ -63,7 +63,7 @@ func InitApp(ctx context.Context) (*App, error) {
 	adminRepository := permission.NewAdminRepository(transactionManager)
 	passportApplicationService := service2.NewPassportApplicationService(userRepository, userDomainService, adminRepository)
 	passportHandler := passport.NewPassportHandler(passportApplicationService)
-	bus := ProvideTypedEventBus(mq)
+	bus := ProvideEventBus(mq)
 	fileRepository := file.NewFileRepository(transactionManager)
 	uploaderRepository := file.NewUploaderRepository(transactionManager)
 	uploaderDomainService := service3.NewUploaderDomainService(transactionManager, bus, fileRepository, uploaderRepository)

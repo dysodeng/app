@@ -18,8 +18,8 @@ func NewFileUploadedHandler() *FileUploadedHandler {
 	return &FileUploadedHandler{}
 }
 
-// HandleTypedEvent 处理通用类型的事件
-func (h *FileUploadedHandler) HandleTypedEvent(ctx context.Context, event any) error {
+// Handle 事件处理
+func (h *FileUploadedHandler) Handle(ctx context.Context, event any) error {
 	domainEvent, err := h.ParseDomainEvent(ctx, event)
 	if err != nil {
 		return err
@@ -50,7 +50,7 @@ func (h *FileUploadedHandler) HandleTypedEvent(ctx context.Context, event any) e
 	return nil
 }
 
-// InterestedEventTypes 返回感兴趣的事件类型列表
+// InterestedEventTypes 返回感兴趣的事件列表
 func (h *FileUploadedHandler) InterestedEventTypes() []string {
 	return []string{fileEvent.FileUploadedEventType}
 }

@@ -84,8 +84,8 @@ func NewDomainEvent[T any](eventType string, aggregateID string, aggregateName s
 
 // Handler 事件处理器接口
 type Handler interface {
-	// HandleTypedEvent 处理类型化事件
-	HandleTypedEvent(ctx context.Context, event any) error
+	// Handle 事件处理
+	Handle(ctx context.Context, event any) error
 	// InterestedEventTypes 返回感兴趣的事件类型列表
 	InterestedEventTypes() []string
 }

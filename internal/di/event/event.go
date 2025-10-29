@@ -6,7 +6,7 @@ import (
 
 // HandlerRegistry 事件处理器注册表
 type HandlerRegistry struct {
-	handlers []any // 类型化事件处理器
+	handlers []any // 事件处理器
 }
 
 func NewHandlerRegistry(

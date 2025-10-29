@@ -106,8 +106,8 @@ func ProvideHealthServer(cfg *config.Config) *health.Server {
 	return health.NewServer(cfg)
 }
 
-// ProvideTypedEventBus 提供类型化事件总线
-func ProvideTypedEventBus(mq contract.MQ) event.Bus {
+// ProvideEventBus 提供事件总线
+func ProvideEventBus(mq contract.MQ) event.Bus {
 	return event.NewMQEventBus(mq.Producer())
 }
 
