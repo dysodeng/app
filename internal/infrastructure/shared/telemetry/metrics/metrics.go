@@ -3,7 +3,6 @@ package metrics
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/resource"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp"
@@ -11,6 +10,7 @@ import (
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
+	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/resource"
 )
 
 var meter metric.Meter
@@ -26,7 +26,7 @@ func Init(cfg *config.Config) error {
 		}
 		exp, err := otlpmetrichttp.New(
 			context.Background(),
-			otlpmetrichttp.WithEndpointURL(cfg.Monitor.Tracer.OtlpEndpoint),
+			otlpmetrichttp.WithEndpointURL(cfg.Monitor.Metrics.OtlpEndpoint),
 		)
 		if err != nil {
 			panic(err)

@@ -3,7 +3,6 @@ package trace
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/resource"
 	"github.com/gin-gonic/gin"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel"
@@ -13,6 +12,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
+	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/resource"
 )
 
 // provider 全局 TracerProvider

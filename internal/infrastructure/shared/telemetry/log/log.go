@@ -3,14 +3,13 @@ package log
 import (
 	"context"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/resource"
 	"github.com/pkg/errors"
-
 	"go.opentelemetry.io/otel/exporters/otlp/otlplog/otlploghttp"
 	"go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/sdk/log"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
+	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/resource"
 )
 
 var otlpLoggerProvider *log.LoggerProvider
