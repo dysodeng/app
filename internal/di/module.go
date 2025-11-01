@@ -6,10 +6,10 @@ import (
 	"github.com/dysodeng/app/internal/di/modules"
 )
 
-// AllModulesSet 所有业务模块的聚合Wire Set
-var AllModulesSet = wire.NewSet(
+// ModulesSet 所有业务模块的聚合Wire Set
+var ModulesSet = wire.NewSet(
 	// 在这里添加所有业务模块的Wire Set
-	// 这样在wire.go中只需要引用这一个AllModulesSet
+	// 这样在wire.go中只需要引用这一个ModulesSet
 	modules.SharedModuleSet,
 	modules.PassportModuleSet,
 	modules.FileModuleSet,

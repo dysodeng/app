@@ -3,7 +3,6 @@ package model
 import (
 	"time"
 
-	"github.com/dysodeng/fs"
 	"github.com/google/uuid"
 )
 
@@ -59,16 +58,4 @@ func (m *MultipartUpload) Complete() {
 // Abort 取消上传
 func (m *MultipartUpload) Abort() {
 	m.Status = 3
-}
-
-func PartListFromStoragePart(parts []fs.MultipartPart) []Part {
-	partList := make([]Part, len(parts))
-	for i, part := range parts {
-		partList[i] = Part{
-			PartNumber: part.PartNumber,
-			ETag:       part.ETag,
-			Size:       part.Size,
-		}
-	}
-	return partList
 }

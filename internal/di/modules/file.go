@@ -3,9 +3,9 @@ package modules
 import (
 	"github.com/google/wire"
 
+	fileDecorator "github.com/dysodeng/app/internal/application/file/decorator"
 	"github.com/dysodeng/app/internal/application/file/event/handler"
 	fileApplicationService "github.com/dysodeng/app/internal/application/file/service"
-	"github.com/dysodeng/app/internal/domain/file/service"
 	fileRepository "github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	fileGRPCService "github.com/dysodeng/app/internal/interfaces/grpc/service"
 	"github.com/dysodeng/app/internal/interfaces/http/handler/file"
@@ -18,8 +18,8 @@ var FileModuleSet = wire.NewSet(
 	fileRepository.NewUploaderRepository,
 
 	// 领域层
-	service.NewFileDomainService,
-	service.NewUploaderDomainService,
+	fileDecorator.NewFileDomainServiceWithTracing,
+	fileDecorator.NewUploaderDomainServiceWithTracing,
 
 	// 应用层
 	fileApplicationService.NewFileApplicationService,

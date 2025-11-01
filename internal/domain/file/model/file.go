@@ -1,7 +1,6 @@
 package model
 
 import (
-	"context"
 	"strings"
 	"time"
 
@@ -9,7 +8,6 @@ import (
 
 	"github.com/dysodeng/app/internal/domain/file/errors"
 	"github.com/dysodeng/app/internal/domain/file/valueobject"
-	"github.com/dysodeng/app/internal/infrastructure/shared/storage"
 )
 
 // File 文件领域模型
@@ -26,13 +24,13 @@ type File struct {
 	CreatedAt time.Time             `json:"created_at"`
 }
 
-// NewFile 创建文件
-func NewFile(ctx context.Context, name, ext, path, mimeType string, size uint64) *File {
+// NewFile 创建文件（不再依赖基础设施进行路径转换）
+func NewFile(name, ext, path, mimeType string, size uint64) *File {
 	fileName := valueobject.FileName(name)
 	return &File{
 		Name:      fileName,
 		NameIndex: fileName.NameIndex(),
-		Path:      storage.Instance().RelativePath(ctx, path),
+		Path:      path,
 		Ext:       ext,
 		MimeType:  mimeType,
 		Size:      size,

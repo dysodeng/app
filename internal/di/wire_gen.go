@@ -9,17 +9,18 @@ package di
 import (
 	"context"
 
+	"github.com/dysodeng/app/internal/application/file/decorator"
 	"github.com/dysodeng/app/internal/application/file/event/handler"
-	service4 "github.com/dysodeng/app/internal/application/file/service"
+	service3 "github.com/dysodeng/app/internal/application/file/service"
 	service2 "github.com/dysodeng/app/internal/application/passport/service"
 	"github.com/dysodeng/app/internal/di/event"
-	service3 "github.com/dysodeng/app/internal/domain/file/service"
+	"github.com/dysodeng/app/internal/di/provider"
 	"github.com/dysodeng/app/internal/domain/user/service"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/cache"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/file"
 	"github.com/dysodeng/app/internal/infrastructure/persistence/repository/permission"
 	"github.com/dysodeng/app/internal/interfaces/grpc"
-	service5 "github.com/dysodeng/app/internal/interfaces/grpc/service"
+	service4 "github.com/dysodeng/app/internal/interfaces/grpc/service"
 	"github.com/dysodeng/app/internal/interfaces/http"
 	file2 "github.com/dysodeng/app/internal/interfaces/http/handler/file"
 	"github.com/dysodeng/app/internal/interfaces/http/handler/passport"
@@ -30,31 +31,31 @@ import (
 
 // InitApp 初始化应用程序
 func InitApp(ctx context.Context) (*App, error) {
-	config, err := ProvideConfig()
+	config, err := provider.ProvideConfig()
 	if err != nil {
 		return nil, err
 	}
-	monitor, err := ProvideMonitor(config)
+	monitor, err := provider.ProvideMonitor(config)
 	if err != nil {
 		return nil, err
 	}
-	logger, err := ProvideLogger(ctx, config)
+	logger, err := provider.ProvideLogger(ctx, config)
 	if err != nil {
 		return nil, err
 	}
-	transactionManager, err := ProvideDB(ctx, config)
+	transactionManager, err := provider.ProvideDB(ctx, config)
 	if err != nil {
 		return nil, err
 	}
-	client, err := ProvideRedis(config)
+	client, err := provider.ProvideRedis(config)
 	if err != nil {
 		return nil, err
 	}
-	mq, err := ProvideMessageQueue(config)
+	mq, err := provider.ProvideMessageQueue(config)
 	if err != nil {
 		return nil, err
 	}
-	storage, err := ProvideStorage(config)
+	storage, err := provider.ProvideStorage(config)
 	if err != nil {
 		return nil, err
 	}
@@ -63,11 +64,15 @@ func InitApp(ctx context.Context) (*App, error) {
 	adminRepository := permission.NewAdminRepository(transactionManager)
 	passportApplicationService := service2.NewPassportApplicationService(userRepository, userDomainService, adminRepository)
 	passportHandler := passport.NewPassportHandler(passportApplicationService)
-	bus := ProvideEventBus(mq)
 	fileRepository := file.NewFileRepository(transactionManager)
 	uploaderRepository := file.NewUploaderRepository(transactionManager)
-	uploaderDomainService := service3.NewUploaderDomainService(transactionManager, bus, fileRepository, uploaderRepository)
-	uploaderApplicationService := service4.NewUploaderApplicationService(uploaderDomainService)
+	fileStorage := provider.ProvideFileStoragePort(storage)
+	filePolicy := provider.ProvideFilePolicyPort(config)
+	uploaderDomainService := decorator.NewUploaderDomainServiceWithTracing(fileRepository, uploaderRepository, fileStorage, filePolicy)
+	bus := provider.ProvideEventBus(mq)
+	eventPublisher := provider.ProvideEventPublisherPort(bus)
+	portTransactionManager := provider.ProvideTransactionManagerPort(transactionManager)
+	uploaderApplicationService := service3.NewUploaderApplicationService(uploaderDomainService, eventPublisher, portTransactionManager, fileRepository, uploaderRepository, fileStorage)
 	uploaderHandler := file2.NewUploaderHandler(uploaderApplicationService)
 	handlerRegistry := http.NewHandlerRegistry(passportHandler, uploaderHandler)
 	textMessageHandler := websocket.NewTextMessageHandler()
@@ -75,16 +80,16 @@ func InitApp(ctx context.Context) (*App, error) {
 	webSocket := websocket.NewWebSocket(textMessageHandler, binaryMessageHandler)
 	fileUploadedHandler := handler.NewFileUploadedHandler()
 	eventHandlerRegistry := event.NewHandlerRegistry(fileUploadedHandler)
-	fileDomainService := service3.NewFileDomainService(fileRepository)
-	fileApplicationService := service4.NewFileApplicationService(fileDomainService)
-	fileService := service5.NewFileService(fileApplicationService)
+	fileDomainService := decorator.NewFileDomainServiceWithTracing(fileRepository)
+	fileApplicationService := service3.NewFileApplicationService(fileDomainService)
+	fileService := service4.NewFileService(fileApplicationService)
 	serviceRegistry := grpc.NewServiceRegistry(fileService)
-	server := ProvideHTTPServer(config, handlerRegistry)
-	grpcServer := ProvideGRPCServer(ctx, config, serviceRegistry)
-	websocketServer := ProvideWebSocketServer(config, webSocket)
-	healthServer := ProvideHealthServer(config)
-	consumerService := ProvideEventConsumerService(mq, logger)
-	eventServer := ProvideEventServer(config, consumerService, eventHandlerRegistry)
+	server := provider.ProvideHTTPServer(config, handlerRegistry)
+	grpcServer := provider.ProvideGRPCServer(ctx, config, serviceRegistry)
+	websocketServer := provider.ProvideWebSocketServer(config, webSocket)
+	healthServer := provider.ProvideHealthServer(config)
+	consumerService := provider.ProvideEventConsumerService(mq, logger)
+	eventServer := provider.ProvideEventServer(config, consumerService, eventHandlerRegistry)
 	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, healthServer, bus, consumerService, eventServer)
 	return app, nil
 }

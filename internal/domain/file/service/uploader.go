@@ -11,20 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/dysodeng/app/internal/domain/file/errors"
-	fileEvent "github.com/dysodeng/app/internal/domain/file/event"
-	"github.com/dysodeng/app/internal/domain/file/model"
-	"github.com/dysodeng/app/internal/domain/file/repository"
-	"github.com/dysodeng/app/internal/domain/file/valueobject"
-	"github.com/dysodeng/app/internal/infrastructure/config"
-	"github.com/dysodeng/app/internal/infrastructure/event"
-	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
-	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
-	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
-	fsStorage "github.com/dysodeng/app/internal/infrastructure/shared/storage"
-	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
-	"github.com/dysodeng/fs"
 	"github.com/google/uuid"
+
+	"github.com/dysodeng/app/internal/domain/file/errors"
+	"github.com/dysodeng/app/internal/domain/file/model"
+	filePort "github.com/dysodeng/app/internal/domain/file/port"
+	"github.com/dysodeng/app/internal/domain/file/repository"
+	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
 )
 
 // UploaderDomainService 文件上传领域服务
@@ -42,27 +35,23 @@ type UploaderDomainService interface {
 }
 
 type uploaderDomainService struct {
-	baseTraceSpanName  string
-	txManager          transactions.TransactionManager
-	eventBus           event.Bus
 	fileRepository     repository.FileRepository
 	uploaderRepository repository.UploaderRepository
-	storage            *fsStorage.Storage
+	storage            filePort.FileStorage
+	policy             filePort.FilePolicy
 }
 
 func NewUploaderDomainService(
-	txManager transactions.TransactionManager,
-	eventBus event.Bus,
 	fileRepository repository.FileRepository,
 	uploaderRepository repository.UploaderRepository,
+	storage filePort.FileStorage,
+	policy filePort.FilePolicy,
 ) UploaderDomainService {
 	return &uploaderDomainService{
-		baseTraceSpanName:  "domain.file.service.UploaderDomainService",
-		txManager:          txManager,
-		eventBus:           eventBus,
 		fileRepository:     fileRepository,
 		uploaderRepository: uploaderRepository,
-		storage:            fsStorage.Instance(),
+		storage:            storage,
+		policy:             policy,
 	}
 }
 
@@ -104,53 +93,32 @@ func (svc *uploaderDomainService) checkFileAllow(ext, mimeType string, size int6
 	ext = strings.TrimLeft(ext, ".")
 	mediaType := model.DetermineMediaType(ext, mimeType)
 
-	var allow config.FileAllow
-	switch mediaType {
-	case valueobject.MediaTypeImage:
-		allow = config.AmsFileAllow.Image
-	case valueobject.MediaTypeAudio:
-		allow = config.AmsFileAllow.Audio
-	case valueobject.MediaTypeVideo:
-		allow = config.AmsFileAllow.Video
-	case valueobject.MediaTypeDocument:
-		allow = config.AmsFileAllow.Document
-	case valueobject.MediaTypeCompressed:
-		allow = config.AmsFileAllow.Compressed
-	default:
+	allowedExts, maxSize := svc.policy.Allow(mediaType)
+	if !helper.Contain(allowedExts, ext) {
 		return errors.ErrFileInvalidType
 	}
-
-	if !helper.Contain(allow.AllowMimeType, ext) {
-		return errors.ErrFileInvalidType
-	}
-	if size > allow.AllowCapacitySize.ToInt() {
+	if size > maxSize {
 		return errors.ErrFileSizeExceeded
 	}
-
 	return nil
 }
 
 func (svc *uploaderDomainService) UploadFile(ctx context.Context, file *multipart.FileHeader) (*model.File, error) {
-	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".UploadFile")
-	defer span.End()
-
 	ext := strings.ToLower(filepath.Ext(file.Filename))
 	src, err := file.Open()
 	if err != nil {
 		return nil, err
 	}
-	defer func() {
-		_ = src.Close()
-	}()
+	defer func() { _ = src.Close() }()
 
-	mimeType := fs.TypeByExtension(file.Filename)
+	mimeType := svc.storage.TypeByExtension(file.Filename)
 
 	// 检查文件上传限制
 	if err = svc.checkFileAllow(ext, mimeType, file.Size); err != nil {
 		return nil, err
 	}
 
-	// 查询文件是否已存在
+	// 查重
 	exists, err := svc.fileRepository.CheckFileNameExists(ctx, file.Filename, uuid.Nil)
 	if err != nil {
 		return nil, errors.ErrFileCheckFailed.Wrap(err)
@@ -159,50 +127,30 @@ func (svc *uploaderDomainService) UploadFile(ctx context.Context, file *multipar
 		return nil, errors.ErrFileNameExists
 	}
 
-	// 生成最终路径
+	// 生成最终路径（相对路径）
 	filePath, _ := svc.generateFilePath(ext)
 
-	// 文件上传
-	uploader := svc.storage.FileSystem().Uploader()
-	err = uploader.Upload(spanCtx, filePath, src, fs.WithContentType(mimeType))
-	if err != nil {
+	// 上传
+	if err = svc.storage.Upload(ctx, filePath, src, mimeType); err != nil {
 		return nil, errors.ErrFileUploadFailed.Wrap(err)
 	}
 
-	// 保存文件记录
-	f := model.NewFile(spanCtx, file.Filename, ext, filePath, mimeType, uint64(file.Size))
+	f := model.NewFile(file.Filename, ext, filePath, mimeType, uint64(file.Size))
 	if err = f.Validate(); err != nil {
 		return nil, err
 	}
-
-	if err = svc.fileRepository.Save(spanCtx, f); err != nil {
-		return nil, errors.ErrFileRecordSaveFailed.Wrap(err)
-	}
-
-	f.Path = svc.storage.FullUrl(spanCtx, f.Path)
-
-	// 发布领域事件
-	err = svc.eventBus.PublishEvent(spanCtx, fileEvent.NewFileUploadedEvent(f.ID, f.Name.String(), f.Path, f.Size))
-	if err != nil {
-		logger.Error(spanCtx, "eventBus.PublishEvent failed", logger.ErrorField(err))
-	}
-
 	return f, nil
 }
 
 func (svc *uploaderDomainService) InitMultipartUpload(ctx context.Context, filename string, fileSize int64) (string, string, error) {
-	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".UploadFile")
-	defer span.End()
-
 	ext := strings.ToLower(filepath.Ext(filename))
-	mimeType := fs.TypeByExtension(filename)
+	mimeType := svc.storage.TypeByExtension(filename)
 
-	// 检查文件上传限制
 	if err := svc.checkFileAllow(ext, mimeType, fileSize); err != nil {
 		return "", "", err
 	}
 
-	// 查询文件是否已存在
+	// 查重
 	exists, err := svc.fileRepository.CheckFileNameExists(ctx, filename, uuid.Nil)
 	if err != nil {
 		return "", "", errors.ErrFileCheckFailed.Wrap(err)
@@ -213,121 +161,67 @@ func (svc *uploaderDomainService) InitMultipartUpload(ctx context.Context, filen
 
 	filePath, _ := svc.generateFilePath(ext)
 
-	uploader := svc.storage.FileSystem().Uploader()
-	uploadId, err := uploader.InitMultipartUpload(spanCtx, filePath, fs.WithContentType(mimeType))
+	uploadId, err := svc.storage.InitMultipartUpload(ctx, filePath, mimeType)
 	if err != nil {
 		return "", "", errors.ErrMultipartInitFailed.Wrap(err)
 	}
 
-	mu := model.NewMultipartUpload(filename, filePath, uint64(fileSize), mimeType, ext, uploadId)
-	err = svc.uploaderRepository.CreateMultipartUpload(spanCtx, mu)
-	if err != nil {
-		_ = uploader.AbortMultipartUpload(spanCtx, filePath, uploadId)
-		return "", "", errors.ErrMultipartInitFailed.Wrap(err)
-	}
-
-	return uploadId, svc.storage.FullUrl(spanCtx, filePath), nil
+	return uploadId, filePath, nil
 }
 
 func (svc *uploaderDomainService) UploadPart(ctx context.Context, path, uploadId string, partNumber int, file *multipart.FileHeader) (*model.Part, error) {
-	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".UploadPart")
-	defer span.End()
-
 	src, err := file.Open()
 	if err != nil {
 		return nil, errors.ErrMultipartReadFailed.Wrap(err)
 	}
-	defer func() {
-		_ = src.Close()
-	}()
+	defer func() { _ = src.Close() }()
 
-	uploader := svc.storage.FileSystem().Uploader()
-	etag, err := uploader.UploadPart(spanCtx, svc.storage.RelativePath(spanCtx, path), uploadId, partNumber, src)
+	etag, err := svc.storage.UploadPart(ctx, svc.storage.RelativePath(ctx, path), uploadId, partNumber, src)
 	if err != nil {
 		return nil, errors.ErrMultipartUploadFailed.Wrap(err)
 	}
-
 	return &model.Part{PartNumber: partNumber, ETag: etag, Size: file.Size}, nil
 }
 
 func (svc *uploaderDomainService) CompleteMultipartUpload(ctx context.Context, uploadId string, parts []model.Part) (*model.File, error) {
-	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".CompleteMultipartUpload")
-	defer span.End()
-
-	mu, err := svc.uploaderRepository.FindMultipartUploadByUploadId(spanCtx, uploadId)
+	mu, err := svc.uploaderRepository.FindMultipartUploadByUploadId(ctx, uploadId)
 	if err != nil {
 		return nil, errors.ErrMultipartStatusFailed.Wrap(err)
 	}
 
 	var totalSize int64
-	var fsParts []fs.MultipartPart
-	for _, part := range parts {
-		totalSize += part.Size
-		fsParts = append(fsParts, fs.MultipartPart{
-			PartNumber: part.PartNumber,
-			ETag:       part.ETag,
-			Size:       part.Size,
-		})
+	for _, p := range parts {
+		totalSize += p.Size
 	}
 
-	uploader := svc.storage.FileSystem().Uploader()
-
-	// 检查文件上传限制
+	// 检查限制
 	if err = svc.checkFileAllow(mu.Ext, mu.MimeType, totalSize); err != nil {
-		_ = uploader.AbortMultipartUpload(spanCtx, mu.Path, uploadId) // 取消分片上传
-		_ = svc.uploaderRepository.MultipartUploadStatus(spanCtx, uploadId, 3)
 		return nil, err
 	}
 
-	filePath := svc.storage.RelativePath(spanCtx, mu.Path)
-
-	if err = uploader.CompleteMultipartUpload(spanCtx, filePath, uploadId, fsParts); err != nil {
+	filePath := svc.storage.RelativePath(ctx, mu.Path)
+	if err = svc.storage.CompleteMultipartUpload(ctx, filePath, uploadId, parts); err != nil {
 		return nil, errors.ErrMultipartCompleteFailed.Wrap(err)
 	}
 
-	f := model.NewFile(spanCtx, mu.FileName, mu.Ext, filePath, mu.MimeType, uint64(totalSize))
+	f := model.NewFile(mu.FileName, mu.Ext, filePath, mu.MimeType, uint64(totalSize))
 	if err = f.Validate(); err != nil {
 		return nil, err
-	}
-
-	err = svc.txManager.Transaction(spanCtx, func(txCtx context.Context) error {
-		if err = svc.fileRepository.Save(txCtx, f); err != nil {
-			return err
-		}
-		// 处理分片上传状态
-		_ = svc.uploaderRepository.MultipartUploadStatus(txCtx, uploadId, 2)
-		return nil
-	})
-	if err != nil {
-		_ = uploader.AbortMultipartUpload(spanCtx, filePath, uploadId)
-		return nil, errors.ErrMultipartCompleteFailed.Wrap(err)
-	}
-
-	f.Path = svc.storage.FullUrl(spanCtx, filePath)
-
-	// 发布领域事件
-	err = svc.eventBus.PublishEvent(spanCtx, fileEvent.NewFileUploadedEvent(f.ID, f.Name.String(), f.Path, f.Size))
-	if err != nil {
-		logger.Error(spanCtx, "eventBus.PublishEvent failed", logger.ErrorField(err))
 	}
 
 	return f, nil
 }
 
 func (svc *uploaderDomainService) MultipartUploadStatus(ctx context.Context, uploadId string) ([]model.Part, string, error) {
-	spanCtx, span := trace.Tracer().Start(ctx, svc.baseTraceSpanName+".MultipartUploadStatus")
-	defer span.End()
-
-	mu, err := svc.uploaderRepository.FindMultipartUploadByUploadId(spanCtx, uploadId)
+	mu, err := svc.uploaderRepository.FindMultipartUploadByUploadId(ctx, uploadId)
 	if err != nil {
 		return nil, "", errors.ErrMultipartStatusFailed.Wrap(err)
 	}
 
-	uploader := svc.storage.FileSystem().Uploader()
-	parts, err := uploader.ListUploadedParts(spanCtx, mu.Path, uploadId)
+	parts, err := svc.storage.ListUploadedParts(ctx, mu.Path, uploadId)
 	if err != nil {
 		return nil, "", errors.ErrMultipartStatusFailed.Wrap(err)
 	}
 
-	return model.PartListFromStoragePart(parts), mu.Path, nil
+	return parts, mu.Path, nil
 }
