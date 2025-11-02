@@ -34,6 +34,7 @@ func (svc *FileService) RegisterMetadata() metadata.ServiceRegisterMetadata {
 		ServiceName: "file.FileService",
 		Version:     metadata.DefaultVersion,
 		Env:         config.GlobalConfig.App.Environment,
+		Tags:        []string{"file", "uploader", "file.storage"},
 	}
 }
 
