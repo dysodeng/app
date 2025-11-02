@@ -9,6 +9,13 @@ if [[ -n "$files" ]]; then
     # 格式化代码并优化导入
     echo "Running goimports..."
     for file in $files; do
+        # 跳过 wire_gen.go 的 imports 检查与处理
+        if [[ "$(basename "$file")" == "wire_gen.go" ]]; then
+            echo "Skipping goimports/gofmt for $file"
+            git add "$file"
+            continue
+        fi
+
         # 检查 goimports 是否安装
         if ! command -v goimports &> /dev/null; then
             echo "goimports not found, installing..."

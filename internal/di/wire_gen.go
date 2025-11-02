@@ -8,7 +8,6 @@ package di
 
 import (
 	"context"
-
 	"github.com/dysodeng/app/internal/application/file/decorator"
 	"github.com/dysodeng/app/internal/application/file/event/handler"
 	service3 "github.com/dysodeng/app/internal/application/file/service"
