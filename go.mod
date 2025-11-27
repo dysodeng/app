@@ -1,6 +1,6 @@
 module github.com/dysodeng/app
 
-go 1.25.0
+go 1.24.0
 
 require (
 	github.com/aliyun/alibaba-cloud-sdk-go v1.63.107
