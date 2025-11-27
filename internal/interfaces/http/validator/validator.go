@@ -6,19 +6,19 @@ import (
 
 	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/locales/zh"
-	ut "github.com/go-playground/universal-translator"
+	translator "github.com/go-playground/universal-translator"
 	"github.com/go-playground/validator/v10"
 )
 
 var (
-	trans ut.Translator
+	trans translator.Translator
 )
 
 // InitValidator 初始化验证器
 func InitValidator() {
 	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
 		zhTrans := zh.New()
-		uni := ut.New(zhTrans, zhTrans)
+		uni := translator.New(zhTrans, zhTrans)
 		trans, _ = uni.GetTranslator("zh")
 
 		// 注册一个函数，获取 struct tag 中的 msg 标签作为错误提示信息
@@ -44,6 +44,6 @@ func TransError(err error) string {
 }
 
 // Translator 获取验证器
-func Translator() ut.Translator {
+func Translator() translator.Translator {
 	return trans
 }

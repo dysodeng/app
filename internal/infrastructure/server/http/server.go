@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/dysodeng/app/internal/interfaces/http/validator"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -55,6 +56,9 @@ func (s *Server) Start() error {
 	if !s.config.App.Debug {
 		gin.SetMode(gin.ReleaseMode)
 	}
+
+	// 初始化自动验证器
+	validator.InitValidator()
 
 	engine := gin.New()
 	engine.Use(middleware.Recovery())
