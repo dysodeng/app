@@ -20,6 +20,8 @@ wire:
 wire-show:
 	wire show ./internal/di
 
+gen-di: wire
+
 install-hooks:
 	@chmod +x ./scripts/install-hooks.sh
 	@./scripts/install-hooks.sh

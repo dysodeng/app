@@ -55,6 +55,9 @@ func Serve(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		clientId = uuid.New()
 	}
+	if connectionsTotal != nil {
+		connectionsTotal.Add(request.Context(), 1)
+	}
 	client := &Client{
 		conn:            conn,
 		send:            make(chan message.WsMessage, bufferSize),

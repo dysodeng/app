@@ -7,13 +7,13 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/dysodeng/app/internal/interfaces/http/validator"
 	"github.com/gin-gonic/gin"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	httpInterfaces "github.com/dysodeng/app/internal/interfaces/http"
 	"github.com/dysodeng/app/internal/interfaces/http/middleware"
 	"github.com/dysodeng/app/internal/interfaces/http/router"
+	"github.com/dysodeng/app/internal/interfaces/http/validator"
 )
 
 // Server HTTP服务
@@ -65,6 +65,7 @@ func (s *Server) Start() error {
 	engine.Use(middleware.Logger())
 	engine.Use(middleware.CORS())
 	engine.Use(middleware.StartTrace())
+	engine.Use(middleware.Metrics())
 
 	// 静态资源管理
 	if s.config.Storage.Driver == "local" && s.config.Storage.Local.StaticEnabled {

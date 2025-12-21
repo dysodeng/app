@@ -10,6 +10,7 @@ import (
 	"github.com/gorilla/websocket"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
 	"go.opentelemetry.io/otel/trace"
 
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
@@ -70,10 +71,16 @@ func (c *Client) readMessage() {
 		// 从客户端接收消息
 		messageType, body, err := c.conn.ReadMessage()
 		if err != nil {
+			if errorsTotal != nil {
+				errorsTotal.Add(ctx, 1, metric.WithAttributes(attribute.String("type", "read_message")))
+			}
 			span.SetStatus(codes.Error, err.Error())
 			span.RecordError(err)
 			span.End()
 			break
+		}
+		if messagesReceivedTotal != nil {
+			messagesReceivedTotal.Add(ctx, 1, metric.WithAttributes(attribute.Int("message_type", messageType)))
 		}
 		span.SetAttributes(
 			attribute.Int("ws.message.type", messageType),
@@ -85,6 +92,9 @@ func (c *Client) readMessage() {
 			if HubBus.binaryMessageHandler != nil {
 				err = HubBus.binaryMessageHandler.Handler(spanCtx, c.clientId, c.userId, body)
 				if err != nil {
+					if errorsTotal != nil {
+						errorsTotal.Add(ctx, 1, metric.WithAttributes(attribute.String("type", "handler_binary")))
+					}
 					span.SetStatus(codes.Error, err.Error())
 					span.RecordError(err)
 					log.Println("handler error: ", err)
@@ -95,6 +105,9 @@ func (c *Client) readMessage() {
 			if HubBus.textMessageHandler != nil {
 				err = HubBus.textMessageHandler.Handler(spanCtx, c.clientId, c.userId, body)
 				if err != nil {
+					if errorsTotal != nil {
+						errorsTotal.Add(ctx, 1, metric.WithAttributes(attribute.String("type", "handler_text")))
+					}
 					span.SetStatus(codes.Error, err.Error())
 					span.RecordError(err)
 					log.Println("handler error: ", err)
@@ -128,9 +141,16 @@ func (c *Client) writeMessage() {
 
 		msg, _ := json.Marshal(messageItem.Message)
 		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
+			if errorsTotal != nil {
+				errorsTotal.Add(context.Background(), 1, metric.WithAttributes(attribute.String("type", "write_message")))
+			}
 			HubBus.errorHandler(messageItem, err)
 			HubBus.pending.Add(int64(-1 * len(c.send)))
 			return
+		}
+
+		if messagesSentTotal != nil {
+			messagesSentTotal.Add(context.Background(), 1)
 		}
 
 		HubBus.pending.Add(int64(-1))
@@ -149,6 +169,9 @@ func (c *Client) heartbeat() {
 			websocket.TextMessage,
 			StringToBytes(fmt.Sprintf(`{"type":"%s"}`, message.TypeHeartbeat)),
 		); err != nil {
+			if errorsTotal != nil {
+				errorsTotal.Add(context.Background(), 1, metric.WithAttributes(attribute.String("type", "heartbeat")))
+			}
 			// 记录详细的网络错误信息
 			logger.Error(context.Background(), "websocket heartbeat failed",
 				logger.Field{Key: "client_id", Value: c.clientId},

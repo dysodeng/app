@@ -90,7 +90,6 @@ func (app *app) waitForInterruptSignal() {
 		}
 		logger.Info(ctx, fmt.Sprintf("%s服务已关闭", serverIns.Name()))
 	}
-	logger.Info(ctx, "服务已关闭")
 
 	if err := app.mainApp.Stop(ctx); err != nil {
 		logger.Error(ctx, "应用停止失败", logger.ErrorField(err))

@@ -1,6 +1,10 @@
 package config
 
-import "github.com/spf13/viper"
+import (
+	"time"
+
+	"github.com/spf13/viper"
+)
 
 // Monitor 平台监控配置
 type Monitor struct {
@@ -13,8 +17,9 @@ type Monitor struct {
 
 // tracer 链路追踪配置
 type otlp struct {
-	OtlpEnabled  bool   `mapstructure:"otlp_enabled"`
-	OtlpEndpoint string `mapstructure:"otlp_endpoint"`
+	OtlpEnabled  bool          `mapstructure:"otlp_enabled"`
+	OtlpEndpoint string        `mapstructure:"otlp_endpoint"`
+	OtlpInterval time.Duration `mapstructure:"otlp_interval"`
 }
 
 func monitorBindEnv(mon *viper.Viper) {
@@ -24,6 +29,7 @@ func monitorBindEnv(mon *viper.Viper) {
 	_ = mon.BindEnv("tracer.otlp_endpoint", "MONITOR_TRACER_OTLP_ENDPOINT")
 	_ = mon.BindEnv("metrics.otlp_enabled", "MONITOR_METRICS_OTLP_ENABLED")
 	_ = mon.BindEnv("metrics.otlp_endpoint", "MONITOR_METRICS_OTLP_ENDPOINT")
+	_ = mon.BindEnv("metrics.otlp_interval", "MONITOR_METRICS_OTLP_INTERVAL")
 	_ = mon.BindEnv("log.otlp_enabled", "MONITOR_LOG_OTLP_ENABLED")
 	_ = mon.BindEnv("log.otlp_endpoint", "MONITOR_LOG_OTLP_ENDPOINT")
 	mon.SetDefault("service_name", "app")

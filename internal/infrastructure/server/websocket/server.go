@@ -39,6 +39,7 @@ func (s *Server) Name() string {
 func (s *Server) Start() error {
 	// websocket 客户端连接hub
 	websocket.HubBus = websocket.NewHub()
+	websocket.InitMetrics()
 	go websocket.HubBus.Run()
 
 	websocket.HubBus.SetTextMessageHandler(s.ws.TextMessageHandler())
@@ -53,9 +54,6 @@ func (s *Server) Start() error {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/ws/v1/message", func(w http.ResponseWriter, r *http.Request) {
 		websocket.Serve(w, r)
-	})
-	mux.HandleFunc("/ws/v1/metrics", func(w http.ResponseWriter, r *http.Request) {
-		websocket.Metrics(w)
 	})
 
 	s.wsServer.Handler = mux

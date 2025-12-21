@@ -31,7 +31,13 @@ func Init(cfg *config.Config) error {
 		if err != nil {
 			panic(err)
 		}
-		mpOpts = append(mpOpts, sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exp)))
+
+		var readerOpts []sdkmetric.PeriodicReaderOption
+		interval := cfg.Monitor.Metrics.OtlpInterval
+		if interval > 0 {
+			readerOpts = append(readerOpts, sdkmetric.WithInterval(interval))
+		}
+		mpOpts = append(mpOpts, sdkmetric.WithReader(sdkmetric.NewPeriodicReader(exp, readerOpts...)))
 	}
 
 	meterProvider := sdkmetric.NewMeterProvider(mpOpts...)
