@@ -1,12 +1,12 @@
 package aliyun
 
 import (
-	"encoding/json"
 	"time"
 
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/auth/credentials"
 	"github.com/aliyun/alibaba-cloud-sdk-go/sdk/requests"
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -37,7 +37,7 @@ func GetToken() (*TokenResult, error) {
 		data, err := c.Get(IsiTokenCacheKey)
 		if err == nil {
 			var token Token
-			_ = json.Unmarshal([]byte(data), &token)
+			_ = sonic.Unmarshal([]byte(data), &token)
 			if token.Id != "" {
 				return &TokenResult{
 					Token: token,
@@ -66,7 +66,7 @@ func GetToken() (*TokenResult, error) {
 	}
 
 	var tr TokenResult
-	err = json.Unmarshal(response.GetHttpContentBytes(), &tr)
+	err = sonic.Unmarshal(response.GetHttpContentBytes(), &tr)
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func GetToken() (*TokenResult, error) {
 	}
 
 	expireTime := tr.Token.ExpireTime - time.Now().Unix()
-	tokenBytes, _ := json.Marshal(tr.Token)
+	tokenBytes, _ := sonic.Marshal(tr.Token)
 	_ = c.Put(IsiTokenCacheKey, string(tokenBytes), time.Second*time.Duration(expireTime-10))
 
 	return &tr, nil

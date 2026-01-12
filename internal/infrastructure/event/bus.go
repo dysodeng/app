@@ -2,9 +2,9 @@ package event
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 
+	"github.com/bytedance/sonic"
 	"github.com/dysodeng/mq/contract"
 	"github.com/dysodeng/mq/message"
 )
@@ -30,7 +30,7 @@ func (b *MQEventBus) Publish(ctx context.Context, eventType string, eventData []
 func (b *MQEventBus) PublishEvent(ctx context.Context, event any) error {
 	// 检查是否实现了EventType方法
 	if e, ok := event.(interface{ EventType() string }); ok {
-		data, err := json.Marshal(event)
+		data, err := sonic.Marshal(event)
 		if err != nil {
 			return fmt.Errorf("marshal event failed: %w", err)
 		}

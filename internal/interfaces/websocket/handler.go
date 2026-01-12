@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 
+	"github.com/bytedance/sonic"
+
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
 	"github.com/dysodeng/app/internal/infrastructure/shared/websocket"
@@ -30,7 +32,7 @@ func (handler *textMessageHandler) Handler(ctx context.Context, clientId, userId
 	defer span.End()
 
 	var messageBody MessageBody
-	err := json.Unmarshal(data, &messageBody)
+	err := sonic.Unmarshal(data, &messageBody)
 	if err != nil {
 		logger.Error(spanCtx, "消息解析失败", logger.AddField("原消息", string(data)), logger.ErrorField(err))
 		return err

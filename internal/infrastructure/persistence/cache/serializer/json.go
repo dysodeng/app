@@ -1,7 +1,7 @@
 package serializer
 
 import (
-	"encoding/json"
+	"github.com/bytedance/sonic"
 
 	"github.com/dysodeng/app/internal/infrastructure/persistence/cache/contracts"
 )
@@ -13,11 +13,11 @@ func NewJSONSerializer[T any]() contracts.Serializer[T] {
 }
 
 func (c jsonSerializer[T]) Encode(v T) ([]byte, error) {
-	return json.Marshal(v)
+	return sonic.Marshal(v)
 }
 
 func (c jsonSerializer[T]) Decode(b []byte) (T, error) {
 	var t T
-	err := json.Unmarshal(b, &t)
+	err := sonic.Unmarshal(b, &t)
 	return t, err
 }

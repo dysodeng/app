@@ -4,18 +4,19 @@ import (
 	"bufio"
 	"bytes"
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
-	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	oteltrace "go.opentelemetry.io/otel/trace"
+
+	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
+	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
 )
 
 func request(requestUrl, method string, body io.Reader, opts ...Option) ([]byte, int, error) {
@@ -238,7 +239,7 @@ func StreamRequest(requestUrl, method string, body io.Reader, fn func([]byte) er
 
 // JsonRequest json请求
 func JsonRequest(requestUrl, method string, data map[string]interface{}, opts ...Option) ([]byte, int, error) {
-	dataBytes, _ := json.Marshal(data)
+	dataBytes, _ := sonic.Marshal(data)
 	opts = append(opts, WithHeader("Content-Type", "application/json; charset=utf-8"))
 	return request(requestUrl, method, bytes.NewReader(dataBytes), opts...)
 }

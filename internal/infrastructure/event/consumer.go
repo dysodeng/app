@@ -7,6 +7,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/dysodeng/mq/contract"
 	"github.com/dysodeng/mq/message"
 	"go.uber.org/zap"
@@ -237,7 +238,7 @@ func (s *ConsumerService) getHandlers(eventType string) []*handlerWrapper {
 // parseEventData 解析事件数据
 func (s *ConsumerService) parseEventData(payload []byte) (*eventData, error) {
 	var data eventData
-	if err := json.Unmarshal(payload, &data); err != nil {
+	if err := sonic.Unmarshal(payload, &data); err != nil {
 		return nil, err
 	}
 	return &data, nil

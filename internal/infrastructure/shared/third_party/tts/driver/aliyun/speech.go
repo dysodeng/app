@@ -2,7 +2,6 @@ package aliyun
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"log"
 	"os"
@@ -10,6 +9,7 @@ import (
 	"time"
 
 	nls "github.com/aliyun/alibabacloud-nls-go-sdk"
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -311,7 +311,7 @@ func (s *Speech) onResultChanged(text string, param interface{}) {
 	defer s.mutex.Unlock()
 
 	var result SpeechResult
-	if err := json.Unmarshal(helper.StringToBytes(text), &result); err != nil {
+	if err := sonic.Unmarshal(helper.StringToBytes(text), &result); err != nil {
 		s.logger.Printf("Failed to parse result JSON: %v", err)
 		return
 	}
@@ -336,7 +336,7 @@ func (s *Speech) onCompleted(text string, param interface{}) {
 	defer s.mutex.Unlock()
 
 	var result SpeechResult
-	if err := json.Unmarshal(helper.StringToBytes(text), &result); err != nil {
+	if err := sonic.Unmarshal(helper.StringToBytes(text), &result); err != nil {
 		s.logger.Printf("Failed to parse result JSON: %v", err)
 		return
 	}

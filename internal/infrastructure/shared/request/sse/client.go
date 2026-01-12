@@ -9,6 +9,8 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+
+	"github.com/bytedance/sonic"
 )
 
 // Event 表示一个解析后的SSE事件
@@ -129,7 +131,7 @@ func (c *Client) Connect(ctx context.Context, url string, opts ...ConnectOption)
 			}
 			if payload != "" {
 				var probe map[string]any
-				if json.Unmarshal([]byte(payload), &probe) == nil {
+				if sonic.Unmarshal([]byte(payload), &probe) == nil {
 					if v, ok := probe["event"].(string); ok && v != "" {
 						resolved = v
 					}

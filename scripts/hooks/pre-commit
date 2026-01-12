@@ -29,15 +29,11 @@ if [[ -n "$files" ]]; then
             break
         fi
 
-        # 如果当前文件没有被格式化，就格式化它
-        UN_FORMATTED=$(gofmt -l "$file")
-        if [ "$UN_FORMATTED" != "" ];then
-            gofmt -w "$PWD"/"$UN_FORMATTED"
-            # shellcheck disable=SC2181
-            if [ $? != 0 ]; then
-                printf "gofmt error \n"
-                PASS=false
-            fi
+        # 格式化文件
+        gofmt -w "$file"
+        if [ $? != 0 ]; then
+            printf "gofmt error \n"
+            PASS=false
         fi
 
         git add "$file"

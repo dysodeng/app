@@ -2,7 +2,6 @@ package sse
 
 import (
 	"context"
-	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -81,7 +81,7 @@ DONE:
 	assert.Equal(t, "message", events[0].Event)
 	assert.Equal(t, 0, events[0].Retry)
 	var p0 map[string]int
-	assert.NoError(t, json.Unmarshal(events[0].Data, &p0))
+	assert.NoError(t, sonic.Unmarshal(events[0].Data, &p0))
 	assert.Equal(t, 1, p0["x"])
 
 	// 事件2：显式
@@ -89,14 +89,14 @@ DONE:
 	assert.Equal(t, "update", events[1].Event)
 	assert.Equal(t, 2000, events[1].Retry)
 	var p1 map[string]int
-	assert.NoError(t, json.Unmarshal(events[1].Data, &p1))
+	assert.NoError(t, sonic.Unmarshal(events[1].Data, &p1))
 	assert.Equal(t, 1, p1["a"])
 
 	// 事件3：payload 覆盖事件名
 	assert.Equal(t, "", events[2].ID)
 	assert.Equal(t, "override", events[2].Event)
 	var p2 map[string]any
-	assert.NoError(t, json.Unmarshal(events[2].Data, &p2))
+	assert.NoError(t, sonic.Unmarshal(events[2].Data, &p2))
 	assert.Equal(t, float64(2), p2["y"])
 }
 
@@ -148,7 +148,7 @@ func TestClientConnect_WithOptions(t *testing.T) {
 	case ev := <-evCh:
 		assert.Equal(t, "z1", ev.ID)
 		var p map[string]bool
-		assert.NoError(t, json.Unmarshal(ev.Data, &p))
+		assert.NoError(t, sonic.Unmarshal(ev.Data, &p))
 		assert.True(t, p["ok"])
 	case e := <-errCh:
 		assert.NoError(t, e)

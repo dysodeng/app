@@ -2,11 +2,11 @@ package websocket
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"log"
 	"time"
 
+	"github.com/bytedance/sonic"
 	"github.com/gorilla/websocket"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -139,7 +139,7 @@ func (c *Client) writeMessage() {
 			return
 		}
 
-		msg, _ := json.Marshal(messageItem.Message)
+		msg, _ := sonic.Marshal(messageItem.Message)
 		if err := c.conn.WriteMessage(websocket.TextMessage, msg); err != nil {
 			if errorsTotal != nil {
 				errorsTotal.Add(context.Background(), 1, metric.WithAttributes(attribute.String("type", "write_message")))

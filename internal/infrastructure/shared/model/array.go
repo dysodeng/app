@@ -2,20 +2,21 @@ package model
 
 import (
 	"database/sql/driver"
-	"encoding/json"
+
+	"github.com/bytedance/sonic"
 )
 
 type Array[T comparable] []T
 
 func (a Array[T]) Value() (driver.Value, error) {
-	return json.Marshal(a)
+	return sonic.Marshal(a)
 }
 
 func (a *Array[T]) Scan(v interface{}) error {
-	return json.Unmarshal(v.([]byte), a)
+	return sonic.Unmarshal(v.([]byte), a)
 }
 
 func (a *Array[T]) String() string {
-	b, _ := json.Marshal(a)
+	b, _ := sonic.Marshal(a)
 	return string(b)
 }

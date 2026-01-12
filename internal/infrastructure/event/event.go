@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"time"
+
+	"github.com/bytedance/sonic"
 )
 
 // Event 泛型事件接口
@@ -111,7 +113,7 @@ func (h *DomainEventHandler[T]) ParseDomainEvent(ctx context.Context, event any)
 
 	// 解析JSON数据为类型T结构
 	var payload T
-	if err := json.Unmarshal(domainEventRaw.Data, &payload); err != nil {
+	if err := sonic.Unmarshal(domainEventRaw.Data, &payload); err != nil {
 		return zero, fmt.Errorf("failed to unmarshal %T event: %w", payload, err)
 	}
 

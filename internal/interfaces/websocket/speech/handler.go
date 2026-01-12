@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/bytedance/sonic"
+
 	"github.com/dysodeng/app/internal/infrastructure/shared/logger"
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/trace"
 	"github.com/dysodeng/app/internal/infrastructure/shared/websocket"
@@ -39,7 +41,7 @@ func HandleSpeechMessage(ctx context.Context, clientID, userID string, body json
 
 	// 直接反序列化为SpeechMessage，避免中间的序列化步骤
 	var speechMessage SpeechMessage
-	if err := json.Unmarshal(body, &speechMessage); err != nil {
+	if err := sonic.Unmarshal(body, &speechMessage); err != nil {
 		logger.Error(spanCtx, "语音消息解析失败", logger.ErrorField(err))
 		return err
 	}
@@ -83,7 +85,7 @@ func handleStartAction(ctx context.Context, clientID, userID string) error {
 		Content: "",
 		IsEnd:   false,
 	}
-	resultBytes, _ := json.Marshal(result)
+	resultBytes, _ := sonic.Marshal(result)
 	return websocket.SendMessage(clientID, message.TypeMessage, string(resultBytes))
 }
 
@@ -113,7 +115,7 @@ func listenRecognitionResults(ctx context.Context, session *Session) {
 				Content: result.Content,
 				IsEnd:   result.IsEnd,
 			}
-			resultBytes, _ := json.Marshal(speechResult)
+			resultBytes, _ := sonic.Marshal(speechResult)
 			if err := websocket.SendMessage(session.ClientID, message.TypeMessage, string(resultBytes)); err != nil {
 				logger.Error(ctx, "发送识别结果失败", logger.ErrorField(err))
 			}

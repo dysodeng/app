@@ -2,11 +2,11 @@ package websocket
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
 	"sync"
 	"sync/atomic"
 
+	"github.com/bytedance/sonic"
 	"go.opentelemetry.io/otel/metric"
 
 	"github.com/dysodeng/app/internal/infrastructure/shared/telemetry/metrics"
@@ -91,7 +91,7 @@ func (h *Hub) SetBinaryMessageHandler(handler BinaryMessageHandler) {
 
 // 默认的错误处理器
 func defaultErrorHandler(msg message.WsMessage, err error) {
-	res, _ := json.Marshal(msg)
+	res, _ := sonic.Marshal(msg)
 	fmt.Printf("send message: %s, error: %s\n", string(res), err.Error())
 }
 

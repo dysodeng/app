@@ -1,8 +1,9 @@
 package helper
 
 import (
-	"encoding/json"
 	"strconv"
+
+	"github.com/bytedance/sonic"
 )
 
 // IfaceConvertString 接口转换为字符串
@@ -40,7 +41,7 @@ func IfaceConvertString(data interface{}) string {
 	case nil:
 		value = ""
 	default:
-		jsonByte, _ := json.Marshal(data)
+		jsonByte, _ := sonic.Marshal(data)
 		value = string(jsonByte)
 	}
 	return value

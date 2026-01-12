@@ -1,12 +1,12 @@
 package sse
 
 import (
-	"encoding/json"
 	"fmt"
 	"html"
 	"net/http"
 	"strings"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 
 	"github.com/dysodeng/app/internal/infrastructure/shared/helper"
@@ -96,7 +96,7 @@ func (w *Writer) WriteEvent(event string, payload any, id string) error {
 
 	builder.WriteString(fmt.Sprintf("event: %s\n", escapeSSEFieldValue(event)))
 
-	data, err := json.Marshal(payload)
+	data, err := sonic.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -113,7 +113,7 @@ func (w *Writer) WriteEvent(event string, payload any, id string) error {
 
 // WriteData 仅写入data
 func (w *Writer) WriteData(payload any) error {
-	data, err := json.Marshal(payload)
+	data, err := sonic.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -133,7 +133,7 @@ func (w *Writer) WriteDataWithID(payload any, id string) error {
 	if id != "" {
 		builder.WriteString(fmt.Sprintf("id: %s\n", escapeSSEFieldValue(id)))
 	}
-	data, err := json.Marshal(payload)
+	data, err := sonic.Marshal(payload)
 	if err != nil {
 		return err
 	}
@@ -176,7 +176,7 @@ func (w *Writer) WriteID(id string) error {
 
 // WriteDataLines 写入多行data（当JSON包含换行时更规范）
 func (w *Writer) WriteDataLines(payload any) error {
-	data, err := json.Marshal(payload)
+	data, err := sonic.Marshal(payload)
 	if err != nil {
 		return err
 	}

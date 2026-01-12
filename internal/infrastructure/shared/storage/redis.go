@@ -2,10 +2,10 @@ package storage
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 
+	"github.com/bytedance/sonic"
 	"github.com/dysodeng/fs/driver/local"
 	"github.com/redis/go-redis/v9"
 )
@@ -28,7 +28,7 @@ func (s *RedisMultipartStorage) getKey(uploadID string) string {
 }
 
 func (s *RedisMultipartStorage) Save(upload *local.MultipartUpload) error {
-	data, err := json.Marshal(*upload)
+	data, err := sonic.Marshal(*upload)
 	if err != nil {
 		return err
 	}
@@ -45,7 +45,7 @@ func (s *RedisMultipartStorage) Get(uploadID string) (*local.MultipartUpload, er
 	}
 
 	upload := &local.MultipartUpload{}
-	if err := json.Unmarshal(data, upload); err != nil {
+	if err := sonic.Unmarshal(data, upload); err != nil {
 		return nil, err
 	}
 	return upload, nil

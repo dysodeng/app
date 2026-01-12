@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/bytedance/sonic"
 	"github.com/pkg/errors"
 )
 
@@ -18,7 +19,7 @@ func (j *JSON) Scan(value interface{}) error {
 	}
 
 	result := json.RawMessage{}
-	err := json.Unmarshal(bytes, &result)
+	err := sonic.Unmarshal(bytes, &result)
 	*j = JSON(result)
 	return err
 }
