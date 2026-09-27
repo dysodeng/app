@@ -2,9 +2,10 @@ package cache
 
 import (
 	"context"
+	"errors"
 	"time"
 
-	"github.com/dysodeng/wx/support/cache"
+	"github.com/goairix/wx/v2/core/cache"
 	"github.com/redis/go-redis/v9"
 )
 
@@ -20,28 +21,23 @@ func NewRedis(client redis.UniversalClient) cache.Cache {
 	}
 }
 
-func (redis *Redis) IsExist(key string) bool {
-	if v, err := redis.client.Exists(context.Background(), key).Result(); err == nil && v > 0 {
-		return true
+func (r *Redis) Get(ctx context.Context, key string) (string, bool, error) {
+	value, err := r.client.Get(ctx, key).Result()
+	if errors.Is(err, redis.Nil) {
+		return "", false, nil
 	}
-	return false
+	if err != nil {
+		return "", false, err
+	}
+	return value, true, nil
 }
 
-func (redis *Redis) Get(key string) (string, error) {
-	return redis.client.Get(context.Background(), key).Result()
-}
-
-func (redis *Redis) Put(key string, value string, expiration time.Duration) error {
-	_, err := redis.client.Set(context.Background(), key, value, expiration).Result()
+func (r *Redis) Put(ctx context.Context, key string, value string, expiration time.Duration) error {
+	_, err := r.client.Set(ctx, key, value, expiration).Result()
 	return err
 }
 
-func (redis *Redis) Delete(key string) error {
-	_, err := redis.client.Del(context.Background(), key).Result()
-	return err
-}
-
-func (redis *Redis) ClearAll() error {
-	_, err := redis.client.FlushDB(context.Background()).Result()
+func (r *Redis) Delete(ctx context.Context, key string) error {
+	_, err := r.client.Del(ctx, key).Result()
 	return err
 }

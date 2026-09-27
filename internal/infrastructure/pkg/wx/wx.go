@@ -1,10 +1,10 @@
 package wx
 
 import (
+	"fmt"
 	"sync"
 
-	"github.com/dysodeng/wx/mini_program"
-	"github.com/dysodeng/wx/support/cache"
+	"github.com/goairix/wx/v2/miniapp"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/pkg/redis"
@@ -12,26 +12,35 @@ import (
 )
 
 var (
-	cacheItem       cache.Cache
-	miniProgram     *mini_program.MiniProgram
-	miniProgramOnce sync.Once
+	miniProgram       *miniapp.Client
+	miniProgramConfig miniapp.Config
+	miniProgramMu     sync.Mutex
 )
 
-// initMiniProgram 初始化微信小程序sdk
-func initMiniProgram() *mini_program.MiniProgram {
-	miniProgramOnce.Do(func() {
-		cacheItem = wxCache.NewRedis(redis.CacheClient())
-		miniProgram = mini_program.New(
-			config.GlobalConfig.ThirdParty.Wx.MiniProgram.AppId,
-			config.GlobalConfig.ThirdParty.Wx.MiniProgram.Secret,
-			"",
-			"",
-			mini_program.WithCache(cacheItem),
-		)
-	})
-	return miniProgram
-}
+// MiniProgram 返回微信小程序 SDK 客户端。
+func MiniProgram() (*miniapp.Client, error) {
+	cfg := config.GlobalConfig
+	if cfg == nil {
+		return nil, fmt.Errorf("wx miniapp: config is not loaded")
+	}
+	requested := miniapp.Config{
+		AppID:     cfg.ThirdParty.Wx.MiniProgram.AppId,
+		AppSecret: cfg.ThirdParty.Wx.MiniProgram.Secret,
+	}
 
-func MiniProgram() *mini_program.MiniProgram {
-	return initMiniProgram()
+	miniProgramMu.Lock()
+	defer miniProgramMu.Unlock()
+	if miniProgram != nil && miniProgramConfig == requested {
+		return miniProgram, nil
+	}
+	client, err := miniapp.NewClient(
+		requested,
+		miniapp.WithCache(wxCache.NewRedis(redis.CacheClient())),
+	)
+	if err != nil {
+		return nil, err
+	}
+	miniProgram = client
+	miniProgramConfig = requested
+	return client, nil
 }

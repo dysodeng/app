@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/dysodeng/wx/mini_program/auth"
 	"github.com/google/uuid"
 
 	"github.com/dysodeng/app/internal/application/passport/dto/command"
@@ -289,7 +288,11 @@ func (svc *passportApplicationService) userLogin(ctx context.Context, cmd *comma
 			return nil, passportErrors.ErrPassportGetWxUserFailed
 		}
 
-		phone, err := wx.MiniProgram().User().GetPhoneNumber(cmd.Code, openId)
+		miniApp, err := wx.MiniProgram()
+		if err != nil {
+			return nil, passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
+		}
+		phone, err := miniApp.Users().GetPhoneNumber(ctx, cmd.Code, openId)
 		if err != nil {
 			return nil, passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
 		}
@@ -371,15 +374,19 @@ func (svc *passportApplicationService) getSessionKeyByCode(ctx context.Context, 
 			sessionKey = s
 		}
 	} else {
-		var session auth.Session
-		session, err = wx.MiniProgram().Auth().Session(code)
-		if err != nil {
-			logger.Error(ctx, passportErrors.ErrPassportGetWxUserFailed.Message, logger.ErrorField(err))
-			return "", "", "", passportErrors.ErrPassportGetWxUserFailed.Wrap(err)
+		miniApp, clientErr := wx.MiniProgram()
+		if clientErr != nil {
+			logger.Error(ctx, passportErrors.ErrPassportGetWxUserFailed.Message, logger.ErrorField(clientErr))
+			return "", "", "", passportErrors.ErrPassportGetWxUserFailed.Wrap(clientErr)
+		}
+		session, sessionErr := miniApp.Auth().Code2Session(ctx, code)
+		if sessionErr != nil {
+			logger.Error(ctx, passportErrors.ErrPassportGetWxUserFailed.Message, logger.ErrorField(sessionErr))
+			return "", "", "", passportErrors.ErrPassportGetWxUserFailed.Wrap(sessionErr)
 		}
 
-		openId = session.Openid
-		unionId = session.UnionId
+		openId = session.OpenID
+		unionId = session.UnionID
 		sessionKey = session.SessionKey
 
 		cacheSessionKey := uuid.NewString()

@@ -9,12 +9,12 @@ require (
 	github.com/dysodeng/fs v0.3.6
 	github.com/dysodeng/mq v0.3.4
 	github.com/dysodeng/rpc v0.2.6
-	github.com/dysodeng/wx v0.1.6
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-gormigrate/gormigrate/v2 v2.1.5
 	github.com/go-playground/locales v0.14.1
 	github.com/go-playground/universal-translator v0.18.1
 	github.com/go-playground/validator/v10 v10.28.0
+	github.com/goairix/wx/v2 v2.2.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
 	github.com/google/wire v0.7.0

@@ -84,8 +84,6 @@ github.com/dysodeng/mq v0.3.4 h1:RkUR8ELebIzJ2jZQXCxndoG+lwY/y3Wo1CeH7daeMjA=
 github.com/dysodeng/mq v0.3.4/go.mod h1:i4i25eKpkeZsb734QpXsc+u6TTLZjhnn4+gM+S1o1O4=
 github.com/dysodeng/rpc v0.2.6 h1:AGhyFYoQE26NHyzipxFpTIbgEmgl/ksCqpt8igv+KUU=
 github.com/dysodeng/rpc v0.2.6/go.mod h1:Jck4t4+v4s5O7reu4W147VNykpokg4GSv7e1vuoanzo=
-github.com/dysodeng/wx v0.1.6 h1:pokHur5ZP1EEE/slYPPlDos6a6FAfQfkcfCMAY7KevI=
-github.com/dysodeng/wx v0.1.6/go.mod h1:jmrGYfBFwJwM/GV50EcsPTqx04/ss06113TUPDuOE0g=
 github.com/fogleman/gg v1.2.1-0.20190220221249-0403632d5b90/go.mod h1:R/bRT+9gY/C5z7JzPU0zXsXHKM4/ayA+zqcVNZzPa1k=
 github.com/frankban/quicktest v1.14.6 h1:7Xjx+VpznH+oBnejlPUj8oUpdxnVs4f8XU8WnHkI4W8=
 github.com/frankban/quicktest v1.14.6/go.mod h1:4ptaffx2x8+WTWXmUCuVU6aPUX1/Mz7zb5vbUoiM6w0=
@@ -121,6 +119,8 @@ github.com/go-sql-driver/mysql v1.8.1 h1:LedoTUt/eveggdHS9qUFC1EFSa8bU2+1pZjSRpv
 github.com/go-sql-driver/mysql v1.8.1/go.mod h1:wEBSXgmK//2ZFJyE+qWnIsVGmvmEKlqwuVSjsCm7DZg=
 github.com/go-viper/mapstructure/v2 v2.4.0 h1:EBsztssimR/CONLSZZ04E8qAkxNYq4Qp9LvH92wZUgs=
 github.com/go-viper/mapstructure/v2 v2.4.0/go.mod h1:oJDH3BJKyqBA2TXFhDsKDGDTlndYOZ6rGS0BRZIxGhM=
+github.com/goairix/wx/v2 v2.2.0 h1:/Y7N/4u3KaMFJfG0rl9uLwaPPDP6qrRnNkRt3NLAwao=
+github.com/goairix/wx/v2 v2.2.0/go.mod h1:z4Lw1mjjgNbnGE8xjMl43uwJdy2lCdACp4fKRvBqsCw=
 github.com/goccy/go-json v0.10.5 h1:Fq85nIqj+gXn/S5ahsiTlK3TmC85qgirsdTP/+DeaC4=
 github.com/goccy/go-json v0.10.5/go.mod h1:oq7eo15ShAhp70Anwd5lgX2pLfOS3QCiwU/PULtXL6M=
 github.com/goccy/go-yaml v1.18.0 h1:8W7wMFS12Pcas7KU+VVkaiCng+kG8QiFeFwzFb+rwuw=
