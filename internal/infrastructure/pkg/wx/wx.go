@@ -19,7 +19,7 @@ var (
 
 // MiniProgram 返回微信小程序 SDK 客户端。
 func MiniProgram() (*miniapp.Client, error) {
-	cfg := config.GlobalConfig
+	cfg := config.Current()
 	if cfg == nil {
 		return nil, fmt.Errorf("wx miniapp: config is not loaded")
 	}

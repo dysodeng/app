@@ -46,14 +46,15 @@ func (m *Manager) CreateSession(ctx context.Context, clientID, userID string) (*
 	}
 
 	// 创建语音转文字服务
-	converter, err := tts.CreateSpeechToText(driver.Provider(config.GlobalConfig.ThirdParty.TTS.SpeechProvider))
+	cfg := config.Current()
+	converter, err := tts.CreateSpeechToText(driver.Provider(cfg.ThirdParty.TTS.SpeechProvider))
 	if err != nil {
 		return nil, err
 	}
 
 	// 启动流式识别
 	resultChan, errChan, err := converter.StartStreamRecognition(ctx, driver.SpeechRecognitionConfig{
-		Format:                      config.GlobalConfig.ThirdParty.TTS.SpeechVoiceFormat,
+		Format:                      cfg.ThirdParty.TTS.SpeechVoiceFormat,
 		SampleRate:                  16000,
 		EnableIntermediateResult:    true,
 		EnablePunctuationPrediction: true,

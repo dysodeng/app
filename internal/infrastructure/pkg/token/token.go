@@ -93,7 +93,7 @@ func GenerateToken(userType string, data map[string]interface{}, attach map[stri
 	}
 
 	// token
-	tokenSecret := helper.StringToBytes(config.GlobalConfig.Security.JWT.Secret)
+	tokenSecret := helper.StringToBytes(config.Current().Security.JWT.Secret)
 	token, err := tokenMethod.SignedString(tokenSecret)
 	if err != nil {
 		return Token{}, errors.New("TOKEN生成错误")
@@ -129,7 +129,7 @@ func VerifyToken(token string) (map[string]interface{}, error) {
 		}
 
 		// hmacSampleSecret is a []byte containing your secret, e.g. []byte("my_secret_key")
-		return []byte(config.GlobalConfig.Security.JWT.Secret), nil
+		return []byte(config.Current().Security.JWT.Secret), nil
 	})
 	if err != nil {
 		log.Printf("%+v", err)

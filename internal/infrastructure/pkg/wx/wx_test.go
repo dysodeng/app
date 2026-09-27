@@ -7,9 +7,9 @@ import (
 )
 
 func TestMiniProgramRetriesAfterFailureAndRefreshesChangedConfig(t *testing.T) {
-	previous := config.GlobalConfig
-	config.GlobalConfig = &config.Config{}
-	t.Cleanup(func() { config.GlobalConfig = previous })
+	previous := config.Current()
+	config.Publish(&config.Config{})
+	t.Cleanup(func() { config.Publish(previous) })
 
 	client, err := MiniProgram()
 	if err == nil {
@@ -19,8 +19,10 @@ func TestMiniProgramRetriesAfterFailureAndRefreshesChangedConfig(t *testing.T) {
 		t.Fatal("expected no client when credentials are missing")
 	}
 
-	config.GlobalConfig.ThirdParty.Wx.MiniProgram.AppId = "first-app"
-	config.GlobalConfig.ThirdParty.Wx.MiniProgram.Secret = "first-secret"
+	valid := &config.Config{}
+	valid.ThirdParty.Wx.MiniProgram.AppId = "first-app"
+	valid.ThirdParty.Wx.MiniProgram.Secret = "first-secret"
+	config.Publish(valid)
 	first, err := MiniProgram()
 	if err != nil || first == nil {
 		t.Fatalf("expected initialization to recover, got client=%v error=%v", first, err)
@@ -37,7 +39,7 @@ func TestMiniProgramRetriesAfterFailureAndRefreshesChangedConfig(t *testing.T) {
 	updated := &config.Config{}
 	updated.ThirdParty.Wx.MiniProgram.AppId = "second-app"
 	updated.ThirdParty.Wx.MiniProgram.Secret = "first-secret"
-	config.GlobalConfig = updated
+	config.Publish(updated)
 	second, err := MiniProgram()
 	if err != nil || second == nil || second == first {
 		t.Fatalf("expected a new client after config change, got client=%v error=%v", second, err)

@@ -29,11 +29,12 @@ func NewFileService(
 }
 
 func (svc *FileService) RegisterMetadata() metadata.ServiceRegisterMetadata {
+	cfg := config.Current()
 	return metadata.ServiceRegisterMetadata{
-		AppName:     config.GlobalConfig.App.Name,
+		AppName:     cfg.App.Name,
 		ServiceName: "file.FileService",
 		Version:     metadata.DefaultVersion,
-		Env:         config.GlobalConfig.App.Environment,
+		Env:         cfg.App.Environment,
 		Tags:        []string{"file", "uploader", "file.storage"},
 	}
 }

@@ -46,7 +46,7 @@ func StartTrace() gin.HandlerFunc {
 		opts := []oteltrace.SpanStartOption{
 			oteltrace.WithAttributes(semconv.NetAttributesFromHTTPRequest("tcp", ctx.Request)...),
 			oteltrace.WithAttributes(semconv.EndUserAttributesFromHTTPRequest(ctx.Request)...),
-			oteltrace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(config.GlobalConfig.App.Name, ctx.FullPath(), ctx.Request)...),
+			oteltrace.WithAttributes(semconv.HTTPServerAttributesFromHTTPRequest(config.Current().App.Name, ctx.FullPath(), ctx.Request)...),
 			oteltrace.WithSpanKind(oteltrace.SpanKindServer),
 		}
 		spanName := ctx.FullPath()

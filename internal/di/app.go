@@ -2,6 +2,7 @@ package di
 
 import (
 	"context"
+	stderrors "errors"
 
 	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
@@ -28,6 +29,7 @@ import (
 // App 应用程序
 type App struct {
 	Config               *config.Config
+	ConfigWatcher        *config.Watcher
 	Monitor              *telemetry.Monitor
 	Logger               *zap.Logger
 	TxManager            transactions.TransactionManager
@@ -49,7 +51,8 @@ type App struct {
 
 // NewApp 创建应用程序
 func NewApp(
-	config *config.Config,
+	cfg *config.Config,
+	loadResult *config.LoadResult,
 	monitor *telemetry.Monitor,
 	logger *zap.Logger,
 	txManager transactions.TransactionManager,
@@ -68,8 +71,13 @@ func NewApp(
 	eventConsumer *event.ConsumerService,
 	eventServer *eventServer.Server,
 ) *App {
+	var watcher *config.Watcher
+	if loadResult != nil && loadResult.WatchSource != nil {
+		watcher = config.NewWatcher(loadResult.WatchSource, loadResult.LocalPath, nil)
+	}
 	return &App{
-		Config:               config,
+		Config:               cfg,
+		ConfigWatcher:        watcher,
 		Monitor:              monitor,
 		Logger:               logger,
 		TxManager:            txManager,
@@ -90,11 +98,24 @@ func NewApp(
 	}
 }
 
+// StartConfigWatcher 启动配置中心热更新监听。
+func (app *App) StartConfigWatcher(ctx context.Context) error {
+	if app.ConfigWatcher == nil {
+		return nil
+	}
+	return app.ConfigWatcher.Start(ctx)
+}
+
 // Stop 停止应用相关服务
 func (app *App) Stop(ctx context.Context) error {
-	return errors.NewPipelineWithContext(ctx).Then(db.Close).Then(func() error {
+	var watchErr error
+	if app.ConfigWatcher != nil {
+		watchErr = app.ConfigWatcher.Stop()
+	}
+	resourceErr := errors.NewPipelineWithContext(ctx).Then(db.Close).Then(func() error {
 		return app.RedisClient.Close()
 	}).Then(func() error {
 		return app.MessageQueue.Close()
 	}).ExecuteParallel()
+	return stderrors.Join(watchErr, resourceErr)
 }

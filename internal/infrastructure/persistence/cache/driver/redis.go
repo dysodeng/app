@@ -21,7 +21,7 @@ type Redis struct {
 func NewRedisCache() *Redis {
 	return &Redis{
 		client:    infraRedis.CacheClient(),
-		keyPrefix: config.GlobalConfig.Redis.Cache.KeyPrefix,
+		keyPrefix: config.Current().Redis.Cache.KeyPrefix,
 	}
 }
 

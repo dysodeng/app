@@ -41,6 +41,9 @@ func (app *app) initialize() {
 	if err != nil {
 		logger.Fatal(app.ctx, "应用初始化失败", logger.ErrorField(err))
 	}
+	if err := mainApp.StartConfigWatcher(app.ctx); err != nil {
+		logger.Fatal(app.ctx, "配置热更新启动失败", logger.ErrorField(err))
+	}
 	app.mainApp = mainApp
 }
 

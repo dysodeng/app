@@ -30,10 +30,11 @@ import (
 
 // InitApp 初始化应用程序
 func InitApp(ctx context.Context) (*App, error) {
-	config, err := provider.ProvideConfig()
+	loadResult, err := provider.ProvideConfig()
 	if err != nil {
 		return nil, err
 	}
+	config := provider.ProvideConfigValue(loadResult)
 	monitor, err := provider.ProvideMonitor(config)
 	if err != nil {
 		return nil, err
@@ -89,6 +90,6 @@ func InitApp(ctx context.Context) (*App, error) {
 	healthServer := provider.ProvideHealthServer(config)
 	consumerService := provider.ProvideEventConsumerService(mq, logger)
 	eventServer := provider.ProvideEventServer(config, consumerService, eventHandlerRegistry)
-	app := NewApp(config, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, healthServer, bus, consumerService, eventServer)
+	app := NewApp(config, loadResult, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, healthServer, bus, consumerService, eventServer)
 	return app, nil
 }

@@ -38,7 +38,7 @@ type cachedUserRepository struct {
 }
 
 func NewCachedUserRepository(txManager transactions.TransactionManager) userDomainRepo.UserRepository {
-	driver := config.GlobalConfig.Cache.Driver
+	driver := config.Current().Cache.Driver
 	cacheTTL := 10 * time.Minute
 	tc := persistCache.NewTypedCacheWith[userCacheDTO](driver, "user", cacheTTL)
 	return &cachedUserRepository{

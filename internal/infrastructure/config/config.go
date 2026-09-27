@@ -1,6 +1,7 @@
 package config
 
 import (
+	"sync/atomic"
 	"time"
 )
 
@@ -10,7 +11,17 @@ const (
 	TempPath        = VarPath + "/tmp"
 )
 
-var GlobalConfig *Config
+var currentConfig atomic.Pointer[Config]
+
+// Current 返回最近一次发布的完整配置。调用方应在一次操作中复用同一个快照。
+func Current() *Config {
+	return currentConfig.Load()
+}
+
+// Publish 原子发布完整配置。发布后不得再修改 cfg 及其内部数据。
+func Publish(cfg *Config) {
+	currentConfig.Store(cfg)
+}
 
 // ConfigCenterConfig 配置中心配置
 type ConfigCenterConfig struct {

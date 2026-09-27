@@ -145,18 +145,18 @@ func Close() {
 
 // MainKey 构建安全key
 func MainKey(key string) string {
-	prefix := config.GlobalConfig.Redis.Main.KeyPrefix
+	prefix := config.Current().Redis.Main.KeyPrefix
 	if prefix != "" {
-		key = config.GlobalConfig.Redis.Main.KeyPrefix + ":" + key
+		key = prefix + ":" + key
 	}
 	return key
 }
 
 // CacheKey 构建缓存key
 func CacheKey(key string) string {
-	prefix := config.GlobalConfig.Redis.Cache.KeyPrefix
+	prefix := config.Current().Redis.Cache.KeyPrefix
 	if prefix != "" {
-		key = config.GlobalConfig.Redis.Cache.KeyPrefix + ":" + key
+		key = prefix + ":" + key
 	}
 	return key
 }

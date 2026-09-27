@@ -30,7 +30,7 @@ var cacheInstanceOnce sync.Once
 // NewCache 创建缓存实例
 func NewCache() (Cache, error) {
 	cacheInstanceOnce.Do(func() {
-		switch config.GlobalConfig.Cache.Driver {
+		switch config.Current().Cache.Driver {
 		case "memory": // 内存
 			cache = NewMemoryCache()
 		case "redis": // redis

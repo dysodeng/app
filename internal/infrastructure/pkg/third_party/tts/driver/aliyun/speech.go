@@ -58,7 +58,7 @@ func NewSpeech() (*Speech, error) {
 		resultChannel:   make(chan *driver.Text),
 		errorChannel:    make(chan error),
 		connectionToken: token.Token.Id,
-		appKey:          config.GlobalConfig.ThirdParty.TTS.Provider.Aliyun.AppKey,
+		appKey:          config.Current().ThirdParty.TTS.Provider.Aliyun.AppKey,
 		logger:          logger,
 		started:         false,
 	}, nil
@@ -78,7 +78,7 @@ func (s *Speech) ConvertSpeechToText(ctx context.Context, reader io.Reader) (*dr
 
 	// 启动流式识别
 	textChan, errChan, err := s.StartStreamRecognition(ctx, driver.SpeechRecognitionConfig{
-		Format:                      config.GlobalConfig.ThirdParty.TTS.SpeechVoiceFormat,
+		Format:                      config.Current().ThirdParty.TTS.SpeechVoiceFormat,
 		SampleRate:                  16000,
 		EnableIntermediateResult:    false,
 		EnablePunctuationPrediction: true,

@@ -46,9 +46,10 @@ func GetToken() (*TokenResult, error) {
 		}
 	}
 
+	cfg := config.Current()
 	credentialsProvider := credentials.NewStaticAKCredentialsProvider(
-		config.GlobalConfig.ThirdParty.TTS.Provider.Aliyun.AccessKeyId,
-		config.GlobalConfig.ThirdParty.TTS.Provider.Aliyun.AccessKeySecret,
+		cfg.ThirdParty.TTS.Provider.Aliyun.AccessKeyId,
+		cfg.ThirdParty.TTS.Provider.Aliyun.AccessKeySecret,
 	)
 	client, err := sdk.NewClientWithOptions("cn-shanghai", sdk.NewConfig(), credentialsProvider)
 	if err != nil {

@@ -24,7 +24,7 @@ type TypedCache[T any] struct {
 // NewTypedCache 创建类型缓存
 func NewTypedCache[T any](namespace string, cache contracts.Cache) *TypedCache[T] {
 	s := serializer.NewJSONSerializer[T]()
-	if config.GlobalConfig.Cache.Serializer == "msgpack" {
+	if config.Current().Cache.Serializer == "msgpack" {
 		s = serializer.NewMsgpackSerializer[T]()
 	}
 	return &TypedCache[T]{

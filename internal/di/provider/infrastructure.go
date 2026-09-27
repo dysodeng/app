@@ -20,7 +20,7 @@ import (
 )
 
 // ProvideConfig 提供配置
-func ProvideConfig() (*config.Config, error) {
+func ProvideConfig() (*config.LoadResult, error) {
 	result, err := config.Load("configs/config.yaml")
 	if err != nil {
 		return nil, err
@@ -30,7 +30,12 @@ func ProvideConfig() (*config.Config, error) {
 			"source", result.Source,
 			"path", result.SourcePath)
 	}
-	return result.Config, nil
+	return result, nil
+}
+
+// ProvideConfigValue 提供当前加载的配置值。
+func ProvideConfigValue(result *config.LoadResult) *config.Config {
+	return result.Config
 }
 
 // ProvideMonitor 提供可观测性配置

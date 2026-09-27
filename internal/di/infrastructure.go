@@ -14,6 +14,7 @@ import (
 var InfrastructureSet = wire.NewSet(
 	// 基础设施
 	provider.ProvideConfig,
+	provider.ProvideConfigValue,
 	provider.ProvideMonitor,
 	provider.ProvideLogger,
 	provider.ProvideDB,

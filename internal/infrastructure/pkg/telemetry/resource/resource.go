@@ -16,12 +16,13 @@ var once sync.Once
 func Resource() *resource.Resource {
 	once.Do(func() {
 		var err error
+		cfg := config.Current()
 		globalResource, err = resource.Merge(
 			resource.Default(),
 			resource.NewSchemaless(
-				semconv.ServiceName(ServiceName()),
-				semconv.ServiceVersion(config.GlobalConfig.Monitor.ServiceVersion),
-				attribute.String("env", config.GlobalConfig.App.Environment),
+				semconv.ServiceName(serviceName(cfg)),
+				semconv.ServiceVersion(cfg.Monitor.ServiceVersion),
+				attribute.String("env", cfg.App.Environment),
 			),
 		)
 		if err != nil {

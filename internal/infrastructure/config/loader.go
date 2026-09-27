@@ -16,156 +16,146 @@ type LoadResult struct {
 	Config      *Config
 	Source      string // "local" 或配置源类型如 "etcd"
 	SourcePath  string
+	LocalPath   string
 	WatchSource Source // 仅配置中心模式下非 nil
 }
 
-// Load 两阶段加载配置
+// Load 按环境变量、配置中心、本地文件的优先级加载配置。
 func Load(path string) (*LoadResult, error) {
-	// 加载.env
+	return load(path, createSource)
+}
+
+func load(path string, sourceFactory func(*ConfigCenterConfig) Source) (*LoadResult, error) {
 	_ = godotenv.Load()
 
-	// 阶段1：读取本地引导配置
-	bootstrap := viper.New()
-	bootstrap.SetConfigFile(path)
-	bootstrap.AutomaticEnv()
-	if err := bootstrap.ReadInConfig(); err != nil {
-		return nil, fmt.Errorf("读取配置文件失败: %w", err)
-	}
-
-	// 显式绑定配置中心的环境变量（AutomaticEnv 在 Unmarshal 时不生效）
-	_ = bootstrap.BindEnv("config_center.type", "CONFIG_CENTER_TYPE")
-	_ = bootstrap.BindEnv("config_center.etcd.endpoints", "CONFIG_CENTER_ETCD_ENDPOINTS")
-	_ = bootstrap.BindEnv("config_center.etcd.key", "CONFIG_CENTER_ETCD_KEY")
-	_ = bootstrap.BindEnv("config_center.etcd.timeout", "CONFIG_CENTER_ETCD_TIMEOUT")
-	_ = bootstrap.BindEnv("config_center.etcd.username", "CONFIG_CENTER_ETCD_USERNAME")
-	_ = bootstrap.BindEnv("config_center.etcd.password", "CONFIG_CENTER_ETCD_PASSWORD")
-
-	// endpoints 环境变量是逗号分隔的字符串，需要手动拆分为 []string
-	if envEndpoints, ok := os.LookupEnv("CONFIG_CENTER_ETCD_ENDPOINTS"); ok {
-		bootstrap.Set("config_center.etcd.endpoints", strings.Split(envEndpoints, ","))
-	}
-
-	// 解析引导配置，检查 config_center
-	bootstrapCfg := &Config{}
-	if err := bootstrap.Unmarshal(bootstrapCfg); err != nil {
-		return nil, fmt.Errorf("解析引导配置失败: %w", err)
-	}
-
-	// 阶段2：如果配置了配置中心，尝试从远程拉取
-	if source := createSource(bootstrapCfg.ConfigCenter); source != nil {
-		cfg, err := loadFromSource(source)
-		if err != nil {
-			slog.Warn("从配置中心加载失败，回退使用本地配置",
-				"source", source.Type(), "error", err)
-		} else {
-			GlobalConfig = cfg
-			return &LoadResult{
-				Config:      cfg,
-				Source:      source.Type(),
-				SourcePath:  sourceKey(bootstrapCfg.ConfigCenter),
-				WatchSource: source,
-			}, nil
-		}
-	}
-
-	// 回退：使用本地配置（保留逐 section 加载逻辑以支持环境变量绑定）
-	cfg, err := loadLocal(path)
+	v, err := readLocal(path)
 	if err != nil {
 		return nil, err
 	}
-	return &LoadResult{Config: cfg, Source: "local", SourcePath: path}, nil
-}
-
-// loadLocal 从本地文件加载配置（保留逐 section 的 BindEnv 逻辑）
-func loadLocal(configPath string) (*Config, error) {
-	_ = godotenv.Load()
-
-	v := viper.New()
-	v.SetConfigFile(configPath)
-	v.AutomaticEnv()
-
-	if err := v.ReadInConfig(); err != nil {
-		return nil, err
+	bootstrapCenter, err := decodeConfigCenter(v)
+	if err != nil {
+		return nil, fmt.Errorf("解析引导配置失败: %w", err)
 	}
 
+	result := &LoadResult{Source: "local", SourcePath: path, LocalPath: path}
+	if source := sourceFactory(bootstrapCenter); source != nil {
+		result.WatchSource = source
+		data, err := source.Load()
+		if err != nil {
+			slog.Warn("从配置中心加载失败，回退使用本地配置",
+				"source", source.Type(), "error", err)
+		} else if err := v.MergeConfig(bytes.NewReader(data)); err != nil {
+			slog.Warn("配置中心内容解析失败，回退使用本地配置",
+				"source", source.Type(), "error", err)
+		} else {
+			result.Source = source.Type()
+			result.SourcePath = sourceKey(bootstrapCenter)
+		}
+	}
+
+	cfg, err := decodeConfig(v)
+	if err != nil {
+		return nil, err
+	}
+	Publish(cfg)
+	result.Config = cfg
+	return result, nil
+}
+
+func readLocal(path string) (*viper.Viper, error) {
+	v := viper.New()
+	v.SetConfigFile(path)
+	if err := v.ReadInConfig(); err != nil {
+		return nil, fmt.Errorf("读取配置文件失败: %w", err)
+	}
+	return v, nil
+}
+
+// decodeConfig 在合并本地和配置中心后应用环境变量。
+func decodeConfig(v *viper.Viper) (*Config, error) {
 	var appConfig AppConfig
-	app := v.Sub("app")
+	app := section(v, "app")
 	appBindEnv(app)
 	if err := app.Unmarshal(&appConfig); err != nil {
 		return nil, err
 	}
 
 	var serverConfig Server
-	server := v.Sub("server")
+	server := section(v, "server")
 	serverBindEnv(server)
 	if err := server.Unmarshal(&serverConfig); err != nil {
 		return nil, err
 	}
 
 	var securityConfig Security
-	security := v.Sub("security")
+	security := section(v, "security")
 	securityBindEnv(security)
 	if err := security.Unmarshal(&securityConfig); err != nil {
 		return nil, err
 	}
 
 	var databaseConfig DatabaseConfig
-	database := v.Sub("database")
+	database := section(v, "database")
 	databaseBindEnv(database)
 	if err := database.Unmarshal(&databaseConfig); err != nil {
 		return nil, err
 	}
 
 	var redisConfig Redis
-	redis := v.Sub("redis")
+	redis := section(v, "redis")
 	redisBindEnv(redis)
 	if err := redis.Unmarshal(&redisConfig); err != nil {
 		return nil, err
 	}
 
 	var cacheConfig Cache
-	cache := v.Sub("cache")
+	cache := section(v, "cache")
 	cacheBindEnv(cache)
 	if err := cache.Unmarshal(&cacheConfig); err != nil {
 		return nil, err
 	}
 
 	var messageQueueConfig MessageQueue
-	messageQueue := v.Sub("message_queue")
+	messageQueue := section(v, "message_queue")
 	messageQueueBindEnv(messageQueue)
 	if err := messageQueue.Unmarshal(&messageQueueConfig); err != nil {
 		return nil, err
 	}
 
 	var etcdConfig Etcd
-	etcd := v.Sub("etcd")
+	etcd := section(v, "etcd")
 	etcdBindEnv(etcd)
 	if err := etcd.Unmarshal(&etcdConfig); err != nil {
 		return nil, err
 	}
 
 	var storageConfig Storage
-	storage := v.Sub("storage")
+	storage := section(v, "storage")
 	storageBindEnv(storage)
 	if err := storage.Unmarshal(&storageConfig); err != nil {
 		return nil, err
 	}
 
 	var monitorConfig Monitor
-	monitor := v.Sub("monitor")
+	monitor := section(v, "monitor")
 	monitorBindEnv(monitor)
 	if err := monitor.Unmarshal(&monitorConfig); err != nil {
 		return nil, err
 	}
 
 	var thirdPartyConfig ThirdParty
-	thirdParty := v.Sub("third_party")
+	thirdParty := section(v, "third_party")
 	thirdPartyBindEnv(thirdParty)
 	if err := thirdParty.Unmarshal(&thirdPartyConfig); err != nil {
 		return nil, err
 	}
 
+	configCenter, err := decodeConfigCenter(v)
+	if err != nil {
+		return nil, err
+	}
 	cfg := &Config{
+		ConfigCenter: configCenter,
 		App:          appConfig,
 		Server:       serverConfig,
 		Security:     securityConfig,
@@ -179,32 +169,41 @@ func loadLocal(configPath string) (*Config, error) {
 		ThirdParty:   thirdPartyConfig,
 	}
 
-	GlobalConfig = cfg
-
 	return cfg, nil
 }
 
-// parseConfig 解析配置中心的 YAML 字节流
-func parseConfig(data []byte) (*Config, error) {
-	v := viper.New()
-	v.SetConfigType("yaml")
-	if err := v.ReadConfig(bytes.NewReader(data)); err != nil {
-		return nil, fmt.Errorf("解析配置失败: %w", err)
+func section(v *viper.Viper, name string) *viper.Viper {
+	sub := v.Sub(name)
+	if sub == nil {
+		sub = viper.New()
 	}
-	cfg := &Config{}
-	if err := v.Unmarshal(cfg); err != nil {
-		return nil, fmt.Errorf("反序列化配置失败: %w", err)
-	}
-	return cfg, nil
+	sub.AllowEmptyEnv(true)
+	return sub
 }
 
-// loadFromSource 从配置源加载并解析配置
-func loadFromSource(source Source) (*Config, error) {
-	data, err := source.Load()
-	if err != nil {
+func decodeConfigCenter(v *viper.Viper) (*ConfigCenterConfig, error) {
+	center := section(v, "config_center")
+	_ = center.BindEnv("type", "CONFIG_CENTER_TYPE")
+	_ = center.BindEnv("etcd.endpoints", "CONFIG_CENTER_ETCD_ENDPOINTS")
+	_ = center.BindEnv("etcd.key", "CONFIG_CENTER_ETCD_KEY")
+	_ = center.BindEnv("etcd.timeout", "CONFIG_CENTER_ETCD_TIMEOUT")
+	_ = center.BindEnv("etcd.username", "CONFIG_CENTER_ETCD_USERNAME")
+	_ = center.BindEnv("etcd.password", "CONFIG_CENTER_ETCD_PASSWORD")
+	if value, ok := os.LookupEnv("CONFIG_CENTER_ETCD_ENDPOINTS"); ok {
+		if value == "" {
+			center.Set("etcd.endpoints", []string{})
+		} else {
+			center.Set("etcd.endpoints", strings.Split(value, ","))
+		}
+	}
+	var cfg ConfigCenterConfig
+	if err := center.Unmarshal(&cfg); err != nil {
 		return nil, err
 	}
-	return parseConfig(data)
+	if cfg.Type == "" && cfg.Etcd == nil {
+		return nil, nil
+	}
+	return &cfg, nil
 }
 
 // createSource 根据配置中心配置创建配置源

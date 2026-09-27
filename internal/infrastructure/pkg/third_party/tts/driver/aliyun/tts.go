@@ -40,15 +40,16 @@ func NewTTS(cfg driver.TTSConfig) (*TTS, error) {
 		return nil, err
 	}
 
+	current := config.Current()
 	ttsConfig := nls.NewConnectionConfigWithToken(
 		nls.DEFAULT_URL,
-		config.GlobalConfig.ThirdParty.TTS.Provider.Aliyun.AppKey,
+		current.ThirdParty.TTS.Provider.Aliyun.AppKey,
 		token.Token.Id,
 	)
 
 	logger := nls.NewNlsLogger(os.Stderr, "TaskID-"+cfg.TaskID+": ", log.LstdFlags|log.Lmicroseconds)
 	logger.SetLogSil(false)
-	if config.GlobalConfig.App.Debug {
+	if current.App.Debug {
 		logger.SetDebug(true)
 	}
 
