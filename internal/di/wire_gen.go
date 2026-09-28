@@ -51,7 +51,7 @@ func InitApp(ctx context.Context) (*App, error) {
 	if err != nil {
 		return nil, err
 	}
-	mq, err := provider.ProvideMessageQueue(config)
+	mqClient, err := provider.ProvideMessageQueue(config, monitor)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +69,7 @@ func InitApp(ctx context.Context) (*App, error) {
 	fileStorage := provider.ProvideFileStoragePort(storage)
 	filePolicy := provider.ProvideFilePolicyPort(config)
 	uploaderDomainService := decorator.NewUploaderDomainServiceWithTracing(fileRepository, uploaderRepository, fileStorage, filePolicy)
-	bus := provider.ProvideEventBus(mq)
+	bus := provider.ProvideEventBus(mqClient)
 	eventPublisher := provider.ProvideEventPublisherPort(bus)
 	portTransactionManager := provider.ProvideTransactionManagerPort(transactionManager)
 	uploaderApplicationService := service3.NewUploaderApplicationService(uploaderDomainService, eventPublisher, portTransactionManager, fileRepository, uploaderRepository, fileStorage)
@@ -88,8 +88,8 @@ func InitApp(ctx context.Context) (*App, error) {
 	grpcServer := provider.ProvideGRPCServer(ctx, config, serviceRegistry)
 	websocketServer := provider.ProvideWebSocketServer(config, webSocket)
 	healthServer := provider.ProvideHealthServer(config)
-	consumerService := provider.ProvideEventConsumerService(mq, logger)
+	consumerService := provider.ProvideEventConsumerService(mqClient, logger)
 	eventServer := provider.ProvideEventServer(config, consumerService, eventHandlerRegistry)
-	app := NewApp(config, loadResult, monitor, logger, transactionManager, client, mq, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, healthServer, bus, consumerService, eventServer)
+	app := NewApp(config, loadResult, monitor, logger, transactionManager, client, mqClient, storage, handlerRegistry, webSocket, eventHandlerRegistry, serviceRegistry, server, grpcServer, websocketServer, healthServer, bus, consumerService, eventServer)
 	return app, nil
 }

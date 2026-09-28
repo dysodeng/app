@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/bytedance/sonic"
-	"github.com/dysodeng/mq/contract"
-	"github.com/dysodeng/mq/message"
+	appmq "github.com/dysodeng/app/internal/infrastructure/pkg/mq"
+	mqv2 "github.com/goairix/mq/v2"
 	"go.uber.org/zap"
 )
 
@@ -77,16 +77,24 @@ func (w *handlerWrapper) handle(ctx context.Context, eventType string, eventData
 	return nil
 }
 
+// SubscriptionQueue provides the v2 consume and topology operations used by events.
+type SubscriptionQueue interface {
+	mqv2.Subscriber
+	Prepare(context.Context, mqv2.Subscription) error
+}
+
 // ConsumerService 事件消费者服务
 type ConsumerService struct {
-	consumer contract.Consumer
+	consumer SubscriptionQueue
 	handlers map[string][]*handlerWrapper // 存储处理器包装器
 	logger   *zap.Logger
 	mu       sync.RWMutex
+	cancel   context.CancelFunc
+	done     chan struct{}
 }
 
 // NewEventConsumerService 创建事件消费者服务
-func NewEventConsumerService(consumer contract.Consumer, logger *zap.Logger) *ConsumerService {
+func NewEventConsumerService(consumer SubscriptionQueue, logger *zap.Logger) *ConsumerService {
 	return &ConsumerService{
 		consumer: consumer,
 		handlers: make(map[string][]*handlerWrapper),
@@ -160,6 +168,10 @@ func (s *ConsumerService) Start(ctx context.Context) error {
 	// 获取所有需要订阅的事件类型
 	eventTypes := make([]string, 0)
 	s.mu.RLock()
+	if s.cancel != nil {
+		s.mu.RUnlock()
+		return fmt.Errorf("event consumer service already started")
+	}
 	for eventType := range s.handlers {
 		eventTypes = append(eventTypes, eventType)
 	}
@@ -171,17 +183,36 @@ func (s *ConsumerService) Start(ctx context.Context) error {
 		return nil
 	}
 
-	// 为每个事件类型单独订阅事件处理器
+	// 先创建订阅，RabbitMQ 发布前必须有目标队列。
 	for _, eventType := range eventTypes {
-		if err := s.consumer.Subscribe(ctx, eventType, s.handleMessage); err != nil {
+		sub := mqv2.Subscription{Topic: eventType, Name: appmq.QueuePrefix}
+		if err := s.consumer.Prepare(ctx, sub); err != nil {
 			s.logger.Error("Failed to subscribe to event type",
 				zap.String("eventType", eventType),
 				zap.Error(err),
 			)
-			return fmt.Errorf("failed to subscribe to event type %s: %w", eventType, err)
+			return fmt.Errorf("prepare event subscription %s: %w", eventType, err)
 		}
-		s.logger.Info("Subscribed to event type", zap.String("eventType", eventType))
 	}
+	runCtx, cancel := context.WithCancel(ctx)
+	done := make(chan struct{})
+	s.mu.Lock()
+	s.cancel = cancel
+	s.done = done
+	s.mu.Unlock()
+	var workers sync.WaitGroup
+	for _, eventType := range eventTypes {
+		sub := mqv2.Subscription{Topic: eventType, Name: appmq.QueuePrefix}
+		workers.Add(1)
+		go func() {
+			defer workers.Done()
+			s.runSubscription(runCtx, sub)
+		}()
+	}
+	go func() {
+		workers.Wait()
+		close(done)
+	}()
 
 	s.logger.Info("Event consumer service started successfully",
 		zap.Int("totalEventTypes", len(eventTypes)),
@@ -191,20 +222,43 @@ func (s *ConsumerService) Start(ctx context.Context) error {
 }
 
 // Stop 停止事件消费服务
-func (s *ConsumerService) Stop() error {
+func (s *ConsumerService) Stop(ctx context.Context) error {
 	s.logger.Info("Stopping event consumer service")
-
-	if err := s.consumer.Close(); err != nil {
-		s.logger.Error("Failed to stop consumer", zap.Error(err))
-		return fmt.Errorf("failed to stop consumer: %w", err)
+	s.mu.RLock()
+	cancel, done := s.cancel, s.done
+	s.mu.RUnlock()
+	if cancel == nil {
+		return nil
 	}
-
+	cancel()
+	select {
+	case <-done:
+	case <-ctx.Done():
+		return ctx.Err()
+	}
 	s.logger.Info("Event consumer service stopped successfully")
 	return nil
 }
 
+func (s *ConsumerService) runSubscription(ctx context.Context, sub mqv2.Subscription) {
+	for ctx.Err() == nil {
+		err := s.consumer.Run(ctx, sub, s.handleMessage)
+		if ctx.Err() != nil {
+			return
+		}
+		s.logger.Error("Event subscription stopped", zap.String("eventType", sub.Topic), zap.Error(err))
+		timer := time.NewTimer(time.Second)
+		select {
+		case <-ctx.Done():
+			timer.Stop()
+			return
+		case <-timer.C:
+		}
+	}
+}
+
 // handleMessage 处理消息
-func (s *ConsumerService) handleMessage(ctx context.Context, msg *message.Message) error {
+func (s *ConsumerService) handleMessage(ctx context.Context, msg mqv2.Message) error {
 	eventType := msg.Topic
 
 	// 获取注册的处理器

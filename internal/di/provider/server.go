@@ -3,12 +3,12 @@ package provider
 import (
 	"context"
 
-	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
 	diEvent "github.com/dysodeng/app/internal/di/event"
 	"github.com/dysodeng/app/internal/infrastructure/config"
 	"github.com/dysodeng/app/internal/infrastructure/event"
+	"github.com/dysodeng/app/internal/infrastructure/pkg/mq"
 	eventServer "github.com/dysodeng/app/internal/infrastructure/server/event"
 	"github.com/dysodeng/app/internal/infrastructure/server/grpc"
 	"github.com/dysodeng/app/internal/infrastructure/server/health"
@@ -40,8 +40,8 @@ func ProvideHealthServer(cfg *config.Config) *health.Server {
 }
 
 // ProvideEventConsumerService 提供事件消费者服务
-func ProvideEventConsumerService(mq contract.MQ, logger *zap.Logger) *event.ConsumerService {
-	return event.NewEventConsumerService(mq.Consumer(), logger)
+func ProvideEventConsumerService(client *mq.Client, logger *zap.Logger) *event.ConsumerService {
+	return event.NewEventConsumerService(client, logger)
 }
 
 // ProvideEventServer 提供Event服务器

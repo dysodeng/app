@@ -4,7 +4,6 @@ import (
 	"context"
 	"log/slog"
 
-	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
 	"github.com/dysodeng/app/internal/infrastructure/config"
@@ -83,7 +82,7 @@ func ProvideRedis(cfg *config.Config) (redis.Client, error) {
 }
 
 // ProvideMessageQueue 提供消息队列
-func ProvideMessageQueue(cfg *config.Config) (contract.MQ, error) {
+func ProvideMessageQueue(cfg *config.Config, _ *telemetry.Monitor) (*mq.Client, error) {
 	return mq.Init(cfg)
 }
 
@@ -93,6 +92,6 @@ func ProvideStorage(cfg *config.Config) (*storage.Storage, error) {
 }
 
 // ProvideEventBus 提供事件总线
-func ProvideEventBus(mq contract.MQ) event.Bus {
-	return event.NewMQEventBus(mq.Producer())
+func ProvideEventBus(mq *mq.Client) event.Bus {
+	return event.NewMQEventBus(mq)
 }

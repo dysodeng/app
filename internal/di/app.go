@@ -4,7 +4,6 @@ import (
 	"context"
 	stderrors "errors"
 
-	"github.com/dysodeng/mq/contract"
 	"go.uber.org/zap"
 
 	diEvent "github.com/dysodeng/app/internal/di/event"
@@ -13,6 +12,7 @@ import (
 	"github.com/dysodeng/app/internal/infrastructure/persistence/transactions"
 	"github.com/dysodeng/app/internal/infrastructure/pkg/db"
 	"github.com/dysodeng/app/internal/infrastructure/pkg/errors"
+	appmq "github.com/dysodeng/app/internal/infrastructure/pkg/mq"
 	"github.com/dysodeng/app/internal/infrastructure/pkg/redis"
 	"github.com/dysodeng/app/internal/infrastructure/pkg/storage"
 	"github.com/dysodeng/app/internal/infrastructure/pkg/telemetry"
@@ -34,7 +34,7 @@ type App struct {
 	Logger               *zap.Logger
 	TxManager            transactions.TransactionManager
 	RedisClient          redis.Client
-	MessageQueue         contract.MQ
+	MessageQueue         *appmq.Client
 	Storage              *storage.Storage
 	HandlerRegistry      *HTTP.HandlerRegistry
 	WebSocketRegistry    *webSocket.WebSocket
@@ -57,7 +57,7 @@ func NewApp(
 	logger *zap.Logger,
 	txManager transactions.TransactionManager,
 	redisClient redis.Client,
-	messageQueue contract.MQ,
+	messageQueue *appmq.Client,
 	storage *storage.Storage,
 	handlerRegistry *HTTP.HandlerRegistry,
 	webSocketRegistry *webSocket.WebSocket,
@@ -115,7 +115,7 @@ func (app *App) Stop(ctx context.Context) error {
 	resourceErr := errors.NewPipelineWithContext(ctx).Then(db.Close).Then(func() error {
 		return app.RedisClient.Close()
 	}).Then(func() error {
-		return app.MessageQueue.Close()
+		return app.MessageQueue.Close(ctx)
 	}).ExecuteParallel()
 	return stderrors.Join(watchErr, resourceErr)
 }
